@@ -1,12 +1,8 @@
 package hn_152.bookstore.model.entity.book;
 
 import hn_152.bookstore.model.entity.AuditableEntity;
-import hn_152.bookstore.model.entity.receipt.ReceiptDetail;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.aop.target.LazyInitTargetSource;
-
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor

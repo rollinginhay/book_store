@@ -2,7 +2,6 @@ package hn_152.bookstore.model.entity.cart;
 
 import hn_152.bookstore.model.entity.AuditableEntity;
 import hn_152.bookstore.model.entity.book.BookDetail;
-import hn_152.bookstore.model.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 

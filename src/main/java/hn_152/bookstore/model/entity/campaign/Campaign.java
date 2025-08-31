@@ -1,7 +1,9 @@
 package hn_152.bookstore.model.entity.campaign;
 
 import hn_152.bookstore.model.entity.AuditableEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.*;
 
 import java.time.LocalDate;
