@@ -1,0 +1,5 @@
+package hn_152.bookstore.model.entity.receipt;
+
+public enum PaymentType {
+    CASH, TRANSFER
+}
