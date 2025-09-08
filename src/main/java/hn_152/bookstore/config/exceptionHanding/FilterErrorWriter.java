@@ -1,0 +1,30 @@
+package hn_152.bookstore.config.exceptionHanding;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import hn_152.bookstore.model.dto.response.ApiError;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+
+@Component
+@RequiredArgsConstructor
+public class FilterErrorWriter {
+    private final ObjectMapper objectMapper;
+
+    public void write(HttpServletResponse resp, int status, String message, String description) throws IOException {
+        ApiError errBody = ApiError.builder()
+                .timestamp(LocalDateTime.now())
+                .message(message)
+                .description(description)
+                .build();
+
+        resp.setStatus(status);
+        resp.setContentType("application/json");
+
+        objectMapper.writeValue(resp.getWriter(), errBody);
+    }
+}
