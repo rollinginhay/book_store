@@ -1,9 +1,7 @@
 package hn_152.bookstore.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hn_152.bookstore.config.exceptionHanding.ApiErrorWriter;
 import hn_152.bookstore.model.dto.response.ApiError;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,7 @@ public class OAuthFailureHandler implements AuthenticationFailureHandler {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
+    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
 
         log.error("Oauth failure ex handler", exception);
 

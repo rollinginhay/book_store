@@ -1,7 +1,6 @@
 package hn_152.bookstore.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import hn_152.bookstore.model.dto.OAuthPrincipalDetails;
 import hn_152.bookstore.model.dto.response.AuthResponse;
 import hn_152.bookstore.model.entity.user.Role;
@@ -11,7 +10,6 @@ import hn_152.bookstore.repository.RoleRepository;
 import hn_152.bookstore.repository.UserRepository;
 import hn_152.bookstore.service.auth.JwtService;
 import hn_152.bookstore.util.mapper.UserMapper;
-import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
