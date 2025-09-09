@@ -20,7 +20,7 @@ public class Receipt extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Long id;
 
     @OneToMany(fetch = FetchType.EAGER)
     private List<ReceiptDetail> receiptDetails;
