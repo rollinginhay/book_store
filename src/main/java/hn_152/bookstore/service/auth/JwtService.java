@@ -1,6 +1,6 @@
 package hn_152.bookstore.service.auth;
 
-import hn_152.bookstore.config.exceptionHanding.UnauthorizedException;
+import hn_152.bookstore.config.exceptionHanding.exception.UnauthorizedException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;

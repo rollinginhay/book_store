@@ -1,6 +1,7 @@
 package hn_152.bookstore.model.entity.campaign;
 
 import hn_152.bookstore.model.entity.AuditableEntity;
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 @Builder
 @Getter
 @Setter
-//@Entity
+@Entity
 
 public class Campaign extends AuditableEntity {
     @Id

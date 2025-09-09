@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @Getter
 @Setter
-//@Entity
+@Entity
 
 public class PaymentDetail extends AuditableEntity {
     @Id
@@ -20,7 +20,7 @@ public class PaymentDetail extends AuditableEntity {
     @OneToOne(fetch = FetchType.LAZY)
     private Receipt receipt;
 
-    private String method;
+    private String paymentType;
 
     private String provider;
 

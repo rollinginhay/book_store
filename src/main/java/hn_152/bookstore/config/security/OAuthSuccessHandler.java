@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hn_152.bookstore.model.dto.OAuthPrincipalDetails;
 import hn_152.bookstore.model.dto.response.AuthResponse;
 import hn_152.bookstore.model.entity.user.Role;
-import hn_152.bookstore.model.entity.user.RoleDef;
+import hn_152.bookstore.model.entity.user.RoleType;
 import hn_152.bookstore.model.entity.user.User;
 import hn_152.bookstore.repository.RoleRepository;
 import hn_152.bookstore.repository.UserRepository;
@@ -58,7 +58,7 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
                             .email(email)
                             .username(email.split("@")[0])
                             .oauth2Id(oauthId)
-                            .roles(List.of(roleRepository.findByName(RoleDef.ROLE_USER.name())))
+                            .roles(List.of(roleRepository.findByName(RoleType.ROLE_USER.name()).orElseThrow()))
                             .personName(name)
                             .build();
                     return userRepository.save(newUser);

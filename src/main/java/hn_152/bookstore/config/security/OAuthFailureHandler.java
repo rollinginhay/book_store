@@ -1,7 +1,7 @@
 package hn_152.bookstore.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hn_152.bookstore.model.dto.response.ApiError;
+import hn_152.bookstore.model.dto.response.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class OAuthFailureHandler implements AuthenticationFailureHandler {
 
         log.error("Oauth failure ex handler", exception);
 
-        ApiError errBody = ApiError.builder()
+        ApiErrorResponse errBody = ApiErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .message("Authentication failed")
                 .description(request.getRequestURI())

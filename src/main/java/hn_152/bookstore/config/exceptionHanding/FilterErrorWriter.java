@@ -1,7 +1,7 @@
 package hn_152.bookstore.config.exceptionHanding;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hn_152.bookstore.model.dto.response.ApiError;
+import hn_152.bookstore.model.dto.response.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ public class FilterErrorWriter {
     private final ObjectMapper objectMapper;
 
     public void write(HttpServletResponse resp, int status, String message, String description) throws IOException {
-        ApiError errBody = ApiError.builder()
+        ApiErrorResponse errBody = ApiErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .message(message)
                 .description(description)

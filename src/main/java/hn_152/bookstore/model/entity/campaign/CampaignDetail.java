@@ -2,10 +2,7 @@ package hn_152.bookstore.model.entity.campaign;
 
 import hn_152.bookstore.model.entity.AuditableEntity;
 import hn_152.bookstore.model.entity.book.BookDetail;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.*;
 
 @AllArgsConstructor
@@ -13,7 +10,7 @@ import lombok.*;
 @Builder
 @Getter
 @Setter
-//@Entity
+@Entity
 public class CampaignDetail extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 @Getter
 @Setter
-//@Entity
+@Entity
 
 public class Receipt extends AuditableEntity {
 
@@ -56,8 +56,6 @@ public class Receipt extends AuditableEntity {
     private String customerPhone;
 
     private String customerAddress;
-
-    private String paymentMethod;
 
     private LocalDateTime paymentDate;
 

@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @Getter
 @Setter
-//@Entity
+@Entity
 
 public class ReceiptDetail extends AuditableEntity {
     @Id

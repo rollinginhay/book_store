@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @Getter
 @Setter
-//@Entity
+@Entity
 public class Cart extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
