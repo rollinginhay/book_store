@@ -19,6 +19,6 @@ public class Publisher extends AuditableEntity {
 
     private String name;
 
-    @OneToMany
+    @OneToMany(mappedBy = "publisher")
     private List<Book> books;
 }

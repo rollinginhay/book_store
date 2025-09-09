@@ -36,13 +36,13 @@ public class Book extends AuditableEntity {
     @JoinTable
     private List<Tag> tags;
 
-    @OneToMany
+    @OneToMany(mappedBy = "book")
     private List<Review> reviews;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Publisher publisher;
 
-    @OneToMany
+    @OneToMany(mappedBy = "book")
     private List<BookDetail> bookCopies;
 
     @ManyToOne

@@ -19,6 +19,6 @@ public class Series extends AuditableEntity {
 
     private String name;
 
-    @OneToMany
+    @OneToMany(mappedBy = "series")
     private List<Book> books;
 }

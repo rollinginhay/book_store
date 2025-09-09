@@ -21,6 +21,6 @@ public class Cart extends AuditableEntity {
     @OneToOne
     private User user;
 
-    @OneToMany
+    @OneToMany(mappedBy = "cart")
     private List<CartDetail> cartDetails;
 }
