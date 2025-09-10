@@ -1,5 +1,6 @@
 package hn_152.bookstore.model.dto.request;
 
+import hn_152.bookstore.util.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -9,6 +10,7 @@ public record LoginRequest(
         String email,
 
         @NotBlank(message = "Password is required")
+        @ValidPassword
         String password
 ) {
 }
