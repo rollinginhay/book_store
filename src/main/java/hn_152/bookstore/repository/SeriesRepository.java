@@ -1,6 +1,6 @@
 package hn_152.bookstore.repository;
 
-import hn_152.bookstore.model.entity.book.Series;
+import hn_152.bookstore.entity.book.Series;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;

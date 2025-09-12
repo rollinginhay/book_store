@@ -1,7 +1,7 @@
 package hn_152.bookstore.config.security;
 
-import hn_152.bookstore.model.entity.user.Role;
-import hn_152.bookstore.model.entity.user.User;
+import hn_152.bookstore.entity.user.Role;
+import hn_152.bookstore.entity.user.User;
 import hn_152.bookstore.repository.UserRepository;
 import hn_152.bookstore.service.auth.JwtService;
 import jakarta.servlet.FilterChain;

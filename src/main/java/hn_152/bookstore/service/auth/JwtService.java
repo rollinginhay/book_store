@@ -4,6 +4,7 @@ import hn_152.bookstore.config.exceptionHanding.exception.UnauthorizedException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ import java.util.Map;
 @Slf4j
 @Service
 public class JwtService {
-    private String secret;
+    private final String secret;
     private final long expiration;
     private final JwtParser parser;
 

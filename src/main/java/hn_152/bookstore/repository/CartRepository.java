@@ -1,6 +1,6 @@
 package hn_152.bookstore.repository;
 
-import hn_152.bookstore.model.entity.cart.Cart;
+import hn_152.bookstore.entity.cart.Cart;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;

@@ -1,7 +1,7 @@
 package hn_152.bookstore.util.mapper;
 
-import hn_152.bookstore.model.dto.response.AuthResponse;
-import hn_152.bookstore.model.entity.user.User;
+import hn_152.bookstore.dto.response.auth.AuthResponse;
+import hn_152.bookstore.entity.user.User;
 
 public class UserMapper {
     public static AuthResponse mapToAuthResponse(User user, String jwtToken) {

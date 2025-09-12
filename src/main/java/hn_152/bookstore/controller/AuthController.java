@@ -1,8 +1,8 @@
 package hn_152.bookstore.controller;
 
-import hn_152.bookstore.model.dto.request.LoginRequest;
-import hn_152.bookstore.model.dto.request.RegisterRequest;
-import hn_152.bookstore.model.dto.response.AuthResponse;
+import hn_152.bookstore.dto.request.auth.LoginRequest;
+import hn_152.bookstore.dto.request.auth.RegisterRequest;
+import hn_152.bookstore.dto.response.auth.AuthResponse;
 import hn_152.bookstore.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

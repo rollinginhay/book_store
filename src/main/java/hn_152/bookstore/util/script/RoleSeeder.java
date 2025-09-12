@@ -1,7 +1,7 @@
 package hn_152.bookstore.util.script;
 
-import hn_152.bookstore.model.entity.user.Role;
-import hn_152.bookstore.model.entity.user.RoleType;
+import hn_152.bookstore.entity.user.Role;
+import hn_152.bookstore.entity.user.RoleType;
 import hn_152.bookstore.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;

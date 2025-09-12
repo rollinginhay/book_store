@@ -1,7 +1,7 @@
 package hn_152.bookstore.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hn_152.bookstore.model.dto.response.ApiErrorResponse;
+import hn_152.bookstore.dto.response.generic.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

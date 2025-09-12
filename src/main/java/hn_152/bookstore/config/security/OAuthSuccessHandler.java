@@ -1,11 +1,11 @@
 package hn_152.bookstore.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hn_152.bookstore.model.dto.OAuthPrincipalDetails;
-import hn_152.bookstore.model.dto.response.AuthResponse;
-import hn_152.bookstore.model.entity.user.Role;
-import hn_152.bookstore.model.entity.user.RoleType;
-import hn_152.bookstore.model.entity.user.User;
+import hn_152.bookstore.dto.internal.OAuthPrincipalDetails;
+import hn_152.bookstore.dto.response.auth.AuthResponse;
+import hn_152.bookstore.entity.user.Role;
+import hn_152.bookstore.entity.user.RoleType;
+import hn_152.bookstore.entity.user.User;
 import hn_152.bookstore.repository.RoleRepository;
 import hn_152.bookstore.repository.UserRepository;
 import hn_152.bookstore.service.auth.JwtService;

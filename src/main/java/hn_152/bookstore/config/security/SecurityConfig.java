@@ -1,6 +1,6 @@
 package hn_152.bookstore.config.security;
 
-import hn_152.bookstore.config.exceptionHanding.FilterErrorWriter;
+import hn_152.bookstore.util.mapper.misc.FilterErrorWriter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,11 +45,11 @@ public class SecurityConfig {
                 .exceptionHandling(exHandler -> exHandler
                         .defaultAuthenticationEntryPointFor(((request, response, authException) -> {
                             log.error("Auth failure ex handler", authException);
-                            filterErrorWriter.write(response, HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized access", request.getRequestURI());
+                            filterErrorWriter.writeToResp(response, HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized access", request.getRequestURI());
                         }), request -> request.getRequestURI().startsWith("/api"))
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             log.error("Access denied ex handler", accessDeniedException);
-                            filterErrorWriter.write(response, HttpServletResponse.SC_UNAUTHORIZED, "Access denied", request.getRequestURI());
+                            filterErrorWriter.writeToResp(response, HttpServletResponse.SC_UNAUTHORIZED, "Access denied", request.getRequestURI());
                         }))
                 .build();
     }

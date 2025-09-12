@@ -2,12 +2,12 @@ package hn_152.bookstore.service.auth;
 
 import hn_152.bookstore.config.exceptionHanding.exception.BadRequestException;
 import hn_152.bookstore.config.exceptionHanding.exception.UnauthorizedException;
-import hn_152.bookstore.model.dto.request.LoginRequest;
-import hn_152.bookstore.model.dto.request.RegisterRequest;
-import hn_152.bookstore.model.dto.response.AuthResponse;
-import hn_152.bookstore.model.entity.user.Role;
-import hn_152.bookstore.model.entity.user.RoleType;
-import hn_152.bookstore.model.entity.user.User;
+import hn_152.bookstore.dto.request.auth.LoginRequest;
+import hn_152.bookstore.dto.request.auth.RegisterRequest;
+import hn_152.bookstore.dto.response.auth.AuthResponse;
+import hn_152.bookstore.entity.user.Role;
+import hn_152.bookstore.entity.user.RoleType;
+import hn_152.bookstore.entity.user.User;
 import hn_152.bookstore.repository.RoleRepository;
 import hn_152.bookstore.repository.UserRepository;
 import hn_152.bookstore.util.mapper.UserMapper;
