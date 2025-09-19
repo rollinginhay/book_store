@@ -2,11 +2,12 @@ package sd_009.bookstore.config.jsonapi;
 
 import com.squareup.moshi.JsonAdapter.Factory;
 import com.squareup.moshi.Moshi;
-import jsonapi.Document;
 import jsonapi.JsonApiFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import sd_009.bookstore.entity.book.GenreDto;
+
+import java.time.LocalDateTime;
+import java.util.Date;
 
 @Configuration
 public class JsonApiMoshiConfig {
@@ -19,8 +20,8 @@ public class JsonApiMoshiConfig {
     @Bean
     public Moshi moshi() {
         return new Moshi.Builder()
+                .add(LocalDateTime.class, new LocalDateTimeAdapter().nullSafe())
                 .add(jsonApiFactory())
                 .build();
     }
-
 }

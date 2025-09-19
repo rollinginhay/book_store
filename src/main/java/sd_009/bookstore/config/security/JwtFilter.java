@@ -1,9 +1,5 @@
 package sd_009.bookstore.config.security;
 
-import sd_009.bookstore.entity.user.Role;
-import sd_009.bookstore.entity.user.User;
-import sd_009.bookstore.repository.UserRepository;
-import sd_009.bookstore.service.auth.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +11,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import sd_009.bookstore.entity.user.Role;
+import sd_009.bookstore.entity.user.User;
+import sd_009.bookstore.repository.UserRepository;
+import sd_009.bookstore.service.auth.JwtService;
 
 import java.io.IOException;
 import java.util.List;

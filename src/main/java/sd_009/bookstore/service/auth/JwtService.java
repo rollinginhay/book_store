@@ -1,12 +1,12 @@
 package sd_009.bookstore.service.auth;
 
-import sd_009.bookstore.config.exceptionHanding.exception.UnauthorizedException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import sd_009.bookstore.config.exceptionHanding.exception.UnauthorizedException;
 
 import java.time.Instant;
 import java.util.Date;

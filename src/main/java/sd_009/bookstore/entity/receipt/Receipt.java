@@ -1,10 +1,10 @@
 package sd_009.bookstore.entity.receipt;
 
 
-import sd_009.bookstore.entity.AuditableEntity;
-import sd_009.bookstore.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
+import sd_009.bookstore.entity.AuditableEntity;
+import sd_009.bookstore.entity.user.User;
 
 import java.time.LocalDateTime;
 import java.util.List;

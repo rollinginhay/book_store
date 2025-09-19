@@ -1,15 +1,6 @@
 package sd_009.bookstore.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import sd_009.bookstore.dto.internal.OAuthPrincipalDetails;
-import sd_009.bookstore.dto.jsonApiResource.user.response.AuthObject;
-import sd_009.bookstore.entity.user.Role;
-import sd_009.bookstore.entity.user.RoleType;
-import sd_009.bookstore.entity.user.User;
-import sd_009.bookstore.repository.RoleRepository;
-import sd_009.bookstore.repository.UserRepository;
-import sd_009.bookstore.service.auth.JwtService;
-import sd_009.bookstore.util.mapper.UserMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,6 +10,15 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import sd_009.bookstore.dto.internal.OAuthPrincipalDetails;
+import sd_009.bookstore.dto.jsonApiResource.user.AuthObject;
+import sd_009.bookstore.entity.user.Role;
+import sd_009.bookstore.entity.user.RoleType;
+import sd_009.bookstore.entity.user.User;
+import sd_009.bookstore.repository.RoleRepository;
+import sd_009.bookstore.repository.UserRepository;
+import sd_009.bookstore.service.auth.JwtService;
+import sd_009.bookstore.util.mapper.user.UserMapper;
 
 import java.io.IOException;
 import java.util.List;

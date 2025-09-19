@@ -1,6 +1,6 @@
-package sd_009.bookstore.util.mapper;
+package sd_009.bookstore.util.mapper.user;
 
-import sd_009.bookstore.dto.jsonApiResource.user.response.AuthObject;
+import sd_009.bookstore.dto.jsonApiResource.user.AuthObject;
 import sd_009.bookstore.entity.user.User;
 
 public class UserMapper {

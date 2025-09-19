@@ -1,8 +1,8 @@
 package sd_009.bookstore.entity.campaign;
 
-import sd_009.bookstore.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import sd_009.bookstore.entity.AuditableEntity;
 
 import java.time.LocalDate;
 import java.util.List;

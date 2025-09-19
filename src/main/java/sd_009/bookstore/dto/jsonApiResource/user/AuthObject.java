@@ -1,4 +1,4 @@
-package sd_009.bookstore.dto.jsonApiResource.user.response;
+package sd_009.bookstore.dto.jsonApiResource.user;
 
 import lombok.Builder;
 

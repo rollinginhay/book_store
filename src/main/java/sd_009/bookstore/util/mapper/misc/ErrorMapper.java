@@ -1,20 +1,18 @@
 package sd_009.bookstore.util.mapper.misc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.Types;
 import jakarta.servlet.http.HttpServletResponse;
 import jsonapi.Document;
+import jsonapi.Error;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.WebRequest;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
-import sd_009.bookstore.dto.jsonApiResource.error.ErrorObject;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -26,36 +24,33 @@ public class ErrorMapper {
 
 
         if (e instanceof MethodArgumentNotValidException) {
-            JsonAdapter<Document<List<ErrorObject>>> adapter = adapterProvider.listResourceAdapter(ErrorObject.class);
+            JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
             return adapter
                     .toJson(Document
                             .from(((MethodArgumentNotValidException) e).getFieldErrors().stream()
-                                    .map(err -> ErrorObject.builder()
-                                            .title(err.getDefaultMessage())
-                                            .detail(req.getDescription(false))
-                                            .build()).toList()));
+                                    .map(err -> new Error(
+                                            null,
+                                            String.valueOf(status.value()),
+                                            null,
+                                            err.getDefaultMessage(),
+                                            req.getDescription(false)))
+                                    .toList()));
         }
 
-        JsonAdapter<Document<ErrorObject>> adapter = adapterProvider.singleResourceAdapter(ErrorObject.class);
-        return adapter.toJson(Document.from(ErrorObject.builder()
-                .title(e.getMessage())
-                .detail(req.getDescription(false))
-                .status(String.valueOf(status.value()))
-                .build()));
+        JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
+        return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, e.getMessage(), req.getDescription(false)))));
     }
 
     public void writeFilterErrorDoc(HttpServletResponse resp, int status, String message, String detail) throws IOException {
-        ErrorObject errObj = ErrorObject.builder()
-                .status(String.valueOf(status))
-                .title(message)
-                .detail(detail)
-                .build();
 
-        JsonAdapter<Document<ErrorObject>> adapter = adapterProvider.singleResourceAdapter(ErrorObject.class);
+        Error err = new Error(null, String.valueOf(status), null, message, detail);
+
+
+        String json = adapterProvider.errorAdapter().toJson(Document.from(err));
 
         resp.setStatus(status);
         resp.setContentType("application/vnd.api+json");
 
-        resp.getWriter().write(adapter.toJson(Document.from(errObj)));
+        resp.getWriter().write(json);
     }
 }

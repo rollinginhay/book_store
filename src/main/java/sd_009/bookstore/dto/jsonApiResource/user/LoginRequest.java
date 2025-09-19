@@ -1,8 +1,8 @@
-package sd_009.bookstore.dto.jsonApiResource.user.request;
+package sd_009.bookstore.dto.jsonApiResource.user;
 
-import sd_009.bookstore.util.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import sd_009.bookstore.util.validation.ValidPassword;
 
 public record LoginRequest(
         @NotBlank(message = "Email is required")

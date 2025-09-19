@@ -1,8 +1,8 @@
 package sd_009.bookstore.entity.book;
 
-import sd_009.bookstore.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import sd_009.bookstore.entity.AuditableEntity;
 
 @AllArgsConstructor
 @NoArgsConstructor

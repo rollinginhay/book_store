@@ -1,19 +1,19 @@
 package sd_009.bookstore.service.auth;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.exceptionHanding.exception.UnauthorizedException;
-import sd_009.bookstore.dto.jsonApiResource.user.request.LoginRequest;
-import sd_009.bookstore.dto.jsonApiResource.user.request.RegisterRequest;
-import sd_009.bookstore.dto.jsonApiResource.user.response.AuthObject;
+import sd_009.bookstore.dto.jsonApiResource.user.LoginRequest;
+import sd_009.bookstore.dto.jsonApiResource.user.RegisterRequest;
+import sd_009.bookstore.dto.jsonApiResource.user.AuthObject;
 import sd_009.bookstore.entity.user.Role;
 import sd_009.bookstore.entity.user.RoleType;
 import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.RoleRepository;
 import sd_009.bookstore.repository.UserRepository;
-import sd_009.bookstore.util.mapper.UserMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+import sd_009.bookstore.util.mapper.user.UserMapper;
 
 import java.util.List;
 import java.util.Map;

@@ -1,13 +1,13 @@
 package sd_009.bookstore.util.script;
 
-import sd_009.bookstore.entity.book.*;
-import sd_009.bookstore.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import sd_009.bookstore.entity.book.*;
+import sd_009.bookstore.repository.BookRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

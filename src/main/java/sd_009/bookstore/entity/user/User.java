@@ -1,8 +1,8 @@
 package sd_009.bookstore.entity.user;
 
-import sd_009.bookstore.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import sd_009.bookstore.entity.AuditableEntity;
 
 import java.util.List;
 

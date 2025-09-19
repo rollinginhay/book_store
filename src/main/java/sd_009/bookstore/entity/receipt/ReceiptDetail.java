@@ -1,9 +1,9 @@
 package sd_009.bookstore.entity.receipt;
 
-import sd_009.bookstore.entity.AuditableEntity;
-import sd_009.bookstore.entity.book.BookDetail;
 import jakarta.persistence.*;
 import lombok.*;
+import sd_009.bookstore.entity.AuditableEntity;
+import sd_009.bookstore.entity.book.BookDetail;
 
 @AllArgsConstructor
 @NoArgsConstructor

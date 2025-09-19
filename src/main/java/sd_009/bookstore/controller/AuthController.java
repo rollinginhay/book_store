@@ -1,9 +1,5 @@
 package sd_009.bookstore.controller;
 
-import sd_009.bookstore.dto.jsonApiResource.user.request.LoginRequest;
-import sd_009.bookstore.dto.jsonApiResource.user.request.RegisterRequest;
-import sd_009.bookstore.dto.jsonApiResource.user.response.AuthObject;
-import sd_009.bookstore.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,9 +12,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import sd_009.bookstore.dto.jsonApiResource.user.LoginRequest;
+import sd_009.bookstore.dto.jsonApiResource.user.RegisterRequest;
+import sd_009.bookstore.dto.jsonApiResource.user.AuthObject;
+import sd_009.bookstore.service.auth.AuthService;
 
-@RequestMapping("/v1/auth")
 @RestController
+@RequestMapping("/v1/auth")
 @Tag(name = "Non-OAuth authentication", description = "Auth by username and password")
 @RequiredArgsConstructor
 public class AuthController {
