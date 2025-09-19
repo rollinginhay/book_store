@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import sd_009.bookstore.dto.jsonApiResource.user.AuthObject;
 import sd_009.bookstore.dto.jsonApiResource.user.LoginRequest;
 import sd_009.bookstore.dto.jsonApiResource.user.RegisterRequest;
-import sd_009.bookstore.dto.jsonApiResource.user.AuthObject;
 import sd_009.bookstore.service.auth.AuthService;
 
 @RestController

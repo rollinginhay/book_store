@@ -1,9 +1,8 @@
 package sd_009.bookstore.util.mapper.book;
 
 import org.mapstruct.*;
-import org.springframework.stereotype.Component;
-import sd_009.bookstore.entity.book.Publisher;
 import sd_009.bookstore.dto.jsonApiResource.book.PublisherDto;
+import sd_009.bookstore.entity.book.Publisher;
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface PublisherMapper {
     Publisher toEntity(PublisherDto publisherDto);

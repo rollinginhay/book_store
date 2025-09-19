@@ -7,18 +7,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
-import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
 import sd_009.bookstore.dto.jsonApiResource.book.GenreDto;
-import sd_009.bookstore.dto.jsonApiResource.book.TagDto;
-import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.Genre;
-import sd_009.bookstore.entity.book.Tag;
-import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.GenreRepository;
-import sd_009.bookstore.repository.TagRepository;
-import sd_009.bookstore.util.mapper.book.BookMapper;
 import sd_009.bookstore.util.mapper.book.GenreMapper;
-import sd_009.bookstore.util.mapper.book.TagMapper;
 
 @RestController
 @RequestMapping("/v1")

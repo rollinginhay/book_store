@@ -1,6 +1,5 @@
 package sd_009.bookstore.controller;
 
-import com.squareup.moshi.JsonAdapter;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jsonapi.Document;

@@ -13,7 +13,6 @@ import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
