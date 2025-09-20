@@ -1,6 +1,5 @@
 package sd_009.bookstore.dto.jsonApiResource.book;
 
-import jakarta.persistence.IdClass;
 import jsonapi.Id;
 import jsonapi.Resource;
 import lombok.AllArgsConstructor;

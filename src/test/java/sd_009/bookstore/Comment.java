@@ -3,7 +3,6 @@ package sd_009.bookstore;
 import jsonapi.Id;
 import jsonapi.Resource;
 import jsonapi.ToOne;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 @Builder
