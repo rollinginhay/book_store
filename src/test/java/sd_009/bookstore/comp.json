@@ -1,0 +1,38 @@
+{
+  "links": {
+    "self": "link.com"
+  },
+  "data": {
+    "type": "book",
+    "relationships": {
+      "publisher": {
+        "data": {
+          "type": "publisher",
+          "id": "1"
+        }
+      }
+    },
+    "attributes": {
+      "createdAt": "2025-09-19T17:26:16.2429393",
+      "title": "title",
+      "publisher": {
+        "type": "publisher",
+        "id": "1",
+        "attributes": {
+          "id": "1",
+          "name": "publisher"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "publisher",
+      "id": "1",
+      "attributes": {
+        "id": "1",
+        "name": "publisher"
+      }
+    }
+  ]
+}

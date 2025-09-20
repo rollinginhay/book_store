@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "comment",
+    "id": "1",
+    "relationships": {
+      "author": {
+        "data": {
+          "type": "person",
+          "id": "1"
+        }
+      }
+    },
+    "attributes": {
+      "id": "1",
+      "body": "body",
+      "author": {
+        "type": "person",
+        "id": "1",
+        "attributes": {
+          "id": "1",
+          "name": "name"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "person",
+      "id": "1",
+      "attributes": {
+        "id": "1",
+        "name": "name"
+      }
+    }
+  ]
+}

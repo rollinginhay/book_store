@@ -1,8 +1,11 @@
 package sd_009.bookstore.dto.jsonApiResource.book;
 
+import jakarta.persistence.IdClass;
 import jsonapi.Id;
 import jsonapi.Resource;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import sd_009.bookstore.entity.book.BookDetail;
 
 import java.io.Serializable;
@@ -11,12 +14,24 @@ import java.time.LocalDateTime;
 /**
  * DTO for {@link BookDetail}
  */
+
+@AllArgsConstructor
+@Getter
 @Builder
-@Resource(type = "bookDetail")
-public record BookDetailDto(LocalDateTime createdAt, LocalDateTime updatedAt,
-                            Boolean enabled, String note, @Id String id,
-                            String isbn11, String isbn13, String bookFormat,
-                            String dimensions, Long printLength, Long stock,
-                            Long price,
-                            String bookCondition) implements Serializable {
+@Resource(type = "bookCopy")
+public class BookDetailDto implements Serializable {
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
+    private final Boolean enabled;
+    private final String note;
+    @Id
+    private final String id;
+    private final String isbn11;
+    private final String isbn13;
+    private final String bookFormat;
+    private final String dimensions;
+    private final Long printLength;
+    private final Long stock;
+    private final Long price;
+    private final String bookCondition;
 }
