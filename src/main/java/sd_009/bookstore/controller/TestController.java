@@ -1,5 +1,6 @@
 package sd_009.bookstore.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import jsonapi.Document;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ public class TestController {
     private final GenreRepository genreRepository;
     private final BookRepository bookRepository;
 
+    @Hidden
     @GetMapping("/test")
     public ResponseEntity<String> testMapper() {
 
@@ -40,6 +42,7 @@ public class TestController {
         return ResponseEntity.ok().body(adapterProvider.singleResourceAdapter(GenreDto.class).toJson(doc));
     }
 
+    @Hidden
     @GetMapping("/test2")
     public ResponseEntity<String> testMapperButMore() {
 

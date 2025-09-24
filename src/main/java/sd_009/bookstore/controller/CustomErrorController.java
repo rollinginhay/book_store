@@ -1,5 +1,6 @@
 package sd_009.bookstore.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jsonapi.Document;
@@ -23,6 +24,7 @@ public class CustomErrorController implements ErrorController {
     private final ErrorMapper errorMapper;
     private final JsonApiAdapterProvider adapterProvider;
 
+    @Hidden
     @GetMapping("/error")
     public ResponseEntity<String> error(HttpServletRequest req) {
         Object status = req.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
