@@ -15,11 +15,13 @@ import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.CreatorDto;
+import sd_009.bookstore.dto.jsonApiResource.book.CreatorOwningDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.Creator;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.CreatorRepository;
 import sd_009.bookstore.util.mapper.book.CreatorMapper;
+import sd_009.bookstore.util.mapper.book.CreatorOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.spec.Routes;
@@ -33,6 +35,7 @@ import java.util.Optional;
 public class CreatorService {
     private final JsonApiAdapterProvider adapterProvider;
     private final CreatorMapper creatorMapper;
+    private final CreatorOwningMapper creatorOwningMapper;
     private final CreatorRepository creatorRepository;
     private final BookRepository bookRepository;
 
@@ -72,16 +75,16 @@ public class CreatorService {
 
         Creator found = creatorRepository.findByEnabledAndId(enabled, id).orElseThrow();
 
-        CreatorDto dto = creatorMapper.toDto(found);
+        CreatorOwningDto dto = creatorOwningMapper.toDto(found);
 
-        Document<CreatorDto> doc = Document
+        Document<CreatorOwningDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID.toString(), id))
                         .build().toMap()))
                 .build();
 
-        return getSingleAdapter().toJson(doc);
+        return getSingleOwningAdapter().toJson(doc);
     }
 
     @Transactional
@@ -129,6 +132,10 @@ public class CreatorService {
 
     private JsonAdapter<Document<List<CreatorDto>>> getListAdapter() {
         return adapterProvider.listResourceAdapter(CreatorDto.class);
+    }
+
+    private JsonAdapter<Document<CreatorOwningDto>> getSingleOwningAdapter() {
+        return adapterProvider.singleResourceAdapter(CreatorOwningDto.class);
     }
 
 }

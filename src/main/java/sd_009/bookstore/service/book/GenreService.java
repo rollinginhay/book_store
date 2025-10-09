@@ -15,11 +15,13 @@ import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.GenreDto;
+import sd_009.bookstore.dto.jsonApiResource.book.GenreOwningDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.Genre;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.GenreRepository;
 import sd_009.bookstore.util.mapper.book.GenreMapper;
+import sd_009.bookstore.util.mapper.book.GenreOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.spec.Routes;
@@ -34,6 +36,7 @@ public class GenreService {
     private final JsonApiAdapterProvider adapterProvider;
 
     private final GenreMapper genreMapper;
+    private final GenreOwningMapper genreOwningMapper;
 
     private final GenreRepository genreRepository;
     private final BookRepository bookRepository;
@@ -74,16 +77,16 @@ public class GenreService {
 
         Genre found = genreRepository.findByEnabledAndId(enabled, id).orElseThrow();
 
-        GenreDto dto = genreMapper.toDto(found);
+        GenreOwningDto dto = genreOwningMapper.toDto(found);
 
-        Document<GenreDto> doc = Document
+        Document<GenreOwningDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID.toString(), id))
                         .build().toMap()))
                 .build();
 
-        return getSingleAdapter().toJson(doc);
+        return getSingleOwningAdapter().toJson(doc);
     }
 
     @Transactional
@@ -131,5 +134,9 @@ public class GenreService {
 
     private JsonAdapter<Document<List<GenreDto>>> getListAdapter() {
         return adapterProvider.listResourceAdapter(GenreDto.class);
+    }
+
+    private JsonAdapter<Document<GenreOwningDto>> getSingleOwningAdapter() {
+        return adapterProvider.singleResourceAdapter(GenreOwningDto.class);
     }
 }

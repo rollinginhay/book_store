@@ -5,8 +5,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.Review;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -16,4 +18,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecif
 
 
     Optional<Review> findByEnabledAndId(Boolean enabled, Long id);
+
+    List<Review> findByBook(Book book);
 }

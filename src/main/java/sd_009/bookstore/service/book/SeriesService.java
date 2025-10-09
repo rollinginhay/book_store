@@ -15,11 +15,13 @@ import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.SeriesDto;
+import sd_009.bookstore.dto.jsonApiResource.book.SeriesOwningDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.Series;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.SeriesRepository;
 import sd_009.bookstore.util.mapper.book.SeriesMapper;
+import sd_009.bookstore.util.mapper.book.SeriesOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.spec.Routes;
@@ -32,6 +34,7 @@ import java.util.Optional;
 public class SeriesService {
     private final JsonApiAdapterProvider adapterProvider;
     private final SeriesMapper seriesMapper;
+    private final SeriesOwningMapper seriesOwningMapper;
     private final SeriesRepository seriesRepository;
     private final BookRepository bookRepository;
 
@@ -71,16 +74,16 @@ public class SeriesService {
 
         Series found = seriesRepository.findByEnabledAndId(enabled, id).orElseThrow();
 
-        SeriesDto dto = seriesMapper.toDto(found);
+        SeriesOwningDto dto = seriesOwningMapper.toDto(found);
 
-        Document<SeriesDto> doc = Document
+        Document<SeriesOwningDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID.toString(), id))
                         .build().toMap()))
                 .build();
 
-        return getSingleAdapter().toJson(doc);
+        return getSingleOwningAdapter().toJson(doc);
     }
 
     @Transactional
@@ -129,6 +132,11 @@ public class SeriesService {
 
     private JsonAdapter<Document<List<SeriesDto>>> getListAdapter() {
         return adapterProvider.listResourceAdapter(SeriesDto.class);
+    }
+
+
+    private JsonAdapter<Document<SeriesOwningDto>> getSingleOwningAdapter() {
+        return adapterProvider.singleResourceAdapter(SeriesOwningDto.class);
     }
 
 }

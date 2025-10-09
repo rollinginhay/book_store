@@ -15,12 +15,14 @@ import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.PublisherDto;
+import sd_009.bookstore.dto.jsonApiResource.book.PublisherOwningDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.Publisher;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.PublisherRepository;
 import sd_009.bookstore.util.mapper.book.BookMapper;
 import sd_009.bookstore.util.mapper.book.PublisherMapper;
+import sd_009.bookstore.util.mapper.book.PublisherOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.spec.Routes;
@@ -33,6 +35,7 @@ import java.util.Optional;
 public class PublisherService {
     private final JsonApiAdapterProvider adapterProvider;
     private final PublisherMapper publisherMapper;
+    private final PublisherOwningMapper publisherOwningMapper;
     private final BookMapper bookMapper;
     private final PublisherRepository publisherRepository;
     private final BookRepository bookRepository;
@@ -73,16 +76,16 @@ public class PublisherService {
 
         Publisher found = publisherRepository.findByEnabledAndId(enabled, id).orElseThrow();
 
-        PublisherDto dto = publisherMapper.toDto(found);
+        PublisherOwningDto dto = publisherOwningMapper.toDto(found);
 
-        Document<PublisherDto> doc = Document
+        Document<PublisherOwningDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID.toString(), id))
                         .build().toMap()))
                 .build();
 
-        return getSingleAdapter().toJson(doc);
+        return getSingleOwningAdapter().toJson(doc);
     }
 
     @Transactional
@@ -133,5 +136,8 @@ public class PublisherService {
         return adapterProvider.listResourceAdapter(PublisherDto.class);
     }
 
+    private JsonAdapter<Document<PublisherOwningDto>> getSingleOwningAdapter() {
+        return adapterProvider.singleResourceAdapter(PublisherOwningDto.class);
+    }
 
 }
