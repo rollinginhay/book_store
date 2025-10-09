@@ -26,6 +26,8 @@ public class Book extends AuditableEntity {
 
     private LocalDateTime published;
 
+    private String blurb;
+
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable
     private List<Creator> creators;
@@ -42,12 +44,14 @@ public class Book extends AuditableEntity {
     private List<Review> reviews;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn
     private Publisher publisher;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.PERSIST)
     private List<BookDetail> bookCopies;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn
     private Series series;
 
     private String imageUrl;

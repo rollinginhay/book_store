@@ -27,6 +27,7 @@ public class BookDto implements Serializable {
     private final String note;
     @Id
     private final String id;
+    private final String blurb;
     private final String title;
     private final String language;
     private final String edition;

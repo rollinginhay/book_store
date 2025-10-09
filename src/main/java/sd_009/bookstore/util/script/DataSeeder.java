@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.entity.book.*;
 import sd_009.bookstore.repository.BookRepository;
+import sd_009.bookstore.repository.GenreRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.List;
 @Order(2)
 public class DataSeeder {
     private final BookRepository bookRepository;
+    private final GenreRepository genreRepository;
 
     //commandline runner create async error when insert before schema is ready, use event listener instead
     @EventListener(ApplicationReadyEvent.class)
@@ -24,6 +26,7 @@ public class DataSeeder {
     public void run() {
         Genre genre1 = Genre.builder().name("genre 1").build();
         Genre genre2 = Genre.builder().name("genre 2").build();
+        Genre genre3 = Genre.builder().name("genre 3").build();
 
         Publisher publisher1 = Publisher.builder().name("publisher 1").build();
 
@@ -78,6 +81,10 @@ public class DataSeeder {
                 .bookCopies(List.of(bookDetail1, bookDetail2))
                 .build();
 
+        bookDetail1.setBook(book1);
+        bookDetail2.setBook(book1);
+        review1.setBook(book1);
+        review2.setBook(book1);
         bookRepository.save(book1);
     }
 }

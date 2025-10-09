@@ -20,5 +20,6 @@ public class Review extends AuditableEntity {
     private String comment;
 
     @ManyToOne
+    @JoinColumn
     private Book book;
 }

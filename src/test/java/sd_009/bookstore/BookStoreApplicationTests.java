@@ -9,11 +9,14 @@ import jsonapi.Links;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
 import sd_009.bookstore.dto.jsonApiResource.book.PublisherDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.repository.BookRepository;
+import sd_009.bookstore.service.book.BookService;
 import sd_009.bookstore.util.mapper.book.BookMapper;
 
 import java.time.LocalDateTime;
@@ -21,17 +24,19 @@ import java.util.Map;
 
 @SpringBootTest
 class BookStoreApplicationTests {
-
-
-
-
-
     @Autowired
     BookRepository bookRepository;
     @Autowired
     BookMapper bookMapper;
     @Autowired
     JsonApiAdapterProvider adapterProvider;
+    @Autowired
+    BookService bookService;
+
+    @Test
+    void fetchingAllBooks() {
+        System.out.println(bookService.find(true, "", PageRequest.of(0, 10, Sort.by("title").descending())));
+    }
 
     @Test
     void contextLoads() {
@@ -83,5 +88,6 @@ class BookStoreApplicationTests {
 
         System.out.println(json);
     }
+
 
 }

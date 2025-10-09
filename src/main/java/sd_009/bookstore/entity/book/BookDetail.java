@@ -16,6 +16,7 @@ public class BookDetail extends AuditableEntity {
     private Long id;
 
     @ManyToOne
+    @JoinColumn
     private Book book;
 
     private String isbn11;

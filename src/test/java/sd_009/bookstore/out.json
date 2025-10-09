@@ -1,35 +1,153 @@
 {
   "data": {
-    "type": "comment",
+    "type": "bookDetail",
     "id": "1",
     "relationships": {
-      "author": {
+      "book": {
         "data": {
-          "type": "person",
+          "type": "book",
           "id": "1"
         }
       }
     },
     "attributes": {
-      "id": "1",
-      "body": "body",
-      "author": {
-        "type": "person",
-        "id": "1",
-        "attributes": {
-          "id": "1",
-          "name": "name"
-        }
-      }
+      "bookCondition": "new",
+      "bookFormat": "paperback",
+      "createdAt": "2025-09-24T21:37:50.301462",
+      "dimensions": "1x1",
+      "enabled": true,
+      "isbn11": "ISBN 11",
+      "isbn13": "ISBN 13",
+      "price": 999,
+      "printLength": 999,
+      "stock": 999,
+      "updatedAt": "2025-09-24T21:37:50.301462"
     }
   },
   "included": [
     {
-      "type": "person",
+      "type": "book",
+      "id": "1",
+      "relationships": {
+        "publisher": {
+          "data": {
+            "type": "publisher",
+            "id": "1"
+          }
+        },
+        "series": {
+          "data": {
+            "type": "series",
+            "id": "1"
+          }
+        },
+        "creators": {
+          "data": [
+            {
+              "type": "creator",
+              "id": "1"
+            },
+            {
+              "type": "creator",
+              "id": "2"
+            }
+          ]
+        },
+        "genres": {
+          "data": [
+            {
+              "type": "genre",
+              "id": "1"
+            },
+            {
+              "type": "genre",
+              "id": "2"
+            }
+          ]
+        },
+        "tags": {
+          "data": []
+        },
+        "reviews": {
+          "data": []
+        },
+        "bookCopies": {
+          "data": [
+            {
+              "type": "bookDetail",
+              "id": "1"
+            }
+          ]
+        }
+      },
+      "attributes": {
+        "createdAt": "2025-09-24T21:37:50.246783",
+        "edition": "edition 1",
+        "enabled": true,
+        "language": "English",
+        "published": "2025-09-24T21:37:50.232345",
+        "title": "book 1",
+        "updatedAt": "2025-09-24T21:37:50.246783"
+      }
+    },
+    {
+      "type": "publisher",
       "id": "1",
       "attributes": {
-        "id": "1",
-        "name": "name"
+        "createdAt": "2025-09-24T21:37:50.255949",
+        "enabled": true,
+        "name": "publisher 1",
+        "updatedAt": "2025-09-24T21:37:50.255949"
+      }
+    },
+    {
+      "type": "series",
+      "id": "1",
+      "attributes": {
+        "createdAt": "2025-09-24T21:37:50.289826",
+        "enabled": true,
+        "name": "series 1",
+        "updatedAt": "2025-09-24T21:37:50.289826"
+      }
+    },
+    {
+      "type": "creator",
+      "id": "1",
+      "attributes": {
+        "createdAt": "2025-09-24T21:37:50.306462",
+        "enabled": true,
+        "name": "creator 1",
+        "updatedAt": "2025-09-24T21:37:50.306462"
+      }
+    },
+    {
+      "type": "creator",
+      "id": "2",
+      "attributes": {
+        "createdAt": "2025-09-24T21:37:50.309465",
+        "enabled": true,
+        "name": "creator 2",
+        "updatedAt": "2025-09-24T21:37:50.309465"
+      }
+    },
+    {
+      "type": "genre",
+      "id": "1",
+      "attributes": {
+        "createdAt": "2025-09-24T21:37:50.310595",
+        "enabled": true,
+        "name": "genre 1",
+        "updatedAt": "2025-09-24T21:37:50.310595"
+      }
+    },
+    {
+      "type": "genre",
+      "id": "2",
+      "attributes": {
+        "createdAt": "2025-09-24T21:37:50.3136",
+        "enabled": true,
+        "name": "genre 2",
+        "updatedAt": "2025-09-24T21:37:50.3136"
       }
     }
   ]

@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
-import sd_009.bookstore.config.exceptionHanding.exception.UnauthorizedException;
+import sd_009.bookstore.config.exceptionHanding.exception.*;
 import sd_009.bookstore.util.mapper.misc.ErrorMapper;
 
 import java.util.NoSuchElementException;
@@ -43,13 +42,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<String> elementNotFoundExceptionHandler(Exception e, WebRequest request) {
-        log.error("Element not found ex handler", e);
-        String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
-    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> methodArgumentNotValidExceptionHandler(Exception e, WebRequest request) {
         log.error("Arguments not valid ex handler", e);
@@ -57,10 +49,40 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(DuplicateElementException.class)
+    public ResponseEntity<String> duplicateElementExceptionHandler(Exception e, WebRequest request) {
+        log.error("Duplicate element ex handler", e);
+        String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<String> elementNotFoundExceptionHandler(Exception e, WebRequest request) {
+        log.error("Element not found ex handler", e);
+        String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<String> noResourceFoundExceptionHandler(Exception e, WebRequest request) {
         log.error("Arguments not valid ex handler", e);
         String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.NOT_FOUND);
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(IsDisabledException.class)
+    public ResponseEntity<String> isDisabledExceptionHandler(Exception e, WebRequest request) {
+        log.error("Element is disabled ex handler", e);
+        String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.CONFLICT);
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(DependencyConflictException.class)
+    public ResponseEntity<String> dependencyConflictExceptionHandler(Exception e, WebRequest request) {
+        log.error("Dependency conflict ex handler", e);
+        String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.CONFLICT);
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
 }

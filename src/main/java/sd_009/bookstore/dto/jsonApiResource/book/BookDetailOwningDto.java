@@ -2,8 +2,8 @@ package sd_009.bookstore.dto.jsonApiResource.book;
 
 import jsonapi.Id;
 import jsonapi.Resource;
+import jsonapi.ToOne;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import sd_009.bookstore.entity.book.BookDetail;
 
@@ -13,18 +13,18 @@ import java.time.LocalDateTime;
 /**
  * DTO for {@link BookDetail}
  */
-
 @AllArgsConstructor
 @Getter
-@Builder
 @Resource(type = "bookDetail")
-public class BookDetailDto implements Serializable {
+public class BookDetailOwningDto implements Serializable {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
     private final String note;
     @Id
     private final String id;
+    @ToOne(name = "book")
+    private final BookDto book;
     private final String isbn11;
     private final String isbn13;
     private final String bookFormat;
