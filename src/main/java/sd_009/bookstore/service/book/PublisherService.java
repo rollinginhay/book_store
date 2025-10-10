@@ -72,9 +72,9 @@ public class PublisherService {
     }
 
     @Transactional
-    public String findById(Boolean enabled, Long id) {
+    public String findById(Long id) {
 
-        Publisher found = publisherRepository.findByEnabledAndId(enabled, id).orElseThrow();
+        Publisher found = publisherRepository.findById(id).orElseThrow();
 
         PublisherOwningDto dto = publisherOwningMapper.toDto(found);
 

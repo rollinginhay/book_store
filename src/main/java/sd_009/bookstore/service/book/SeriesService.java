@@ -70,9 +70,9 @@ public class SeriesService {
     }
 
     @Transactional
-    public String findById(Boolean enabled, Long id) {
+    public String findById(Long id) {
 
-        Series found = seriesRepository.findByEnabledAndId(enabled, id).orElseThrow();
+        Series found = seriesRepository.findById(id).orElseThrow();
 
         SeriesOwningDto dto = seriesOwningMapper.toDto(found);
 

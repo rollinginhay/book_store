@@ -73,9 +73,9 @@ public class GenreService {
     }
 
     @Transactional
-    public String findById(Boolean enabled, Long id) {
+    public String findById(Long id) {
 
-        Genre found = genreRepository.findByEnabledAndId(enabled, id).orElseThrow();
+        Genre found = genreRepository.findById(id).orElseThrow();
 
         GenreOwningDto dto = genreOwningMapper.toDto(found);
 
@@ -112,7 +112,7 @@ public class GenreService {
         if (genre.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        return getSingleAdapter().toJson(Document.with(genreMapper.toDto(genreRepository.save(genre))).build());
+        return getSingleAdapter().toJson(Document.with(genreMapper.toDto(genreRepository.save(genreMapper.partialUpdate(genreDto, genre)))).build());
     }
 
     @Transactional

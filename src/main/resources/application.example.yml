@@ -64,3 +64,8 @@ server:
   error:
     whitelabel:
       enabled: false
+
+#Jsonapi content type
+config:
+  jsonapi:
+    contentType: application/vnd.api+json

@@ -71,9 +71,9 @@ public class CreatorService {
     }
 
     @Transactional
-    public String findById(Boolean enabled, Long id) {
+    public String findById(Long id) {
 
-        Creator found = creatorRepository.findByEnabledAndId(enabled, id).orElseThrow();
+        Creator found = creatorRepository.findById(id).orElseThrow();
 
         CreatorOwningDto dto = creatorOwningMapper.toDto(found);
 

@@ -1,9 +1,9 @@
-package sd_009.bookstore.controller;
+package sd_009.bookstore.controller.book;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/v1/book")
+@RequestMapping("/v1")
 public class BookController {
 }

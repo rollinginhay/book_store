@@ -26,7 +26,7 @@ public class DataSeeder {
     public void run() {
         Genre genre1 = Genre.builder().name("genre 1").build();
         Genre genre2 = Genre.builder().name("genre 2").build();
-        Genre genre3 = Genre.builder().name("genre 3").build();
+        Genre genre3 = Genre.builder().name("unattached genre").build();
 
         Publisher publisher1 = Publisher.builder().name("publisher 1").build();
 
@@ -85,6 +85,8 @@ public class DataSeeder {
         bookDetail2.setBook(book1);
         review1.setBook(book1);
         review2.setBook(book1);
+
+        genreRepository.save(genre3);
         bookRepository.save(book1);
     }
 }

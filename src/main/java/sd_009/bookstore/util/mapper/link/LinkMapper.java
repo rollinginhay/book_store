@@ -5,6 +5,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -28,7 +29,13 @@ public final class LinkMapper {
                 Object value = entry.getValue();
                 if (value == null) continue;
                 //note: can pass collection values for param
-                builder.queryParam(entry.getKey(), value);
+                if (value instanceof String) {
+                    builder.queryParam(entry.getKey(), value);
+                }
+
+                if (value instanceof Collection<?>) {
+                    builder.queryParam(entry.getKey(), ((Collection<?>) value).toArray());
+                }
             }
         }
         //add pathVars

@@ -1,6 +1,7 @@
 package sd_009.bookstore.dto.jsonApiResource.book;
 
 import jsonapi.Id;
+import jsonapi.Resource;
 import jsonapi.ToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,6 +16,7 @@ import java.util.List;
  */
 @AllArgsConstructor
 @Getter
+@Resource(type = "genre")
 public class GenreOwningDto implements Serializable {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;

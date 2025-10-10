@@ -1,6 +1,7 @@
 package sd_009.bookstore.dto.jsonApiResource.book;
 
 import jsonapi.Id;
+import jsonapi.Resource;
 import jsonapi.ToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
  */
 @AllArgsConstructor
 @Getter
+@Resource(type = "review")
 public class ReviewOwningDto implements Serializable {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;

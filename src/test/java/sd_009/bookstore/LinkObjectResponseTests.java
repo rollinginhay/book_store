@@ -33,7 +33,7 @@ public class LinkObjectResponseTests {
     @Test
     public void serializeSuccessfulWithLinks() {
         String json = genreService.
-                find(true, "g", PageRequest.of(0, 10, Sort.by("name").descending()));
+                find(true, "g", PageRequest.of(0, 10, Sort.by("name").descending().and(Sort.by("id").ascending())));
 
         System.out.println(json);
     }

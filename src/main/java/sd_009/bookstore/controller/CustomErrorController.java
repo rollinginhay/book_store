@@ -26,7 +26,7 @@ public class CustomErrorController implements ErrorController {
 
     @Hidden
     @GetMapping("/error")
-    public ResponseEntity<String> error(HttpServletRequest req) {
+    public ResponseEntity<Object> error(HttpServletRequest req) {
         Object status = req.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
         Object message = req.getAttribute(RequestDispatcher.ERROR_MESSAGE);
         Object path = req.getAttribute(RequestDispatcher.ERROR_REQUEST_URI);
