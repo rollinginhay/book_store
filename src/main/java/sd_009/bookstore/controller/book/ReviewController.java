@@ -1,4 +1,4 @@
-package sd_009.reviewstore.controller.review;
+package sd_009.bookstore.controller.book;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
