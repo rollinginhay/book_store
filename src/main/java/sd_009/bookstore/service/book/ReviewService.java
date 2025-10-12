@@ -9,13 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
+import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
 import sd_009.bookstore.dto.jsonApiResource.book.ReviewDto;
 import sd_009.bookstore.dto.jsonApiResource.book.ReviewOwningDto;
-import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.Review;
-import sd_009.bookstore.repository.ReviewRepository;
 import sd_009.bookstore.repository.BookRepository;
+import sd_009.bookstore.repository.ReviewRepository;
 import sd_009.bookstore.util.mapper.book.ReviewMapper;
 import sd_009.bookstore.util.mapper.book.ReviewOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
@@ -51,6 +51,23 @@ public class ReviewService {
     }
 
     @Transactional
+    public String findById(Long id) {
+
+        Review found = reviewRepository.findById(id).orElseThrow();
+
+        ReviewOwningDto dto = reviewOwningMapper.toDto(found);
+
+        Document<ReviewOwningDto> doc = Document
+                .with(dto)
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_REVIEW_BY_ID.toString(), id))
+                        .build().toMap()))
+                .build();
+
+        return getSingleOwningAdapter().toJson(doc);
+    }
+
+    @Transactional
     public String save(ReviewOwningDto reviewOwningDto) {
 
         Review review = reviewOwningMapper.toEntity(reviewOwningDto);
@@ -64,7 +81,9 @@ public class ReviewService {
         if (review.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        return getSingleAdapter().toJson(Document.with(reviewMapper.toDto(reviewRepository.save(review))).build());
+        Review existing = reviewRepository.findById(review.getId()).orElseThrow();
+
+        return getSingleAdapter().toJson(Document.with(reviewMapper.toDto(reviewRepository.save(reviewMapper.partialUpdate(reviewDto, existing)))).build());
     }
 
     @Transactional
@@ -84,6 +103,10 @@ public class ReviewService {
 
     private JsonAdapter<Document<List<ReviewDto>>> getListAdapter() {
         return adapterProvider.listResourceAdapter(ReviewDto.class);
+    }
+
+    private JsonAdapter<Document<ReviewOwningDto>> getSingleOwningAdapter() {
+        return adapterProvider.singleResourceAdapter(ReviewOwningDto.class);
     }
 
     private JsonAdapter<Document<List<ReviewOwningDto>>> getListOwningAdapter() {

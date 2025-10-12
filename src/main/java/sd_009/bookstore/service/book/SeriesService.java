@@ -104,12 +104,14 @@ public class SeriesService {
     }
 
     @Transactional
-    public String update(SeriesDto SeriesDto) {
-        Series Series = seriesMapper.toEntity(SeriesDto);
-        if (Series.getId() == null) {
+    public String update(SeriesDto seriesDto) {
+        Series series = seriesMapper.toEntity(seriesDto);
+        if (series.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        return getSingleAdapter().toJson(Document.with(seriesMapper.toDto(seriesRepository.save(Series))).build());
+        Series existing = seriesRepository.findById(series.getId()).orElseThrow();
+
+        return getSingleAdapter().toJson(Document.with(seriesMapper.toDto(seriesRepository.save(seriesMapper.partialUpdate(seriesDto, existing)))).build());
     }
 
     @Transactional

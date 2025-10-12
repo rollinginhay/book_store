@@ -15,14 +15,10 @@ import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementExcept
 import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
-import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
-import sd_009.bookstore.entity.book.Book;
-import sd_009.bookstore.entity.book.BookDetail;
-import sd_009.bookstore.repository.BookDetailRepository;
-import sd_009.bookstore.repository.BookRepository;
-import sd_009.bookstore.repository.CreatorRepository;
-import sd_009.bookstore.util.mapper.book.BookMapper;
-import sd_009.bookstore.util.mapper.book.CreatorMapper;
+import sd_009.bookstore.dto.jsonApiResource.book.*;
+import sd_009.bookstore.entity.book.*;
+import sd_009.bookstore.repository.*;
+import sd_009.bookstore.util.mapper.book.*;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.spec.Routes;
@@ -37,9 +33,18 @@ public class BookService {
     private final JsonApiAdapterProvider adapterProvider;
     private final BookMapper bookMapper;
     private final CreatorMapper creatorMapper;
+    private final PublisherMapper publisherMapper;
+    private final GenreMapper genreMapper;
+    private final SeriesMapper seriesMapper;
+    private final ReviewMapper reviewMapper;
+    private final BookDetailMapper bookDetailMapper;
     private final BookRepository bookRepository;
     private final BookDetailRepository bookDetailRepository;
+    private final ReviewRepository reviewRepository;
     private final CreatorRepository creatorRepository;
+    private final PublisherRepository publisherRepository;
+    private final SeriesRepository seriesRepository;
+    private final GenreRepository genreRepository;
 
     @Transactional
     public String find(Boolean enabled, String titleQuery, Pageable pageable) {
@@ -72,8 +77,8 @@ public class BookService {
         return getListAdapter().toJson(doc);
     }
 
-    public String findById(Boolean enabled, Long id) {
-        Book found = bookRepository.findByEnabledAndId(enabled, id).orElseThrow();
+    public String findById(Long id) {
+        Book found = bookRepository.findById(id).orElseThrow();
 
         BookDto dto = bookMapper.toDto(found);
 
@@ -110,7 +115,7 @@ public class BookService {
         if (book.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(bookRepository.save(book))).build());
+        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(bookRepository.save(bookMapper.partialUpdate(bookDto, book)))).build());
     }
 
     @Transactional
@@ -124,6 +129,76 @@ public class BookService {
             e.setEnabled(false);
             bookRepository.save(e);
         });
+    }
+
+    @Transactional
+    public <T> String attachOrReplaceRelationship(Long bookId, T dto) {
+        Book book = bookRepository.findById(bookId).orElseThrow();
+
+        switch (dto) {
+            case BookDetailDto bookDetailDto -> {
+                BookDetail bookDetail = bookDetailMapper.toEntity(bookDetailDto);
+                book.getBookCopies().add(bookDetail);
+            }
+            case ReviewDto reviewDto -> {
+                Review review = reviewMapper.toEntity(reviewDto);
+                book.getReviews().add(review);
+            }
+            case CreatorDto creatorDto -> {
+                Creator creator = creatorMapper.toEntity(creatorDto);
+                book.getCreators().add(creator);
+            }
+            case PublisherDto publisherDto -> {
+                Publisher publisher = publisherMapper.toEntity(publisherDto);
+                book.setPublisher(publisher);
+            }
+            case SeriesDto seriesDto -> {
+                Series series = seriesMapper.toEntity(seriesDto);
+                book.setSeries(series);
+            }
+            case GenreDto genreDto -> {
+                Genre genre = genreMapper.toEntity(genreDto);
+                book.getGenres().add(genre);
+            }
+            case null, default ->
+                    throw new BadRequestException("Unsupported relationship type");
+        }
+        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(bookRepository.save(book))).build());
+    }
+
+    @Transactional
+    public <T> String detachRelationShip(Long bookId, T dto) {
+        Book book = bookRepository.findById(bookId).orElseThrow();
+
+        switch (dto) {
+            case BookDetailDto bookDetailDto -> {
+                BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailDto.getId())).orElseThrow();
+                book.getBookCopies().remove(bookDetail);
+            }
+            case ReviewDto reviewDto -> {
+                Review review = reviewRepository.findById(Long.valueOf(reviewDto.getId())).orElseThrow();
+                book.getReviews().remove(review);
+            }
+            case CreatorDto creatorDto -> {
+                Creator creator = creatorRepository.findById(Long.valueOf(creatorDto.getId())).orElseThrow();
+                book.getCreators().remove(creator);
+            }
+            case PublisherDto publisherDto -> {
+                Publisher publisher = publisherRepository.findById(Long.valueOf(publisherDto.getId())).orElseThrow();
+                book.setPublisher(null);
+            }
+            case SeriesDto seriesDto -> {
+                Series series = seriesRepository.findById(Long.valueOf(seriesDto.getId())).orElseThrow();
+                book.setSeries(null);
+            }
+            case GenreDto genreDto -> {
+                Genre genre = genreRepository.findById(Long.valueOf(genreDto.getId())).orElseThrow();
+                book.getGenres().remove(genre);
+            }
+            case null, default ->
+                    throw new BadRequestException("Unsupported relationship type");
+        }
+        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(bookRepository.save(book))).build());
     }
 
     private JsonAdapter<Document<BookDto>> getSingleAdapter() {

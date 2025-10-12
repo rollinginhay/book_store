@@ -111,9 +111,10 @@ public class PublisherService {
         if (publisher.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        return getSingleAdapter().toJson(Document.with(publisherMapper.toDto(publisherRepository.save(publisher))).build());
-    }
+        Publisher existing = publisherRepository.findById(publisher.getId()).orElseThrow();
 
+        return getSingleAdapter().toJson(Document.with(publisherMapper.toDto(publisherRepository.save(publisherMapper.partialUpdate(publisherDto, existing)))).build());
+    }
     @Transactional
     public void delete(Long id) {
         publisherRepository.findById(id).ifPresent(e -> {

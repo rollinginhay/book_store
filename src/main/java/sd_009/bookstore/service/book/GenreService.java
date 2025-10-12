@@ -112,7 +112,9 @@ public class GenreService {
         if (genre.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        return getSingleAdapter().toJson(Document.with(genreMapper.toDto(genreRepository.save(genreMapper.partialUpdate(genreDto, genre)))).build());
+        Genre existing = genreRepository.findById(genre.getId()).orElseThrow();
+
+        return getSingleAdapter().toJson(Document.with(genreMapper.toDto(genreRepository.save(genreMapper.partialUpdate(genreDto, existing)))).build());
     }
 
     @Transactional

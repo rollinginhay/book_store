@@ -110,7 +110,9 @@ public class CreatorService {
         if (creator.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        return getSingleAdapter().toJson(Document.with(creatorMapper.toDto(creatorRepository.save(creator))).build());
+        Creator existing = creatorRepository.findById(creator.getId()).orElseThrow();
+
+        return getSingleAdapter().toJson(Document.with(creatorMapper.toDto(creatorRepository.save(creatorMapper.partialUpdate(creatorDto, existing)))).build());
     }
 
     @Transactional

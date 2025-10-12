@@ -51,6 +51,23 @@ public class BookDetailService {
     }
 
     @Transactional
+    public String findById(Long id) {
+
+        BookDetail found = bookDetailRepository.findById(id).orElseThrow();
+
+        BookDetailOwningDto dto = bookDetailOwningMapper.toDto(found);
+
+        Document<BookDetailOwningDto> doc = Document
+                .with(dto)
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAIL_BY_ID.toString(), id))
+                        .build().toMap()))
+                .build();
+
+        return getSingleOwningAdapter().toJson(doc);
+    }
+
+    @Transactional
     public String save(BookDetailOwningDto bookDetailOwningDto) {
 
         BookDetail bookDetail = bookDetailOwningMapper.toEntity(bookDetailOwningDto);
@@ -61,10 +78,11 @@ public class BookDetailService {
     @Transactional
     public String update(BookDetailDto bookDetailDto) {
         BookDetail bookDetail = bookDetailMapper.toEntity(bookDetailDto);
+        BookDetail existing = bookDetailRepository.findById(bookDetail.getId()).orElseThrow();
         if (bookDetail.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        return getSingleAdapter().toJson(Document.with(bookDetailMapper.toDto(bookDetailRepository.save(bookDetail))).build());
+        return getSingleAdapter().toJson(Document.with(bookDetailMapper.toDto(bookDetailRepository.save(bookDetailMapper.partialUpdate(bookDetailDto, existing)))).build());
     }
 
     @Transactional
@@ -84,6 +102,10 @@ public class BookDetailService {
 
     private JsonAdapter<Document<List<BookDetailDto>>> getListAdapter() {
         return adapterProvider.listResourceAdapter(BookDetailDto.class);
+    }
+
+    private JsonAdapter<Document<BookDetailOwningDto>> getSingleOwningAdapter() {
+        return adapterProvider.singleResourceAdapter(BookDetailOwningDto.class);
     }
 
     private JsonAdapter<Document<List<BookDetailOwningDto>>> getListOwningAdapter() {
