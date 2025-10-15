@@ -1,8 +1,6 @@
 package sd_009.bookstore.util.script;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +19,7 @@ public class DataSeeder {
     private final GenreRepository genreRepository;
 
     //commandline runner create async error when insert before schema is ready, use event listener instead
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void run() {
         Genre genre1 = Genre.builder().name("genre 1").build();
@@ -37,8 +35,7 @@ public class DataSeeder {
 
         BookDetail bookDetail1 = BookDetail.builder()
                 .bookFormat("paperback")
-                .isbn11("ISBN 11")
-                .isbn13("ISBN 13")
+                .isbn("ISBN 13")
                 .bookFormat("paperback")
                 .dimensions("1x1")
                 .printLength(999L)
@@ -48,8 +45,7 @@ public class DataSeeder {
                 .build();
         BookDetail bookDetail2 = BookDetail.builder()
                 .bookFormat("paperback")
-                .isbn11("ISBN 11")
-                .isbn13("ISBN 13")
+                .isbn("ISBN 13")
                 .bookFormat("paperback")
                 .dimensions("1x1")
                 .printLength(999L)

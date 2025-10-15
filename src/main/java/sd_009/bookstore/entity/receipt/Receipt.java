@@ -22,8 +22,6 @@ public class Receipt extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
-    private List<ReceiptDetail> receiptDetails;
 
     private Long subTotal;
 
@@ -60,7 +58,10 @@ public class Receipt extends AuditableEntity {
 
     private LocalDateTime paymentDate;
 
-    @OneToOne(fetch = FetchType.EAGER, mappedBy = "receipt", cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "receipt", cascade = CascadeType.PERSIST)
     private PaymentDetail paymentDetail;
+
+    @OneToMany(mappedBy = "receipt", cascade = CascadeType.PERSIST)
+    private List<ReceiptDetail> receiptDetails;
 
 }

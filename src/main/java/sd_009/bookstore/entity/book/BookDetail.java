@@ -19,9 +19,7 @@ public class BookDetail extends AuditableEntity {
     @JoinColumn
     private Book book;
 
-    private String isbn11;
-
-    private String isbn13;
+    private String isbn;
 
     private String bookFormat;
 

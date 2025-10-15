@@ -17,11 +17,12 @@ public class ReceiptDetail extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Transient
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn
     private Receipt receipt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
+    @JoinColumn
     private BookDetail bookCopy;
 
     private Long pricePerUnit;
