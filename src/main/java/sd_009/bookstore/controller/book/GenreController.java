@@ -2,10 +2,9 @@ package sd_009.bookstore.controller.book;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -14,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sd_009.bookstore.dto.jsonApiResource.book.GenreDto;
-import sd_009.bookstore.dto.jsonApiResource.book.GenreOwningDto;
 import sd_009.bookstore.service.book.GenreService;
 
 import java.util.List;
@@ -30,9 +27,10 @@ public class GenreController {
     private final GenreService genreService;
 
 
+    @Operation(
+            summary = "Get genres by query",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get genres resp", externalValue = "/jsonExample/genre/get_genres.json"))))
     @GetMapping("/genres")
-    @Operation(description = "Get genres by query")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = GenreDto.class)))
     public ResponseEntity<Object> getGenres(@RequestParam(required = false, name = "q") String keyword,
                                             @RequestParam(name = "e") Boolean enabled,
                                             @RequestParam int page,
@@ -59,25 +57,30 @@ public class GenreController {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(genreService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
     }
 
-    @Operation(description = "Get genre by id, with attached relationship")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = GenreOwningDto.class)))
+    @Operation(
+            summary = "Get genre by id, with attached relationship",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get genre by id resp", externalValue = "/jsonExample/genre/get_genre_owning.json"))))
     @GetMapping("/genre/{id}")
     public ResponseEntity<Object> getGenreById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(genreService.findById(id));
     }
 
-    @Operation(description = "Create a new genre")
-    @ApiResponse(responseCode = "201", description = "Success", content = @Content(schema = @Schema(implementation = GenreDto.class)))
+    @Operation(
+            summary = "Create a new genre",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create genre req", externalValue = "/jsonExample/genre/post_genre.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create genre resp", externalValue = "/jsonExample/genre/get_genre.json"))))
     @PostMapping("/genre/create")
-    public ResponseEntity<Object> createGenre(@Valid @RequestBody GenreDto genreDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(genreService.save(genreDto));
+    public ResponseEntity<Object> createGenre(@RequestBody String json) {
+        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(genreService.save(json));
     }
 
-    @Operation(description = "Update a genre")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = GenreDto.class)))
+    @Operation(
+            summary = "Update a genre",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create genre req", externalValue = "/jsonExample/genre/put_genre.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create genre resp", externalValue = "/jsonExample/genre/get_genre.json"))))
     @PutMapping("/genre/update")
-    public ResponseEntity<Object> updateGenre(@Valid @RequestBody GenreDto genreDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(genreService.update(genreDto));
+    public ResponseEntity<Object> updateGenre(@RequestBody String json) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(genreService.update(json));
     }
 
     @Operation(description = "Delete a genre")

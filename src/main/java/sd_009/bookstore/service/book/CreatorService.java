@@ -8,11 +8,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
 import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
 import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.CreatorDto;
 import sd_009.bookstore.dto.jsonApiResource.book.CreatorOwningDto;
@@ -24,7 +24,7 @@ import sd_009.bookstore.util.mapper.book.CreatorMapper;
 import sd_009.bookstore.util.mapper.book.CreatorOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
-import sd_009.bookstore.util.spec.Routes;
+import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +38,7 @@ public class CreatorService {
     private final CreatorOwningMapper creatorOwningMapper;
     private final CreatorRepository creatorRepository;
     private final BookRepository bookRepository;
+    private final JsonApiValidator jsonApiValidator;
 
     @Transactional
     public String find(Boolean enabled, String name, Pageable pageable) {
@@ -88,10 +89,10 @@ public class CreatorService {
     }
 
     @Transactional
-    public String save(CreatorDto creatorDto) {
-        Creator creator = creatorMapper.toEntity(creatorDto);
+    public String save(String json) {
+        CreatorDto dto = jsonApiValidator.readAndValidate(json, CreatorDto.class);
 
-        Optional<Creator> existing = creatorRepository.findByName(creator.getName());
+        Optional<Creator> existing = creatorRepository.findByName(dto.getName());
 
         if (existing.isPresent()) {
             if (existing.get().getEnabled()) {
@@ -101,18 +102,28 @@ public class CreatorService {
             throw new IsDisabledException("Creator is disabled. Can be reinstated");
         }
 
-        return getSingleAdapter().toJson(Document.with(creatorMapper.toDto(creatorRepository.save(creator))).build());
+        Creator saved = creatorRepository.save(creatorMapper.toEntity(dto));
+        return getSingleAdapter().toJson(Document
+                .with(creatorMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional
-    public String update(CreatorDto creatorDto) {
-        Creator creator = creatorMapper.toEntity(creatorDto);
-        if (creator.getId() == null) {
-            throw new BadRequestException("No identifier found");
-        }
-        Creator existing = creatorRepository.findById(creator.getId()).orElseThrow();
+    public String update(String json) {
+        CreatorDto dto = jsonApiValidator.readAndValidate(json, CreatorDto.class);
 
-        return getSingleAdapter().toJson(Document.with(creatorMapper.toDto(creatorRepository.save(creatorMapper.partialUpdate(creatorDto, existing)))).build());
+        Creator existing = creatorRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
+
+        Creator saved = creatorRepository.save(creatorMapper.partialUpdate(dto, existing));
+        return getSingleAdapter().toJson(Document
+                .with(creatorMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional
@@ -127,7 +138,6 @@ public class CreatorService {
             creatorRepository.save(e);
         });
     }
-
     private JsonAdapter<Document<CreatorDto>> getSingleAdapter() {
         return adapterProvider.singleResourceAdapter(CreatorDto.class);
     }

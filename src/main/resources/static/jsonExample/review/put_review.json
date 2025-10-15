@@ -1,0 +1,10 @@
+{
+  "data": {
+    "type": "review",
+    "id": "100",
+    "attributes": {
+      "comment": "comment",
+      "rating": 4
+    }
+  }
+}

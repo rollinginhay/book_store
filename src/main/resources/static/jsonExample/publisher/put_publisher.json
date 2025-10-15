@@ -1,0 +1,9 @@
+{
+  "data": {
+    "type": "publisher",
+    "id": "1",
+    "attributes": {
+      "name": "publisher 1"
+    }
+  }
+}

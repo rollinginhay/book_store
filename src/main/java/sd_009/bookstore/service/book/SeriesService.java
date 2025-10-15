@@ -8,11 +8,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
 import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
 import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.SeriesDto;
 import sd_009.bookstore.dto.jsonApiResource.book.SeriesOwningDto;
@@ -24,7 +24,7 @@ import sd_009.bookstore.util.mapper.book.SeriesMapper;
 import sd_009.bookstore.util.mapper.book.SeriesOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
-import sd_009.bookstore.util.spec.Routes;
+import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +37,7 @@ public class SeriesService {
     private final SeriesOwningMapper seriesOwningMapper;
     private final SeriesRepository seriesRepository;
     private final BookRepository bookRepository;
+    private final JsonApiValidator jsonApiValidator;
 
     @Transactional
     public String find(Boolean enabled, String name, Pageable pageable) {
@@ -79,18 +80,19 @@ public class SeriesService {
         Document<SeriesOwningDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID_PATH.toString(), id))
                         .build().toMap()))
                 .build();
 
         return getSingleOwningAdapter().toJson(doc);
     }
 
-    @Transactional
-    public String save(SeriesDto SeriesDto) {
-        Series Series = seriesMapper.toEntity(SeriesDto);
 
-        Optional<Series> existing = seriesRepository.findByName(Series.getName());
+    @Transactional
+    public String save(String json) {
+        SeriesDto dto = jsonApiValidator.readAndValidate(json, SeriesDto.class);
+
+        Optional<Series> existing = seriesRepository.findByName(dto.getName());
 
         if (existing.isPresent()) {
             if (existing.get().getEnabled()) {
@@ -100,18 +102,28 @@ public class SeriesService {
             throw new IsDisabledException("Series is disabled. Can be reinstated");
         }
 
-        return getSingleAdapter().toJson(Document.with(seriesMapper.toDto(seriesRepository.save(Series))).build());
+        Series saved = seriesRepository.save(seriesMapper.toEntity(dto));
+        return getSingleAdapter().toJson(Document
+                .with(seriesMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional
-    public String update(SeriesDto seriesDto) {
-        Series series = seriesMapper.toEntity(seriesDto);
-        if (series.getId() == null) {
-            throw new BadRequestException("No identifier found");
-        }
-        Series existing = seriesRepository.findById(series.getId()).orElseThrow();
+    public String update(String json) {
+        SeriesDto dto = jsonApiValidator.readAndValidate(json, SeriesDto.class);
 
-        return getSingleAdapter().toJson(Document.with(seriesMapper.toDto(seriesRepository.save(seriesMapper.partialUpdate(seriesDto, existing)))).build());
+        Series existing = seriesRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
+
+        Series saved = seriesRepository.save(seriesMapper.partialUpdate(dto, existing));
+        return getSingleAdapter().toJson(Document
+                .with(seriesMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional

@@ -2,6 +2,7 @@ package sd_009.bookstore.util.mapper.misc;
 
 import com.squareup.moshi.JsonAdapter;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.ConstraintViolationException;
 import jsonapi.Document;
 import jsonapi.Error;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,19 @@ public class ErrorMapper {
 
     public String toApiErrorDoc(Exception e, WebRequest req, HttpStatus status) {
 
-
+        if (e instanceof ConstraintViolationException) {
+            JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
+            return adapter
+                    .toJson(Document
+                            .from(((ConstraintViolationException) e).getConstraintViolations().stream()
+                                    .map(err -> new Error(
+                                            null,
+                                            String.valueOf(status.value()),
+                                            null,
+                                            err.getMessage(),
+                                            req.getDescription(false)))
+                                    .toList()));
+        }
         if (e instanceof MethodArgumentNotValidException) {
             JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
             return adapter

@@ -2,10 +2,9 @@ package sd_009.bookstore.controller.book;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -14,25 +13,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sd_009.bookstore.dto.jsonApiResource.book.*;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.service.book.BookService;
-import sd_009.bookstore.util.spec.Routes;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1")
 @Tag(name = "Book CRUD")
 public class BookController {
     @Value("${config.jsonapi.contentType}")
     private String contentType;
     private final BookService bookService;
 
-
-    @GetMapping("/books")
-    @Operation(description = "Get books by query")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = BookDto.class)))
+    @Operation(
+            summary = "Get books by query",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get books resp", externalValue = "/jsonExample/book/get_books.json"))))
+    @GetMapping("/v1/books")
     public ResponseEntity<Object> getBooks(@RequestParam(required = false, name = "q") String keyword,
                                            @RequestParam(name = "e") Boolean enabled,
                                            @RequestParam int page,
@@ -59,92 +56,77 @@ public class BookController {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
     }
 
-    @Operation(description = "Get book by id, with attached relationship")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = BookDto.class)))
-    @GetMapping("/book/{id}")
+    @Operation(
+            summary = "Get book by id, with attached relationship",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get book by id resp", externalValue = "/jsonExample/book/get_book.json"))))
+    @GetMapping("/v1/book/{id}")
     public ResponseEntity<Object> getBookById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.findById(id));
     }
 
-    @Operation(description = "Create a new book")
-    @ApiResponse(responseCode = "201", description = "Success", content = @Content(schema = @Schema(implementation = BookDto.class)))
-    @PostMapping("/book/create")
-    public ResponseEntity<Object> createBook(@Valid @RequestBody BookDto bookDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(bookService.save(bookDto));
+    @Operation(
+            summary = "Create a new book",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create book req", externalValue = "/jsonExample/book/post_book.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create book resp", externalValue = "/jsonExample/book/get_book.json"))))
+    @PostMapping("/v1/book/create")
+    public ResponseEntity<Object> createBook(@RequestBody String json) {
+        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(bookService.save(json));
     }
 
-    @Operation(description = "Update a book")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = BookDto.class)))
-    @PutMapping("/book/update")
-    public ResponseEntity<Object> updateBook(@Valid @RequestBody BookDto bookDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.update(bookDto));
+    @Operation(
+            summary = "Update a book",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create book req", externalValue = "/jsonExample/book/put_book.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create book resp", externalValue = "/jsonExample/book/get_book.json"))))
+    @PutMapping("/v1/book/update")
+    public ResponseEntity<Object> updateBook(@RequestBody String json) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.update(json));
     }
 
     @Operation(description = "Delete a book")
     @ApiResponse(responseCode = "200", description = "Success")
-    @DeleteMapping("/book/delete/{id}")
+    @DeleteMapping("/v1/book/delete/{id}")
     public ResponseEntity<Object> deleteBook(@PathVariable Long id) {
         bookService.delete(id);
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(null);
     }
 
-    @PostMapping(Routes.BOOK_RELATIONSHIP_BOOK_DETAIL_PATH)
-    public ResponseEntity<Object> attachBookDetail(@PathVariable Long id, @Valid @RequestBody BookDetailDto bookDetailDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachOrReplaceRelationship(id, bookDetailDto));
+    @Operation(
+            summary = "Get bookDetails of book",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get bookDetails of book", externalValue = "/jsonExample/bookDetail/get_bookDetails.json"))))
+    @GetMapping(Routes.BOOK_RELATIONSHIP_BOOK_DETAIL_PATH)
+    public ResponseEntity<Object> getBookDetailsByBook(@PathVariable Long id) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.getDependents(id, "bookDetail"));
     }
 
-    @DeleteMapping(Routes.BOOK_RELATIONSHIP_BOOK_DETAIL_PATH)
-    public ResponseEntity<Object> detachBookDetail(@PathVariable Long id, @Valid @RequestBody BookDetailDto bookDetailDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.detachRelationShip(id, bookDetailDto));
+    @Operation(
+            summary = "Get reviews of book",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get reviews of book", externalValue = "/jsonExample/review/get_reviews.json"))))
+    @GetMapping(Routes.BOOK_RELATIONSHIP_BOOK_REVIEW_PATH)
+    public ResponseEntity<Object> getReviewsByBook(@PathVariable Long id) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.getDependents(id, "review"));
     }
 
-    @PostMapping(Routes.BOOK_RELATIONSHIP_BOOK_REVIEW_PATH)
-    public ResponseEntity<Object> attachReview(@PathVariable Long id, @Valid @RequestBody ReviewDto reviewDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachOrReplaceRelationship(id, reviewDto));
+    @Operation(
+            summary = "Attach relationship to book",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
+                    @ExampleObject(name = "Attach genre req", externalValue = "/jsonExample/genre/get_genre.json"),
+                    @ExampleObject(name = "Attach bookDetail", externalValue = "/jsonExample/bookDetail/get_bookDetail.json")
+            })),
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get book by id resp", externalValue = "/jsonExample/book/get_book.json"))))
+    @PostMapping(Routes.GET_BOOK_RELATIONSHIP_GENERIC_PATH)
+    public ResponseEntity<Object> attachRelationship(@PathVariable(name = "id") Long id, @PathVariable(name = "dependent") String dependent, @RequestBody String json) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachOrReplaceRelationship(id, json, dependent));
     }
 
-    @PostMapping(Routes.BOOK_RELATIONSHIP_BOOK_REVIEW_PATH)
-    public ResponseEntity<Object> detachReview(@PathVariable Long id, @Valid @RequestBody ReviewDto reviewDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.detachRelationShip(id, reviewDto));
-    }
-
-    @PostMapping(Routes.BOOK_RELATIONSHIP_GENRE_PATH)
-    public ResponseEntity<Object> attachGenre(@PathVariable Long id, @Valid @RequestBody GenreDto genreDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachOrReplaceRelationship(id, genreDto));
-    }
-
-    @PostMapping(Routes.BOOK_RELATIONSHIP_GENRE_PATH)
-    public ResponseEntity<Object> detachGenre(@PathVariable Long id, @Valid @RequestBody GenreDto genreDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.detachRelationShip(id, genreDto));
-    }
-
-    @PostMapping(Routes.BOOK_RELATIONSHIP_CREATOR_PATH)
-    public ResponseEntity<Object> attachCreator(@PathVariable Long id, @Valid @RequestBody CreatorDto creatorDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachOrReplaceRelationship(id, creatorDto));
-    }
-
-    @PostMapping(Routes.BOOK_RELATIONSHIP_CREATOR_PATH)
-    public ResponseEntity<Object> detachCreator(@PathVariable Long id, @Valid @RequestBody CreatorDto creatorDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.detachRelationShip(id, creatorDto));
-    }
-
-    @PostMapping(Routes.BOOK_RELATIONSHIP_PUBLISHER_PATH)
-    public ResponseEntity<Object> attachPublisher(@PathVariable Long id, @Valid @RequestBody PublisherDto publisherDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachOrReplaceRelationship(id, publisherDto));
-    }
-
-    @PostMapping(Routes.BOOK_RELATIONSHIP_PUBLISHER_PATH)
-    public ResponseEntity<Object> detachPublisher(@PathVariable Long id, @Valid @RequestBody PublisherDto publisherDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.detachRelationShip(id, publisherDto));
-    }
-
-    @PostMapping(Routes.BOOK_RELATIONSHIP_SERIES_PATH)
-    public ResponseEntity<Object> attachSeries(@PathVariable Long id, @Valid @RequestBody SeriesDto SeriesDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachOrReplaceRelationship(id, SeriesDto));
-    }
-
-    @PostMapping(Routes.BOOK_RELATIONSHIP_SERIES_PATH)
-    public ResponseEntity<Object> detachSeries(@PathVariable Long id, @Valid @RequestBody SeriesDto SeriesDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.detachRelationShip(id, SeriesDto));
+    @Operation(
+            summary = "Detach relationship from book",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
+                    @ExampleObject(name = "Detach genre req", externalValue = "/jsonExample/genre/get_genre.json"),
+                    @ExampleObject(name = "Detach bookDetail", externalValue = "/jsonExample/bookDetail/get_bookDetail.json")
+            })),
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get book by id resp", externalValue = "/jsonExample/book/get_book.json"))))
+    @DeleteMapping(Routes.GET_BOOK_RELATIONSHIP_GENERIC_PATH)
+    public ResponseEntity<Object> detachRelationship(@PathVariable(name = "id") Long id, @PathVariable(name = "dependent") String dependent, @RequestBody String json) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.detachRelationShip(id, json, dependent));
     }
 }

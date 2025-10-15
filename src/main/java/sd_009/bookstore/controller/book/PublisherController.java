@@ -2,10 +2,9 @@ package sd_009.bookstore.controller.book;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -14,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sd_009.bookstore.dto.jsonApiResource.book.PublisherDto;
-import sd_009.bookstore.dto.jsonApiResource.book.PublisherOwningDto;
 import sd_009.bookstore.service.book.PublisherService;
 
 import java.util.List;
@@ -29,10 +26,10 @@ public class PublisherController {
     private String contentType;
     private final PublisherService publisherService;
 
-
+    @Operation(
+            summary = "Get publishers by query",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get publishers resp", externalValue = "/jsonExample/publisher/get_publishers.json"))))
     @GetMapping("/publishers")
-    @Operation(description = "Get publishers by query")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = PublisherDto.class)))
     public ResponseEntity<Object> getPublishers(@RequestParam(required = false, name = "q") String keyword,
                                                 @RequestParam(name = "e") Boolean enabled,
                                                 @RequestParam int page,
@@ -59,25 +56,30 @@ public class PublisherController {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(publisherService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
     }
 
-    @Operation(description = "Get publisher by id, with attached relationship")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = PublisherOwningDto.class)))
+    @Operation(
+            summary = "Get publisher by id, with attached relationship",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get publisher by id resp", externalValue = "/jsonExample/publisher/get_publisher_owning.json"))))
     @GetMapping("/publisher/{id}")
     public ResponseEntity<Object> getPublisherById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(publisherService.findById(id));
     }
 
-    @Operation(description = "Create a new publisher")
-    @ApiResponse(responseCode = "201", description = "Success", content = @Content(schema = @Schema(implementation = PublisherDto.class)))
+    @Operation(
+            summary = "Create a new publisher",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create publisher req", externalValue = "/jsonExample/publisher/post_publisher.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create publisher resp", externalValue = "/jsonExample/publisher/get_publisher.json"))))
     @PostMapping("/publisher/create")
-    public ResponseEntity<Object> createPublisher(@Valid @RequestBody PublisherDto publisherDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(publisherService.save(publisherDto));
+    public ResponseEntity<Object> createPublisher(@RequestBody String json) {
+        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(publisherService.save(json));
     }
 
-    @Operation(description = "Update a publisher")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = PublisherDto.class)))
+    @Operation(
+            summary = "Update a publisher",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create publisher req", externalValue = "/jsonExample/publisher/put_publisher.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create publisher resp", externalValue = "/jsonExample/publisher/get_publisher.json"))))
     @PutMapping("/publisher/update")
-    public ResponseEntity<Object> updatePublisher(@Valid @RequestBody PublisherDto publisherDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(publisherService.update(publisherDto));
+    public ResponseEntity<Object> updatePublisher(@RequestBody String json) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(publisherService.update(json));
     }
 
     @Operation(description = "Delete a publisher")

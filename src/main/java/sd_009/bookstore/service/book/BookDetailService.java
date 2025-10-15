@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.BookDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.book.BookDetailOwningDto;
-import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.repository.BookDetailRepository;
@@ -19,7 +19,7 @@ import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.util.mapper.book.BookDetailMapper;
 import sd_009.bookstore.util.mapper.book.BookDetailOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
-import sd_009.bookstore.util.spec.Routes;
+import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
 
@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BookDetailService {
     private final JsonApiAdapterProvider adapterProvider;
+    private final JsonApiValidator jsonApiValidator;
 
     private final BookDetailMapper bookDetailMapper;
     private final BookDetailOwningMapper bookDetailOwningMapper;
@@ -34,8 +35,8 @@ public class BookDetailService {
     private final BookRepository bookRepository;
 
     @Transactional
-    public String findByBook(Boolean enabled, BookDto bookDto) {
-        Book book = bookRepository.findById(Long.parseLong(bookDto.getId())).orElseThrow();
+    public String findByBookId(Boolean enabled, Long bookId) {
+        Book book = bookRepository.findById(bookId).orElseThrow();
 
         List<BookDetail> bookDetails = bookDetailRepository.findByBook(book);
 
@@ -68,21 +69,34 @@ public class BookDetailService {
     }
 
     @Transactional
-    public String save(BookDetailOwningDto bookDetailOwningDto) {
+    public String save(String json) {
+        BookDetailDto dto = jsonApiValidator.readAndValidate(json, BookDetailDto.class);
 
-        BookDetail bookDetail = bookDetailOwningMapper.toEntity(bookDetailOwningDto);
+        BookDetail saved = bookDetailRepository.save(bookDetailMapper.toEntity(dto));
 
-        return getSingleAdapter().toJson(Document.with(bookDetailMapper.toDto(bookDetailRepository.save(bookDetail))).build());
+        return getSingleAdapter().toJson(Document
+                .with(bookDetailMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAIL_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional
-    public String update(BookDetailDto bookDetailDto) {
-        BookDetail bookDetail = bookDetailMapper.toEntity(bookDetailDto);
-        BookDetail existing = bookDetailRepository.findById(bookDetail.getId()).orElseThrow();
-        if (bookDetail.getId() == null) {
+    public String update(String json) {
+        BookDetailDto dto = jsonApiValidator.readAndValidate(json, BookDetailDto.class);
+        if (dto.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        return getSingleAdapter().toJson(Document.with(bookDetailMapper.toDto(bookDetailRepository.save(bookDetailMapper.partialUpdate(bookDetailDto, existing)))).build());
+        BookDetail existing = bookDetailRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
+        BookDetail saved = bookDetailRepository.save(bookDetailMapper.partialUpdate(dto, existing));
+
+        return getSingleAdapter().toJson(Document
+                .with(bookDetailMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAIL_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional

@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.jsonApiResource.book.BookDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.book.BookDetailOwningDto;
@@ -56,7 +55,6 @@ public class LinkObjectResponseTests {
     }
 
     @Test
-    @Transactional
     void owningBookDetailTest() {
         BookDetail bookDetail = bookDetailRepository.findById(1L).orElseThrow();
 
@@ -69,6 +67,33 @@ public class LinkObjectResponseTests {
         String json = adapter.toJson(doc);
 
         System.out.println(json);
+    }
+
+    @Test
+    void testPutRequestCreate() {
+        String json = "{\n" +
+                "  \"data\": {\n" +
+                "    \"type\": \"genre\",\n" +
+                "    \"relationships\": {\n" +
+                "      \"books\": {\n" +
+                "        \"data\": [\n" +
+                "          {\n" +
+                "            \"type\": \"book\",\n" +
+                "            \"id\": \"37\"\n" +
+                "          }\n" +
+                "        ]\n" +
+                "      }\n" +
+                "    },\n" +
+                "    \"attributes\": {\n" +
+                "      \"createdAt\": \"2025-10-01T18:29:52.390751\",\n" +
+                "      \"enabled\": true,\n" +
+                "      \"name\": \"test genre\",\n" +
+                "      \"updatedAt\": \"2025-10-01T18:29:52.390751\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        System.out.println(genreService.save(json));
     }
 
 }

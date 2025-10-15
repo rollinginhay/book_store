@@ -9,6 +9,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * Forces jsonapi content type on every response. Disabled to allow swagger ui testing, setting content type manually on controllers instead
+ */
 //@Configuration
 public class WebConfig implements WebMvcConfigurer {
 

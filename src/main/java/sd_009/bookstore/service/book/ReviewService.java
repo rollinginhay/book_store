@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
-import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
 import sd_009.bookstore.dto.jsonApiResource.book.ReviewDto;
 import sd_009.bookstore.dto.jsonApiResource.book.ReviewOwningDto;
 import sd_009.bookstore.entity.book.Book;
@@ -19,7 +19,7 @@ import sd_009.bookstore.repository.ReviewRepository;
 import sd_009.bookstore.util.mapper.book.ReviewMapper;
 import sd_009.bookstore.util.mapper.book.ReviewOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
-import sd_009.bookstore.util.spec.Routes;
+import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
 
@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewService {
     private final JsonApiAdapterProvider adapterProvider;
+    private final JsonApiValidator jsonApiValidator;
 
     private final ReviewMapper reviewMapper;
     private final ReviewOwningMapper reviewOwningMapper;
@@ -34,8 +35,8 @@ public class ReviewService {
     private final BookRepository bookRepository;
 
     @Transactional
-    public String findByBook(Boolean enabled, BookDto bookDto) {
-        Book book = bookRepository.findById(Long.parseLong(bookDto.getId())).orElseThrow();
+    public String findByBook(Boolean enabled, Long bookId) {
+        Book book = bookRepository.findById(bookId).orElseThrow();
 
         List<Review> reviews = reviewRepository.findByBook(book);
 
@@ -68,22 +69,33 @@ public class ReviewService {
     }
 
     @Transactional
-    public String save(ReviewOwningDto reviewOwningDto) {
+    public String save(String json) {
+        ReviewDto dto = jsonApiValidator.readAndValidate(json, ReviewDto.class);
 
-        Review review = reviewOwningMapper.toEntity(reviewOwningDto);
-
-        return getSingleAdapter().toJson(Document.with(reviewMapper.toDto(reviewRepository.save(review))).build());
+        Review saved = reviewRepository.save(reviewMapper.toEntity(dto));
+        return getSingleAdapter().toJson(Document
+                .with(reviewMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_REVIEW_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional
-    public String update(ReviewDto reviewDto) {
-        Review review = reviewMapper.toEntity(reviewDto);
-        if (review.getId() == null) {
+    public String update(String json) {
+        ReviewDto dto = jsonApiValidator.readAndValidate(json, ReviewDto.class);
+        if (dto.getId() == null) {
             throw new BadRequestException("No identifier found");
         }
-        Review existing = reviewRepository.findById(review.getId()).orElseThrow();
+        Review existing = reviewRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
+        Review saved = reviewRepository.save(reviewMapper.partialUpdate(dto, existing));
 
-        return getSingleAdapter().toJson(Document.with(reviewMapper.toDto(reviewRepository.save(reviewMapper.partialUpdate(reviewDto, existing)))).build());
+        return getSingleAdapter().toJson(Document
+                .with(reviewMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_REVIEW_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional

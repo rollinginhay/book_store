@@ -1,0 +1,16 @@
+{
+  "data": {
+    "type": "bookDetail",
+    "attributes": {
+      "bookCondition": "old",
+      "bookFormat": "paperback",
+      "dimensions": "1x1",
+      "enabled": true,
+      "isbn11": "ISBN 11",
+      "isbn13": "ISBN 13",
+      "price": 899,
+      "printLength": 999,
+      "stock": 999
+    }
+  }
+}

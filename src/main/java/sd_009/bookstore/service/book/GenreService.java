@@ -8,11 +8,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
 import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
 import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.GenreDto;
 import sd_009.bookstore.dto.jsonApiResource.book.GenreOwningDto;
@@ -24,7 +24,7 @@ import sd_009.bookstore.util.mapper.book.GenreMapper;
 import sd_009.bookstore.util.mapper.book.GenreOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
-import sd_009.bookstore.util.spec.Routes;
+import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +40,8 @@ public class GenreService {
 
     private final GenreRepository genreRepository;
     private final BookRepository bookRepository;
+
+    private final JsonApiValidator jsonApiValidator;
 
     @Transactional
     public String find(Boolean enabled, String name, Pageable pageable) {
@@ -90,10 +92,10 @@ public class GenreService {
     }
 
     @Transactional
-    public String save(GenreDto genreDto) {
-        Genre genre = genreMapper.toEntity(genreDto);
+    public String save(String json) {
+        GenreDto dto = jsonApiValidator.readAndValidate(json, GenreDto.class);
 
-        Optional<Genre> existing = genreRepository.findByName(genre.getName());
+        Optional<Genre> existing = genreRepository.findByName(dto.getName());
 
         if (existing.isPresent()) {
             if (existing.get().getEnabled()) {
@@ -103,18 +105,28 @@ public class GenreService {
             throw new IsDisabledException("Genre is disabled. Can be reinstated");
         }
 
-        return getSingleAdapter().toJson(Document.with(genreMapper.toDto(genreRepository.save(genre))).build());
+        Genre saved = genreRepository.save(genreMapper.toEntity(dto));
+        return getSingleAdapter().toJson(Document
+                .with(genreMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional
-    public String update(GenreDto genreDto) {
-        Genre genre = genreMapper.toEntity(genreDto);
-        if (genre.getId() == null) {
-            throw new BadRequestException("No identifier found");
-        }
-        Genre existing = genreRepository.findById(genre.getId()).orElseThrow();
+    public String update(String json) {
+        GenreDto dto = jsonApiValidator.readAndValidate(json, GenreDto.class);
 
-        return getSingleAdapter().toJson(Document.with(genreMapper.toDto(genreRepository.save(genreMapper.partialUpdate(genreDto, existing)))).build());
+        Genre existing = genreRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
+
+        Genre saved = genreRepository.save(genreMapper.partialUpdate(dto, existing));
+        return getSingleAdapter().toJson(Document
+                .with(genreMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional

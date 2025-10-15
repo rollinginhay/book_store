@@ -10,12 +10,16 @@ public interface BookMapper {
 
     @AfterMapping
     default void linkReviews(@MappingTarget Book book) {
-        book.getReviews().forEach(review -> review.setBook(book));
+        if (book.getReviews() != null) {
+            book.getReviews().forEach(review -> review.setBook(book));
+        }
     }
 
     @AfterMapping
     default void linkBookCopies(@MappingTarget Book book) {
-        book.getBookCopies().forEach(bookCopy -> bookCopy.setBook(book));
+        if (book.getBookCopies() != null) {
+            book.getBookCopies().forEach(bookCopy -> bookCopy.setBook(book));
+        }
     }
 
     BookDto toDto(Book book);

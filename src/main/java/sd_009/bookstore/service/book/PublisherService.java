@@ -8,11 +8,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
 import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
 import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.PublisherDto;
 import sd_009.bookstore.dto.jsonApiResource.book.PublisherOwningDto;
@@ -25,7 +25,7 @@ import sd_009.bookstore.util.mapper.book.PublisherMapper;
 import sd_009.bookstore.util.mapper.book.PublisherOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
-import sd_009.bookstore.util.spec.Routes;
+import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +39,7 @@ public class PublisherService {
     private final BookMapper bookMapper;
     private final PublisherRepository publisherRepository;
     private final BookRepository bookRepository;
+    private final JsonApiValidator jsonApiValidator;
 
     @Transactional
     public String find(Boolean enabled, String name, Pageable pageable) {
@@ -89,10 +90,10 @@ public class PublisherService {
     }
 
     @Transactional
-    public String save(PublisherDto publisherDto) {
-        Publisher publisher = publisherMapper.toEntity(publisherDto);
+    public String save(String json) {
+        PublisherDto dto = jsonApiValidator.readAndValidate(json, PublisherDto.class);
 
-        Optional<Publisher> existing = publisherRepository.findByName(publisher.getName());
+        Optional<Publisher> existing = publisherRepository.findByName(dto.getName());
 
         if (existing.isPresent()) {
             if (existing.get().getEnabled()) {
@@ -102,18 +103,28 @@ public class PublisherService {
             throw new IsDisabledException("Publisher is disabled. Can be reinstated");
         }
 
-        return getSingleAdapter().toJson(Document.with(publisherMapper.toDto(publisherRepository.save(publisher))).build());
+        Publisher saved = publisherRepository.save(publisherMapper.toEntity(dto));
+        return getSingleAdapter().toJson(Document
+                .with(publisherMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional
-    public String update(PublisherDto publisherDto) {
-        Publisher publisher = publisherMapper.toEntity(publisherDto);
-        if (publisher.getId() == null) {
-            throw new BadRequestException("No identifier found");
-        }
-        Publisher existing = publisherRepository.findById(publisher.getId()).orElseThrow();
+    public String update(String json) {
+        PublisherDto dto = jsonApiValidator.readAndValidate(json, PublisherDto.class);
 
-        return getSingleAdapter().toJson(Document.with(publisherMapper.toDto(publisherRepository.save(publisherMapper.partialUpdate(publisherDto, existing)))).build());
+        Publisher existing = publisherRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
+
+        Publisher saved = publisherRepository.save(publisherMapper.partialUpdate(dto, existing));
+        return getSingleAdapter().toJson(Document
+                .with(publisherMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
     @Transactional
     public void delete(Long id) {

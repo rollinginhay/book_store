@@ -1,7 +1,8 @@
-package sd_009.bookstore.util.validation;
+package sd_009.bookstore.util.validation.implementation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import sd_009.bookstore.util.validation.annotation.ValidPassword;
 
 import java.util.regex.Pattern;
 

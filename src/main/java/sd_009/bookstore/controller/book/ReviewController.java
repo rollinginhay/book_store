@@ -2,18 +2,15 @@ package sd_009.bookstore.controller.book;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sd_009.bookstore.dto.jsonApiResource.book.ReviewDto;
-import sd_009.bookstore.dto.jsonApiResource.book.ReviewOwningDto;
 import sd_009.bookstore.service.book.ReviewService;
 
 @RestController
@@ -25,25 +22,30 @@ public class ReviewController {
     private String contentType;
     private final ReviewService reviewService;
 
-    @Operation(description = "Create a new review")
-    @ApiResponse(responseCode = "201", description = "Success", content = @Content(schema = @Schema(implementation = ReviewDto.class)))
-    @PostMapping("/review/create")
-    public ResponseEntity<Object> createReview(@Valid @RequestBody ReviewOwningDto reviewOwningDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(reviewService.save(reviewOwningDto));
-    }
-
-    @Operation(description = "Get review by id, with attached relationship")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ReviewOwningDto.class)))
+    @Operation(
+            summary = "Get review by id, with attached relationship",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get review by id resp", externalValue = "/jsonExample/review/get_review_owning.json"))))
     @GetMapping("/review/{id}")
     public ResponseEntity<Object> getReviewById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(reviewService.findById(id));
     }
 
-    @Operation(description = "Update a review")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ReviewOwningDto.class)))
+    @Operation(
+            summary = "Create a new review",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create review req", externalValue = "/jsonExample/review/post_review.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create review resp", externalValue = "/jsonExample/review/get_review.json"))))
+    @PostMapping("/review/create")
+    public ResponseEntity<Object> createReview(@RequestBody String json) {
+        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(reviewService.save(json));
+    }
+
+    @Operation(
+            summary = "Update a review",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create review req", externalValue = "/jsonExample/review/put_review.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create review resp", externalValue = "/jsonExample/review/get_review.json"))))
     @PutMapping("/review/update")
-    public ResponseEntity<Object> updateReview(@Valid @RequestBody ReviewDto reviewDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(reviewService.update(reviewDto));
+    public ResponseEntity<Object> updateReview(@RequestBody String json) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(reviewService.update(json));
     }
 
     @Operation(description = "Delete a review")
@@ -53,6 +55,4 @@ public class ReviewController {
         reviewService.delete(id);
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(null);
     }
-
-
 }

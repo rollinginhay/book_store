@@ -14,4 +14,6 @@ public interface BookDetailRepository extends JpaRepository<BookDetail, Long> {
     Page<BookDetail> findByEnabled(Boolean enabled, Pageable pageable);
 
     List<BookDetail> findByBook(Book book);
+
+    BookDetail book(Book book);
 }

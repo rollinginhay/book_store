@@ -14,6 +14,7 @@ import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictExce
 import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
 import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.book.*;
 import sd_009.bookstore.entity.book.*;
@@ -21,7 +22,7 @@ import sd_009.bookstore.repository.*;
 import sd_009.bookstore.util.mapper.book.*;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
-import sd_009.bookstore.util.spec.Routes;
+import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +32,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BookService {
     private final JsonApiAdapterProvider adapterProvider;
+    private final JsonApiValidator validator;
     private final BookMapper bookMapper;
     private final CreatorMapper creatorMapper;
     private final PublisherMapper publisherMapper;
@@ -93,10 +95,10 @@ public class BookService {
     }
 
     @Transactional
-    public String save(BookDto bookDto) {
-        Book book = bookMapper.toEntity(bookDto);
+    public String save(String json) {
+        BookDto dto = validator.readAndValidate(json, BookDto.class);
 
-        Optional<Book> existing = bookRepository.findByTitle(book.getTitle());
+        Optional<Book> existing = bookRepository.findByTitle(dto.getTitle());
 
         if (existing.isPresent()) {
             if (existing.get().getEnabled()) {
@@ -106,16 +108,28 @@ public class BookService {
             throw new IsDisabledException("Book is disabled. Can be reinstated");
         }
 
-        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(bookRepository.save(book))).build());
+        Book saved = bookRepository.save(bookMapper.toEntity(dto));
+        return getSingleAdapter().toJson(Document
+                .with(bookMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional
-    public String update(BookDto bookDto) {
-        Book book = bookMapper.toEntity(bookDto);
-        if (book.getId() == null) {
-            throw new BadRequestException("No identifier found");
-        }
-        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(bookRepository.save(bookMapper.partialUpdate(bookDto, book)))).build());
+    public String update(String json) {
+        BookDto dto = validator.readAndValidate(json, BookDto.class);
+
+        Book existing = bookRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
+
+        Book saved = bookRepository.save(bookMapper.partialUpdate(dto, existing));
+        return getSingleAdapter().toJson(Document
+                .with(bookMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID_PATH, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     @Transactional
@@ -132,51 +146,110 @@ public class BookService {
     }
 
     @Transactional
-    public <T> String attachOrReplaceRelationship(Long bookId, T dto) {
+    public String attachOrReplaceRelationship(Long bookId, String json, String relationship) {
         Book book = bookRepository.findById(bookId).orElseThrow();
+
+        Class<?> dependentType;
+
+        switch (relationship) {
+            case "bookDetail" -> {
+                dependentType = BookDetailDto.class;
+            }
+            case "review" -> {
+                dependentType = ReviewDto.class;
+            }
+            case "creator" -> {
+                dependentType = CreatorDto.class;
+            }
+            case "publisher" -> {
+                dependentType = PublisherDto.class;
+            }
+            case "series" -> {
+                dependentType = SeriesDto.class;
+            }
+            case "genre" -> {
+                dependentType = GenreDto.class;
+            }
+            default ->
+                    throw new BadRequestException("Invalid relationship type");
+        }
+
+        var dto = validator.readAndValidate(json, dependentType);
 
         switch (dto) {
             case BookDetailDto bookDetailDto -> {
-                BookDetail bookDetail = bookDetailMapper.toEntity(bookDetailDto);
+                BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailDto.getId())).orElseThrow();
+                bookDetail.setBook(book);
                 book.getBookCopies().add(bookDetail);
             }
             case ReviewDto reviewDto -> {
-                Review review = reviewMapper.toEntity(reviewDto);
+                Review review = reviewRepository.findById(Long.valueOf(reviewDto.getId())).orElseThrow();
+                review.setBook(book);
                 book.getReviews().add(review);
             }
             case CreatorDto creatorDto -> {
-                Creator creator = creatorMapper.toEntity(creatorDto);
+                Creator creator = creatorRepository.findById(Long.valueOf(creatorDto.getId())).orElseThrow();
                 book.getCreators().add(creator);
             }
             case PublisherDto publisherDto -> {
-                Publisher publisher = publisherMapper.toEntity(publisherDto);
+                Publisher publisher = publisherRepository.findById(Long.valueOf(publisherDto.getId())).orElseThrow();
                 book.setPublisher(publisher);
             }
             case SeriesDto seriesDto -> {
-                Series series = seriesMapper.toEntity(seriesDto);
+                Series series = seriesRepository.findById(Long.valueOf(seriesDto.getId())).orElseThrow();
                 book.setSeries(series);
             }
             case GenreDto genreDto -> {
-                Genre genre = genreMapper.toEntity(genreDto);
+                Genre genre = genreRepository.findById(Long.valueOf(genreDto.getId())).orElseThrow();
                 book.getGenres().add(genre);
             }
             case null, default ->
                     throw new BadRequestException("Unsupported relationship type");
         }
-        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(bookRepository.save(book))).build());
+        Book saved = bookRepository.save(book);
+        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(saved)).build());
     }
 
     @Transactional
-    public <T> String detachRelationShip(Long bookId, T dto) {
+    public <T> String detachRelationShip(Long bookId, String json, String relationship) {
         Book book = bookRepository.findById(bookId).orElseThrow();
+
+        Class<?> dependentType;
+
+        switch (relationship) {
+            case "bookDetail" -> {
+                dependentType = BookDetailDto.class;
+            }
+            case "review" -> {
+                dependentType = ReviewDto.class;
+            }
+            case "creator" -> {
+                dependentType = CreatorDto.class;
+            }
+            case "publisher" -> {
+                dependentType = PublisherDto.class;
+            }
+            case "series" -> {
+                dependentType = SeriesDto.class;
+            }
+            case "genre" -> {
+                dependentType = GenreDto.class;
+            }
+            default ->
+                    throw new BadRequestException("Invalid relationship type");
+        }
+
+        var dto = validator.readAndValidate(json, dependentType);
 
         switch (dto) {
             case BookDetailDto bookDetailDto -> {
                 BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailDto.getId())).orElseThrow();
+                bookDetail.setBook(null);
                 book.getBookCopies().remove(bookDetail);
             }
             case ReviewDto reviewDto -> {
                 Review review = reviewRepository.findById(Long.valueOf(reviewDto.getId())).orElseThrow();
+                review.setBook(null);
                 book.getReviews().remove(review);
             }
             case CreatorDto creatorDto -> {
@@ -199,6 +272,35 @@ public class BookService {
                     throw new BadRequestException("Unsupported relationship type");
         }
         return getSingleAdapter().toJson(Document.with(bookMapper.toDto(bookRepository.save(book))).build());
+    }
+
+    public String getDependents(Long bookId, String type) {
+        Book book = bookRepository.findById(bookId).orElseThrow();
+
+        switch (type) {
+            case "bookDetail" -> {
+                List<BookDetail> dependents = bookDetailRepository.findByBook(book);
+                List<BookDetailDto> dtos = dependents.stream().map(bookDetailMapper::toDto).toList();
+                return adapterProvider.listResourceAdapter(BookDetailDto.class).toJson(Document
+                        .with(dtos)
+                        .links(Links.from(JsonApiLinksObject.builder()
+                                .self(LinkMapper.toLink(Routes.BOOK_RELATIONSHIP_BOOK_DETAIL_PATH, bookId))
+                                .build().toMap()))
+                        .build());
+            }
+            case "review" -> {
+                List<Review> dependents = reviewRepository.findByBook(book);
+                List<ReviewDto> dtos = dependents.stream().map(reviewMapper::toDto).toList();
+                return adapterProvider.listResourceAdapter(ReviewDto.class).toJson(Document
+                        .with(dtos)
+                        .links(Links.from(JsonApiLinksObject.builder()
+                                .self(LinkMapper.toLink(Routes.BOOK_RELATIONSHIP_BOOK_REVIEW_PATH, bookId))
+                                .build().toMap()))
+                        .build());
+            }
+            default ->
+                    throw new BadRequestException("Unsupported relationship type");
+        }
     }
 
     private JsonAdapter<Document<BookDto>> getSingleAdapter() {

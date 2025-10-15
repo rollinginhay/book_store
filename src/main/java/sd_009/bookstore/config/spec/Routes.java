@@ -1,4 +1,4 @@
-package sd_009.bookstore.util.spec;
+package sd_009.bookstore.config.spec;
 
 public enum Routes {
     GET_BOOKS("/v1/books"),
@@ -49,6 +49,7 @@ public enum Routes {
     public static final String BOOK_RELATIONSHIP_GENRE_PATH = "/v1/book/{id}/relationships/genre";
     public static final String BOOK_RELATIONSHIP_BOOK_DETAIL_PATH = "/v1/book/{id}/relationships/bookDetail";
     public static final String BOOK_RELATIONSHIP_BOOK_REVIEW_PATH = "/v1/book/{id}/relationships/review";
+    public static final String GET_BOOK_RELATIONSHIP_GENERIC_PATH = "/v1/book/{id}/relationships/{dependent}";
 
     public static final String GET_GENRES_PATH = "/v1/genres";
     public static final String GET_GENRE_BY_ID_PATH = "/v1/genre/{id}";
@@ -67,4 +68,5 @@ public enum Routes {
 
     public static final String GET_REVIEWS_BY_BOOK_ID_PATH = "/v1/book/{id}/reviews";
     public static final String GET_REVIEW_BY_ID_PATH = "/v1/review/{id}";
+
 }

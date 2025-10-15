@@ -2,10 +2,9 @@ package sd_009.bookstore.controller.book;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -14,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sd_009.bookstore.dto.jsonApiResource.book.SeriesDto;
-import sd_009.bookstore.dto.jsonApiResource.book.SeriesOwningDto;
 import sd_009.bookstore.service.book.SeriesService;
 
 import java.util.List;
@@ -29,10 +26,11 @@ public class SeriesController {
     private String contentType;
     private final SeriesService seriesService;
 
+    @Operation(
+            summary = "Get seriess by query",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get seriess resp", externalValue = "/jsonExample/series/get_seriess.json"))))
 
     @GetMapping("/seriess")
-    @Operation(description = "Get seriess by query")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = SeriesDto.class)))
     public ResponseEntity<Object> getSeriess(@RequestParam(required = false, name = "q") String keyword,
                                              @RequestParam(name = "e") Boolean enabled,
                                              @RequestParam int page,
@@ -59,25 +57,30 @@ public class SeriesController {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(seriesService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
     }
 
-    @Operation(description = "Get series by id, with attached relationship")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = SeriesOwningDto.class)))
+    @Operation(
+            summary = "Get series by id, with attached relationship",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get series by id resp", externalValue = "/jsonExample/series/get_series_owning.json"))))
     @GetMapping("/series/{id}")
     public ResponseEntity<Object> getSeriesById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(seriesService.findById(id));
     }
 
-    @Operation(description = "Create a new series")
-    @ApiResponse(responseCode = "201", description = "Success", content = @Content(schema = @Schema(implementation = SeriesDto.class)))
+    @Operation(
+            summary = "Create a new series",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create series req", externalValue = "/jsonExample/series/post_series.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create series resp", externalValue = "/jsonExample/series/get_series.json"))))
     @PostMapping("/series/create")
-    public ResponseEntity<Object> createSeries(@Valid @RequestBody SeriesDto seriesDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(seriesService.save(seriesDto));
+    public ResponseEntity<Object> createSeries(@RequestBody String json) {
+        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(seriesService.save(json));
     }
 
-    @Operation(description = "Update a series")
-    @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = SeriesDto.class)))
+    @Operation(
+            summary = "Update a series",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create series req", externalValue = "/jsonExample/series/put_series.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create series resp", externalValue = "/jsonExample/series/get_series.json"))))
     @PutMapping("/series/update")
-    public ResponseEntity<Object> updateSeries(@Valid @RequestBody SeriesDto seriesDto) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(seriesService.update(seriesDto));
+    public ResponseEntity<Object> updateSeries(@RequestBody String json) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(seriesService.update(json));
     }
 
     @Operation(description = "Delete a series")

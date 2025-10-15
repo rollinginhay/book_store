@@ -1,0 +1,141 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/creator/22",
+    "first": null,
+    "last": null,
+    "next": null,
+    "prev": null
+  },
+  "data": {
+    "type": "creator",
+    "id": "22",
+    "relationships": {
+      "books": {
+        "data": [
+          {
+            "type": "book",
+            "id": "11"
+          }
+        ]
+      }
+    },
+    "attributes": {
+      "createdAt": "2025-09-26T17:56:48.809894",
+      "enabled": true,
+      "name": "creator 2",
+      "updatedAt": "2025-09-26T17:56:48.809894"
+    }
+  },
+  "included": [
+    {
+      "type": "book",
+      "id": "11",
+      "relationships": {
+        "publisher": {
+          "data": {
+            "type": "publisher",
+            "id": "11"
+          }
+        },
+        "series": {
+          "data": {
+            "type": "series",
+            "id": "11"
+          }
+        },
+        "creators": {
+          "data": [
+            {
+              "type": "creator",
+              "id": "21"
+            },
+            {
+              "type": "creator",
+              "id": "22"
+            }
+          ]
+        },
+        "genres": {
+          "data": [
+            {
+              "type": "genre",
+              "id": "21"
+            },
+            {
+              "type": "genre",
+              "id": "22"
+            }
+          ]
+        },
+        "tags": {
+          "data": []
+        },
+        "reviews": {
+          "data": []
+        },
+        "bookCopies": {
+          "data": []
+        }
+      },
+      "attributes": {
+        "createdAt": "2025-09-26T17:56:48.708544",
+        "edition": "edition 1",
+        "enabled": true,
+        "language": "English",
+        "published": "2025-09-26T17:56:48.687373",
+        "title": "book 1",
+        "updatedAt": "2025-09-26T17:56:48.708544"
+      }
+    },
+    {
+      "type": "publisher",
+      "id": "11",
+      "attributes": {
+        "createdAt": "2025-09-26T17:56:48.719682",
+        "enabled": true,
+        "name": "publisher 1",
+        "updatedAt": "2025-09-26T17:56:48.719682"
+      }
+    },
+    {
+      "type": "series",
+      "id": "11",
+      "attributes": {
+        "createdAt": "2025-09-26T17:56:48.772443",
+        "enabled": true,
+        "name": "series 1",
+        "updatedAt": "2025-09-26T17:56:48.772443"
+      }
+    },
+    {
+      "type": "creator",
+      "id": "21",
+      "attributes": {
+        "createdAt": "2025-09-26T17:56:48.797892",
+        "enabled": true,
+        "name": "creator 1",
+        "updatedAt": "2025-09-26T17:56:48.797892"
+      }
+    },
+    {
+      "type": "genre",
+      "id": "21",
+      "attributes": {
+        "createdAt": "2025-09-26T17:56:48.811895",
+        "enabled": true,
+        "name": "genre 1",
+        "updatedAt": "2025-09-26T17:56:48.811895"
+      }
+    },
+    {
+      "type": "genre",
+      "id": "22",
+      "attributes": {
+        "createdAt": "2025-09-26T17:56:48.822895",
+        "enabled": true,
+        "name": "genre 2",
+        "updatedAt": "2025-09-26T17:56:48.822895"
+      }
+    }
+  ]
+}

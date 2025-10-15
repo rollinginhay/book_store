@@ -1,5 +1,6 @@
 package sd_009.bookstore.config.exceptionHanding;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -56,13 +57,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<String> constraintViolationExceptionHandler(ConstraintViolationException e, WebRequest request) {
+        log.error("Constraint violation ex handler", e);
+        String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<String> elementNotFoundExceptionHandler(Exception e, WebRequest request) {
         log.error("Element not found ex handler", e);
         String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.NOT_FOUND);
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
-
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<String> noResourceFoundExceptionHandler(Exception e, WebRequest request) {
@@ -84,5 +91,4 @@ public class GlobalExceptionHandler {
         String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.CONFLICT);
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
-
 }

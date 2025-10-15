@@ -1,7 +1,8 @@
-package sd_009.bookstore.util.validation;
+package sd_009.bookstore.util.validation.annotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
+import sd_009.bookstore.util.validation.implementation.PasswordConstraintValidator;
 
 import java.lang.annotation.*;
 
