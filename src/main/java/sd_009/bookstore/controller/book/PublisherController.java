@@ -13,12 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.service.book.PublisherService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1")
 @RequiredArgsConstructor
 @Tag(name = "Publisher CRUD")
 public class PublisherController {
@@ -29,7 +29,7 @@ public class PublisherController {
     @Operation(
             summary = "Get publishers by query",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get publishers resp", externalValue = "/jsonExample/publisher/get_publishers.json"))))
-    @GetMapping("/publishers")
+    @GetMapping(Routes.GET_PUBLISHERS)
     public ResponseEntity<Object> getPublishers(@RequestParam(required = false, name = "q") String keyword,
                                                 @RequestParam(name = "e") Boolean enabled,
                                                 @RequestParam int page,
@@ -58,8 +58,8 @@ public class PublisherController {
 
     @Operation(
             summary = "Get publisher by id, with attached relationship",
-            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get publisher by id resp", externalValue = "/jsonExample/publisher/get_publisher_owning.json"))))
-    @GetMapping("/publisher/{id}")
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get publisher by id resp", externalValue = "/jsonExample/publisher/get_publisher.json"))))
+    @GetMapping(Routes.GET_PUBLISHER_BY_ID)
     public ResponseEntity<Object> getPublisherById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(publisherService.findById(id));
     }
@@ -68,7 +68,7 @@ public class PublisherController {
             summary = "Create a new publisher",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create publisher req", externalValue = "/jsonExample/publisher/post_publisher.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create publisher resp", externalValue = "/jsonExample/publisher/get_publisher.json"))))
-    @PostMapping("/publisher/create")
+    @PostMapping(Routes.POST_PUBLISHER_CREATE)
     public ResponseEntity<Object> createPublisher(@RequestBody String json) {
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(publisherService.save(json));
     }
@@ -77,14 +77,14 @@ public class PublisherController {
             summary = "Update a publisher",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create publisher req", externalValue = "/jsonExample/publisher/put_publisher.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create publisher resp", externalValue = "/jsonExample/publisher/get_publisher.json"))))
-    @PutMapping("/publisher/update")
+    @PutMapping(Routes.PUT_PUBLISHER_UPDATE)
     public ResponseEntity<Object> updatePublisher(@RequestBody String json) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(publisherService.update(json));
     }
 
     @Operation(description = "Delete a publisher")
     @ApiResponse(responseCode = "200", description = "Success")
-    @DeleteMapping("/publisher/delete/{id}")
+    @DeleteMapping(Routes.DELETE_PUBLISHER_DELETE)
     public ResponseEntity<Object> deletePublisher(@PathVariable Long id) {
         publisherService.delete(id);
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(null);

@@ -13,12 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.service.book.SeriesService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1")
 @RequiredArgsConstructor
 @Tag(name = "Series CRUD")
 public class SeriesController {
@@ -30,7 +30,7 @@ public class SeriesController {
             summary = "Get seriess by query",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get seriess resp", externalValue = "/jsonExample/series/get_seriess.json"))))
 
-    @GetMapping("/seriess")
+    @GetMapping(Routes.GET_SERIES)
     public ResponseEntity<Object> getSeriess(@RequestParam(required = false, name = "q") String keyword,
                                              @RequestParam(name = "e") Boolean enabled,
                                              @RequestParam int page,
@@ -60,7 +60,7 @@ public class SeriesController {
     @Operation(
             summary = "Get series by id, with attached relationship",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get series by id resp", externalValue = "/jsonExample/series/get_series_owning.json"))))
-    @GetMapping("/series/{id}")
+    @GetMapping(Routes.GET_SERIES_BY_ID)
     public ResponseEntity<Object> getSeriesById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(seriesService.findById(id));
     }
@@ -69,7 +69,7 @@ public class SeriesController {
             summary = "Create a new series",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create series req", externalValue = "/jsonExample/series/post_series.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create series resp", externalValue = "/jsonExample/series/get_series.json"))))
-    @PostMapping("/series/create")
+    @PostMapping(Routes.POST_SERIES_CREATE)
     public ResponseEntity<Object> createSeries(@RequestBody String json) {
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(seriesService.save(json));
     }
@@ -78,14 +78,14 @@ public class SeriesController {
             summary = "Update a series",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create series req", externalValue = "/jsonExample/series/put_series.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create series resp", externalValue = "/jsonExample/series/get_series.json"))))
-    @PutMapping("/series/update")
+    @PutMapping(Routes.PUT_SERIES_UPDATE)
     public ResponseEntity<Object> updateSeries(@RequestBody String json) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(seriesService.update(json));
     }
 
     @Operation(description = "Delete a series")
     @ApiResponse(responseCode = "200", description = "Success")
-    @DeleteMapping("/series/delete/{id}")
+    @DeleteMapping(Routes.DELETE_SERIES_DELETE)
     public ResponseEntity<Object> deleteSeries(@PathVariable Long id) {
         seriesService.delete(id);
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(null);

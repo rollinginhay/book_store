@@ -13,12 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.service.book.GenreService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1")
 @RequiredArgsConstructor
 @Tag(name = "Genre CRUD")
 public class GenreController {
@@ -30,7 +30,7 @@ public class GenreController {
     @Operation(
             summary = "Get genres by query",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get genres resp", externalValue = "/jsonExample/genre/get_genres.json"))))
-    @GetMapping("/genres")
+    @GetMapping(Routes.GET_GENRES)
     public ResponseEntity<Object> getGenres(@RequestParam(required = false, name = "q") String keyword,
                                             @RequestParam(name = "e") Boolean enabled,
                                             @RequestParam int page,
@@ -59,8 +59,8 @@ public class GenreController {
 
     @Operation(
             summary = "Get genre by id, with attached relationship",
-            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get genre by id resp", externalValue = "/jsonExample/genre/get_genre_owning.json"))))
-    @GetMapping("/genre/{id}")
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get genre by id resp", externalValue = "/jsonExample/genre/get_genre.json"))))
+    @GetMapping(Routes.GET_GENRE_BY_ID)
     public ResponseEntity<Object> getGenreById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(genreService.findById(id));
     }
@@ -69,7 +69,7 @@ public class GenreController {
             summary = "Create a new genre",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create genre req", externalValue = "/jsonExample/genre/post_genre.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create genre resp", externalValue = "/jsonExample/genre/get_genre.json"))))
-    @PostMapping("/genre/create")
+    @PostMapping(Routes.POST_GENRE_CREATE)
     public ResponseEntity<Object> createGenre(@RequestBody String json) {
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(genreService.save(json));
     }
@@ -78,14 +78,14 @@ public class GenreController {
             summary = "Update a genre",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create genre req", externalValue = "/jsonExample/genre/put_genre.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create genre resp", externalValue = "/jsonExample/genre/get_genre.json"))))
-    @PutMapping("/genre/update")
+    @PutMapping(Routes.PUT_GENRE_UPDATE)
     public ResponseEntity<Object> updateGenre(@RequestBody String json) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(genreService.update(json));
     }
 
     @Operation(description = "Delete a genre")
     @ApiResponse(responseCode = "200", description = "Success")
-    @DeleteMapping("/genre/delete/{id}")
+    @DeleteMapping(Routes.DELETE_GENRE_DELETE)
     public ResponseEntity<Object> deleteGenre(@PathVariable Long id) {
         genreService.delete(id);
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(null);

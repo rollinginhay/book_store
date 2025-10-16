@@ -13,13 +13,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.service.book.CreatorService;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1")
 @Tag(name = "Creator CRUD")
 public class CreatorController {
     @Value("${config.jsonapi.contentType}")
@@ -29,7 +29,7 @@ public class CreatorController {
     @Operation(
             summary = "Get creators by query",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get creator by query req", externalValue = "/jsonExample/creator/get_creator.json"))))
-    @GetMapping("/creators")
+    @GetMapping(Routes.GET_CREATORS)
     public ResponseEntity<Object> getCreators(@RequestParam(required = false, name = "q") String keyword,
                                               @RequestParam(name = "e") Boolean enabled,
                                               @RequestParam int page,
@@ -58,8 +58,8 @@ public class CreatorController {
 
     @Operation(
             summary = "Get creator by id, with attached relationship",
-            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get creator by id resp", externalValue = "/jsonExample/creator/get_creator_owning.json"))))
-    @GetMapping("/creator/{id}")
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get creator by id resp", externalValue = "/jsonExample/creator/get_creator.json"))))
+    @GetMapping(Routes.GET_CREATOR_BY_ID)
     public ResponseEntity<Object> getCreatorById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(creatorService.findById(id));
     }
@@ -68,7 +68,7 @@ public class CreatorController {
             summary = "Create a new creator",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create creator req", externalValue = "/jsonExample/creator/post_creator.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create creator resp", externalValue = "/jsonExample/creator/get_creator.json"))))
-    @PostMapping("/creator/create")
+    @PostMapping(Routes.POST_CREATOR_CREATE)
     public ResponseEntity<Object> createCreator(@RequestBody String json) {
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(creatorService.save(json));
     }
@@ -77,14 +77,14 @@ public class CreatorController {
             summary = "Update a creator",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create creator req", externalValue = "/jsonExample/creator/put_creator.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create creator resp", externalValue = "/jsonExample/creator/get_creator.json"))))
-    @PutMapping("/creator/update")
+    @PutMapping(Routes.PUT_CREATOR_UPDATE)
     public ResponseEntity<Object> updateCreator(@RequestBody String json) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(creatorService.update(json));
     }
 
     @Operation(description = "Delete a creator")
     @ApiResponse(responseCode = "200", description = "Success")
-    @DeleteMapping("/creator/delete/{id}")
+    @DeleteMapping(Routes.DELETE_CREATOR_DELETE)
     public ResponseEntity<Object> deleteCreator(@PathVariable Long id) {
         creatorService.delete(id);
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(null);

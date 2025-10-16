@@ -29,7 +29,7 @@ public class BookController {
     @Operation(
             summary = "Get books by query",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get books resp", externalValue = "/jsonExample/book/get_books.json"))))
-    @GetMapping("/v1/books")
+    @GetMapping(Routes.GET_BOOKS)
     public ResponseEntity<Object> getBooks(@RequestParam(required = false, name = "q") String keyword,
                                            @RequestParam(name = "e") Boolean enabled,
                                            @RequestParam int page,
@@ -59,7 +59,7 @@ public class BookController {
     @Operation(
             summary = "Get book by id, with attached relationship",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get book by id resp", externalValue = "/jsonExample/book/get_book.json"))))
-    @GetMapping("/v1/book/{id}")
+    @GetMapping(Routes.GET_BOOK_BY_ID)
     public ResponseEntity<Object> getBookById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.findById(id));
     }
@@ -68,7 +68,7 @@ public class BookController {
             summary = "Create a new book",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create book req", externalValue = "/jsonExample/book/post_book.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create book resp", externalValue = "/jsonExample/book/get_book.json"))))
-    @PostMapping("/v1/book/create")
+    @PostMapping(Routes.POST_BOOK_CREATE)
     public ResponseEntity<Object> createBook(@RequestBody String json) {
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(bookService.save(json));
     }
@@ -77,14 +77,14 @@ public class BookController {
             summary = "Update a book",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create book req", externalValue = "/jsonExample/book/put_book.json"))),
             responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create book resp", externalValue = "/jsonExample/book/get_book.json"))))
-    @PutMapping("/v1/book/update")
+    @PutMapping(Routes.PUT_BOOK_UPDATE)
     public ResponseEntity<Object> updateBook(@RequestBody String json) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.update(json));
     }
 
     @Operation(description = "Delete a book")
     @ApiResponse(responseCode = "200", description = "Success")
-    @DeleteMapping("/v1/book/delete/{id}")
+    @DeleteMapping(Routes.DELETE_BOOK_DELETE)
     public ResponseEntity<Object> deleteBook(@PathVariable Long id) {
         bookService.delete(id);
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(null);
@@ -93,7 +93,7 @@ public class BookController {
     @Operation(
             summary = "Get bookDetails of book",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get bookDetails of book", externalValue = "/jsonExample/bookDetail/get_bookDetails.json"))))
-    @GetMapping(Routes.BOOK_RELATIONSHIP_BOOK_DETAIL_PATH)
+    @GetMapping(Routes.MULTI_BOOK_RELATIONSHIP_BOOK_DETAIL)
     public ResponseEntity<Object> getBookDetailsByBook(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.getDependents(id, "bookDetail"));
     }
@@ -101,7 +101,7 @@ public class BookController {
     @Operation(
             summary = "Get reviews of book",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get reviews of book", externalValue = "/jsonExample/review/get_reviews.json"))))
-    @GetMapping(Routes.BOOK_RELATIONSHIP_BOOK_REVIEW_PATH)
+    @GetMapping(Routes.MULTI_BOOK_RELATIONSHIP_REVIEW)
     public ResponseEntity<Object> getReviewsByBook(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.getDependents(id, "review"));
     }
@@ -113,7 +113,7 @@ public class BookController {
                     @ExampleObject(name = "Attach bookDetail", externalValue = "/jsonExample/bookDetail/get_bookDetail.json")
             })),
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get book by id resp", externalValue = "/jsonExample/book/get_book.json"))))
-    @PostMapping(Routes.GET_BOOK_RELATIONSHIP_GENERIC_PATH)
+    @PostMapping(Routes.MULTI_BOOK_RELATIONSHIP_GENERIC)
     public ResponseEntity<Object> attachRelationship(@PathVariable(name = "id") Long id, @PathVariable(name = "dependent") String dependent, @RequestBody String json) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachOrReplaceRelationship(id, json, dependent));
     }
@@ -125,7 +125,7 @@ public class BookController {
                     @ExampleObject(name = "Detach bookDetail", externalValue = "/jsonExample/bookDetail/get_bookDetail.json")
             })),
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get book by id resp", externalValue = "/jsonExample/book/get_book.json"))))
-    @DeleteMapping(Routes.GET_BOOK_RELATIONSHIP_GENERIC_PATH)
+    @DeleteMapping(Routes.MULTI_BOOK_RELATIONSHIP_GENERIC)
     public ResponseEntity<Object> detachRelationship(@PathVariable(name = "id") Long id, @PathVariable(name = "dependent") String dependent, @RequestBody String json) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.detachRelationShip(id, json, dependent));
     }
