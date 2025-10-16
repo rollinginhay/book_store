@@ -21,7 +21,6 @@ import sd_009.bookstore.entity.book.Genre;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.GenreRepository;
 import sd_009.bookstore.util.mapper.book.GenreMapper;
-import sd_009.bookstore.util.mapper.book.GenreOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
@@ -36,7 +35,6 @@ public class GenreService {
     private final JsonApiAdapterProvider adapterProvider;
 
     private final GenreMapper genreMapper;
-    private final GenreOwningMapper genreOwningMapper;
 
     private final GenreRepository genreRepository;
     private final BookRepository bookRepository;

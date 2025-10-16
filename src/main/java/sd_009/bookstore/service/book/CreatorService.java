@@ -21,7 +21,6 @@ import sd_009.bookstore.entity.book.Creator;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.CreatorRepository;
 import sd_009.bookstore.util.mapper.book.CreatorMapper;
-import sd_009.bookstore.util.mapper.book.CreatorOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
@@ -35,7 +34,6 @@ import java.util.Optional;
 public class CreatorService {
     private final JsonApiAdapterProvider adapterProvider;
     private final CreatorMapper creatorMapper;
-    private final CreatorOwningMapper creatorOwningMapper;
     private final CreatorRepository creatorRepository;
     private final BookRepository bookRepository;
     private final JsonApiValidator jsonApiValidator;

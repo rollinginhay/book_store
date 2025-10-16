@@ -21,7 +21,6 @@ import sd_009.bookstore.entity.book.Series;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.SeriesRepository;
 import sd_009.bookstore.util.mapper.book.SeriesMapper;
-import sd_009.bookstore.util.mapper.book.SeriesOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
@@ -34,7 +33,6 @@ import java.util.Optional;
 public class SeriesService {
     private final JsonApiAdapterProvider adapterProvider;
     private final SeriesMapper seriesMapper;
-    private final SeriesOwningMapper seriesOwningMapper;
     private final SeriesRepository seriesRepository;
     private final BookRepository bookRepository;
     private final JsonApiValidator jsonApiValidator;
@@ -75,16 +73,16 @@ public class SeriesService {
 
         Series found = seriesRepository.findById(id).orElseThrow();
 
-        SeriesOwningDto dto = seriesOwningMapper.toDto(found);
+        SeriesDto dto = seriesMapper.toDto(found);
 
-        Document<SeriesOwningDto> doc = Document
+        Document<SeriesDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID, id))
                         .build().toMap()))
                 .build();
 
-        return getSingleOwningAdapter().toJson(doc);
+        return getSingleAdapter().toJson(doc);
     }
 
 

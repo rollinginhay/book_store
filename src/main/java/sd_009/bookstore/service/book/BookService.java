@@ -34,10 +34,6 @@ public class BookService {
     private final JsonApiAdapterProvider adapterProvider;
     private final JsonApiValidator validator;
     private final BookMapper bookMapper;
-    private final CreatorMapper creatorMapper;
-    private final PublisherMapper publisherMapper;
-    private final GenreMapper genreMapper;
-    private final SeriesMapper seriesMapper;
     private final ReviewMapper reviewMapper;
     private final BookDetailMapper bookDetailMapper;
     private final BookRepository bookRepository;
@@ -67,12 +63,12 @@ public class BookService {
         Document<List<BookDto>> doc = Document
                 .with(dtos)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS.toString(), paramMapper.getSelfParams()))
-                        .first(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS.toString(), paramMapper.getFirstParams()))
-                        .last(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS.toString(), paramMapper.getLastParams()))
+                        .self(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getSelfParams()))
+                        .first(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getFirstParams()))
+                        .last(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getLastParams()))
                         //has to manually check for null in case of invalid pages
-                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS.toString(), paramMapper.getNextParams()))
-                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS.toString(), paramMapper.getPrevParams()))
+                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getNextParams()))
+                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getPrevParams()))
                         .build().toMap()))
                 .build();
 
@@ -87,7 +83,7 @@ public class BookService {
         Document<BookDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOKS.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_BOOKS, id))
                         .build().toMap()))
                 .build();
 

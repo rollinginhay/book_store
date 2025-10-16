@@ -20,9 +20,7 @@ import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.Publisher;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.PublisherRepository;
-import sd_009.bookstore.util.mapper.book.BookMapper;
 import sd_009.bookstore.util.mapper.book.PublisherMapper;
-import sd_009.bookstore.util.mapper.book.PublisherOwningMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
@@ -35,8 +33,6 @@ import java.util.Optional;
 public class PublisherService {
     private final JsonApiAdapterProvider adapterProvider;
     private final PublisherMapper publisherMapper;
-    private final PublisherOwningMapper publisherOwningMapper;
-    private final BookMapper bookMapper;
     private final PublisherRepository publisherRepository;
     private final BookRepository bookRepository;
     private final JsonApiValidator jsonApiValidator;
