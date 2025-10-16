@@ -18,7 +18,7 @@ public class ReceiptDetailDto implements Serializable {
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
     private final String note;
-    private final Long id;
+    private final String id;
     private final BookDetailDto bookCopy;
     private final Long pricePerUnit;
     private final Long quantity;

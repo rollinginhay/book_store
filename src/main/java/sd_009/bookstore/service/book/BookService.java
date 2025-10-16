@@ -83,7 +83,7 @@ public class BookService {
         Document<BookDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOKS, id))
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID, id))
                         .build().toMap()))
                 .build();
 
@@ -267,7 +267,14 @@ public class BookService {
             case null, default ->
                     throw new BadRequestException("Unsupported relationship type");
         }
-        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(bookRepository.save(book))).build());
+
+        Book saved = bookRepository.save(book);
+        return getSingleAdapter().toJson(Document
+                .with(bookMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID, saved.getId()))
+                        .build().toMap()))
+                .build());
     }
 
     public String getDependents(Long bookId, String type) {

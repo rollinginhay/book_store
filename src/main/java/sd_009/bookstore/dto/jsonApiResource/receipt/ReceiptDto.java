@@ -20,7 +20,7 @@ public class ReceiptDto implements Serializable {
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
     private final String note;
-    private final Long id;
+    private final String id;
     private final Long subTotal;
     private final Long discount;
     private final Long tax;
