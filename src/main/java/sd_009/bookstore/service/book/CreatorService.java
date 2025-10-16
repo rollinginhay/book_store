@@ -60,12 +60,12 @@ public class CreatorService {
         Document<List<CreatorDto>> doc = Document
                 .with(dtos)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLinkWithQuery(Routes.GET_CREATORS.toString(), paramMapper.getSelfParams()))
-                        .first(LinkMapper.toLinkWithQuery(Routes.GET_CREATORS.toString(), paramMapper.getFirstParams()))
-                        .last(LinkMapper.toLinkWithQuery(Routes.GET_CREATORS.toString(), paramMapper.getLastParams()))
+                        .self(LinkMapper.toLinkWithQuery(Routes.GET_CREATORS, paramMapper.getSelfParams()))
+                        .first(LinkMapper.toLinkWithQuery(Routes.GET_CREATORS, paramMapper.getFirstParams()))
+                        .last(LinkMapper.toLinkWithQuery(Routes.GET_CREATORS, paramMapper.getLastParams()))
                         //has to manually check for null in case of invalid pages
-                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_CREATORS.toString(), paramMapper.getNextParams()))
-                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_CREATORS.toString(), paramMapper.getPrevParams()))
+                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_CREATORS, paramMapper.getNextParams()))
+                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_CREATORS, paramMapper.getPrevParams()))
                         .build().toMap()))
                 .build();
         return getListAdapter().toJson(doc);
@@ -76,16 +76,16 @@ public class CreatorService {
 
         Creator found = creatorRepository.findById(id).orElseThrow();
 
-        CreatorOwningDto dto = creatorOwningMapper.toDto(found);
+        CreatorDto dto = creatorMapper.toDto(found);
 
-        Document<CreatorOwningDto> doc = Document
+        Document<CreatorDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID, id))
                         .build().toMap()))
                 .build();
 
-        return getSingleOwningAdapter().toJson(doc);
+        return getSingleAdapter().toJson(doc);
     }
 
     @Transactional
@@ -106,7 +106,7 @@ public class CreatorService {
         return getSingleAdapter().toJson(Document
                 .with(creatorMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
@@ -121,7 +121,7 @@ public class CreatorService {
         return getSingleAdapter().toJson(Document
                 .with(creatorMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
@@ -138,6 +138,7 @@ public class CreatorService {
             creatorRepository.save(e);
         });
     }
+
     private JsonAdapter<Document<CreatorDto>> getSingleAdapter() {
         return adapterProvider.singleResourceAdapter(CreatorDto.class);
     }

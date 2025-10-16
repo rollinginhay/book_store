@@ -63,12 +63,12 @@ public class GenreService {
         Document<List<GenreDto>> doc = Document
                 .with(dtos)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLinkWithQuery(Routes.GET_GENRES.toString(), paramMapper.getSelfParams()))
-                        .first(LinkMapper.toLinkWithQuery(Routes.GET_GENRES.toString(), paramMapper.getFirstParams()))
-                        .last(LinkMapper.toLinkWithQuery(Routes.GET_GENRES.toString(), paramMapper.getLastParams()))
+                        .self(LinkMapper.toLinkWithQuery(Routes.GET_GENRES, paramMapper.getSelfParams()))
+                        .first(LinkMapper.toLinkWithQuery(Routes.GET_GENRES, paramMapper.getFirstParams()))
+                        .last(LinkMapper.toLinkWithQuery(Routes.GET_GENRES, paramMapper.getLastParams()))
                         //has to manually check for null in case of invalid pages
-                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_GENRES.toString(), paramMapper.getNextParams()))
-                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_GENRES.toString(), paramMapper.getPrevParams()))
+                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_GENRES, paramMapper.getNextParams()))
+                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_GENRES, paramMapper.getPrevParams()))
                         .build().toMap()))
                 .build();
         return getListAdapter().toJson(doc);
@@ -79,16 +79,16 @@ public class GenreService {
 
         Genre found = genreRepository.findById(id).orElseThrow();
 
-        GenreOwningDto dto = genreOwningMapper.toDto(found);
+        GenreDto dto = genreMapper.toDto(found);
 
-        Document<GenreOwningDto> doc = Document
+        Document<GenreDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID, id))
                         .build().toMap()))
                 .build();
 
-        return getSingleOwningAdapter().toJson(doc);
+        return getSingleAdapter().toJson(doc);
     }
 
     @Transactional
@@ -109,7 +109,7 @@ public class GenreService {
         return getSingleAdapter().toJson(Document
                 .with(genreMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
@@ -124,7 +124,7 @@ public class GenreService {
         return getSingleAdapter().toJson(Document
                 .with(genreMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }

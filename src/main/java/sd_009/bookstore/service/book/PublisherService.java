@@ -61,12 +61,12 @@ public class PublisherService {
         Document<List<PublisherDto>> doc = Document
                 .with(dtos)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS.toString(), paramMapper.getSelfParams()))
-                        .first(LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS.toString(), paramMapper.getFirstParams()))
-                        .last(LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS.toString(), paramMapper.getLastParams()))
+                        .self(LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS, paramMapper.getSelfParams()))
+                        .first(LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS, paramMapper.getFirstParams()))
+                        .last(LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS, paramMapper.getLastParams()))
                         //has to manually check for null in case of invalid pages
-                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS.toString(), paramMapper.getNextParams()))
-                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS.toString(), paramMapper.getPrevParams()))
+                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS, paramMapper.getNextParams()))
+                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_PUBLISHERS, paramMapper.getPrevParams()))
                         .build().toMap()))
                 .build();
         return getListAdapter().toJson(doc);
@@ -77,16 +77,16 @@ public class PublisherService {
 
         Publisher found = publisherRepository.findById(id).orElseThrow();
 
-        PublisherOwningDto dto = publisherOwningMapper.toDto(found);
+        PublisherDto dto = publisherMapper.toDto(found);
 
-        Document<PublisherOwningDto> doc = Document
+        Document<PublisherDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID, id))
                         .build().toMap()))
                 .build();
 
-        return getSingleOwningAdapter().toJson(doc);
+        return getSingleAdapter().toJson(doc);
     }
 
     @Transactional
@@ -107,7 +107,7 @@ public class PublisherService {
         return getSingleAdapter().toJson(Document
                 .with(publisherMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
@@ -122,10 +122,11 @@ public class PublisherService {
         return getSingleAdapter().toJson(Document
                 .with(publisherMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
+
     @Transactional
     public void delete(Long id) {
         publisherRepository.findById(id).ifPresent(e -> {

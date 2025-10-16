@@ -44,7 +44,7 @@ public class ReviewService {
 
         Document<List<ReviewOwningDto>> doc = Document.with(dtos).links(
                 Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_REVIEWS_BY_BOOK_ID.toString(), book.getId()))
+                        .self(LinkMapper.toLink(Routes.MULTI_BOOK_RELATIONSHIP_REVIEW, book.getId()))
                         .build().toMap())
         ).build();
 
@@ -56,16 +56,16 @@ public class ReviewService {
 
         Review found = reviewRepository.findById(id).orElseThrow();
 
-        ReviewOwningDto dto = reviewOwningMapper.toDto(found);
+        ReviewDto dto = reviewMapper.toDto(found);
 
-        Document<ReviewOwningDto> doc = Document
+        Document<ReviewDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_REVIEW_BY_ID.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_REVIEW_BY_ID, id))
                         .build().toMap()))
                 .build();
 
-        return getSingleOwningAdapter().toJson(doc);
+        return getSingleAdapter().toJson(doc);
     }
 
     @Transactional
@@ -76,7 +76,7 @@ public class ReviewService {
         return getSingleAdapter().toJson(Document
                 .with(reviewMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_REVIEW_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_REVIEW_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
@@ -93,7 +93,7 @@ public class ReviewService {
         return getSingleAdapter().toJson(Document
                 .with(reviewMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_REVIEW_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_REVIEW_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }

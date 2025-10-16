@@ -112,7 +112,7 @@ public class BookService {
         return getSingleAdapter().toJson(Document
                 .with(bookMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
@@ -127,7 +127,7 @@ public class BookService {
         return getSingleAdapter().toJson(Document
                 .with(bookMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
@@ -284,7 +284,7 @@ public class BookService {
                 return adapterProvider.listResourceAdapter(BookDetailDto.class).toJson(Document
                         .with(dtos)
                         .links(Links.from(JsonApiLinksObject.builder()
-                                .self(LinkMapper.toLink(Routes.BOOK_RELATIONSHIP_BOOK_DETAIL_PATH, bookId))
+                                .self(LinkMapper.toLink(Routes.MULTI_BOOK_RELATIONSHIP_BOOK_DETAIL, bookId))
                                 .build().toMap()))
                         .build());
             }
@@ -294,7 +294,7 @@ public class BookService {
                 return adapterProvider.listResourceAdapter(ReviewDto.class).toJson(Document
                         .with(dtos)
                         .links(Links.from(JsonApiLinksObject.builder()
-                                .self(LinkMapper.toLink(Routes.BOOK_RELATIONSHIP_BOOK_REVIEW_PATH, bookId))
+                                .self(LinkMapper.toLink(Routes.MULTI_BOOK_RELATIONSHIP_REVIEW, bookId))
                                 .build().toMap()))
                         .build());
             }

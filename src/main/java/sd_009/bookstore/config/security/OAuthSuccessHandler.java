@@ -18,7 +18,7 @@ import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.RoleRepository;
 import sd_009.bookstore.repository.UserRepository;
 import sd_009.bookstore.service.auth.JwtService;
-import sd_009.bookstore.util.mapper.user.UserMapper;
+import sd_009.bookstore.util.mapper.user.UserMapperManual;
 
 import java.io.IOException;
 import java.util.List;
@@ -66,7 +66,7 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
 
         String jwtToken = jwtService.generateToken(user.getEmail(), Map.of("roles", user.getRoles().stream().map(Role::getName).toList()));
 
-        AuthObject authResp = UserMapper.mapToAuthResponse(user, jwtToken);
+        AuthObject authResp = UserMapperManual.mapToAuthResponse(user, jwtToken);
 
         response.setContentType("application/vnd.api+json");
         response.setCharacterEncoding("UTF-8");

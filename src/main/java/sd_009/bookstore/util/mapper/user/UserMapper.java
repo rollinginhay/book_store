@@ -1,17 +1,15 @@
 package sd_009.bookstore.util.mapper.user;
 
-import sd_009.bookstore.dto.jsonApiResource.user.AuthObject;
+import org.mapstruct.*;
 import sd_009.bookstore.entity.user.User;
+import sd_009.bookstore.dto.jsonApiResource.user.UserDto;
 
-public class UserMapper {
-    public static AuthObject mapToAuthResponse(User user, String jwtToken) {
-        return AuthObject.builder()
-                .oauthId(user.getOauth2Id())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .jwtToken(jwtToken)
-                .build();
-    }
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, uses = {RoleMapper.class})
+public interface UserMapper {
+    User toEntity(UserDto userDto);
+
+    UserDto toDto(User user);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    User partialUpdate(UserDto userDto, @MappingTarget User user);
 }

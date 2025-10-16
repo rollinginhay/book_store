@@ -44,7 +44,7 @@ public class BookDetailService {
 
         Document<List<BookDetailOwningDto>> doc = Document.with(dtos).links(
                 Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAILS_BY_BOOK_ID.toString(), book.getId()))
+                        .self(LinkMapper.toLink(Routes.MULTI_BOOK_RELATIONSHIP_BOOK_DETAIL, book.getId()))
                         .build().toMap())
         ).build();
 
@@ -56,16 +56,16 @@ public class BookDetailService {
 
         BookDetail found = bookDetailRepository.findById(id).orElseThrow();
 
-        BookDetailOwningDto dto = bookDetailOwningMapper.toDto(found);
+        BookDetailDto dto = bookDetailMapper.toDto(found);
 
-        Document<BookDetailOwningDto> doc = Document
+        Document<BookDetailDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAIL_BY_ID.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAIL_BY_ID, id))
                         .build().toMap()))
                 .build();
 
-        return getSingleOwningAdapter().toJson(doc);
+        return getSingleAdapter().toJson(doc);
     }
 
     @Transactional
@@ -77,7 +77,7 @@ public class BookDetailService {
         return getSingleAdapter().toJson(Document
                 .with(bookDetailMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAIL_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAIL_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
@@ -94,7 +94,7 @@ public class BookDetailService {
         return getSingleAdapter().toJson(Document
                 .with(bookDetailMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAIL_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_BOOK_DETAIL_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }

@@ -59,12 +59,12 @@ public class SeriesService {
         Document<List<SeriesDto>> doc = Document
                 .with(dtos)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLinkWithQuery(Routes.GET_SERIES.toString(), paramMapper.getSelfParams()))
-                        .first(LinkMapper.toLinkWithQuery(Routes.GET_SERIES.toString(), paramMapper.getFirstParams()))
-                        .last(LinkMapper.toLinkWithQuery(Routes.GET_SERIES.toString(), paramMapper.getLastParams()))
+                        .self(LinkMapper.toLinkWithQuery(Routes.GET_SERIES, paramMapper.getSelfParams()))
+                        .first(LinkMapper.toLinkWithQuery(Routes.GET_SERIES, paramMapper.getFirstParams()))
+                        .last(LinkMapper.toLinkWithQuery(Routes.GET_SERIES, paramMapper.getLastParams()))
                         //has to manually check for null in case of invalid pages
-                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_SERIES.toString(), paramMapper.getNextParams()))
-                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_SERIES.toString(), paramMapper.getPrevParams()))
+                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_SERIES, paramMapper.getNextParams()))
+                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_SERIES, paramMapper.getPrevParams()))
                         .build().toMap()))
                 .build();
         return getListAdapter().toJson(doc);
@@ -80,7 +80,7 @@ public class SeriesService {
         Document<SeriesOwningDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID_PATH.toString(), id))
+                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID, id))
                         .build().toMap()))
                 .build();
 
@@ -106,7 +106,7 @@ public class SeriesService {
         return getSingleAdapter().toJson(Document
                 .with(seriesMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }
@@ -121,7 +121,7 @@ public class SeriesService {
         return getSingleAdapter().toJson(Document
                 .with(seriesMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID_PATH, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
     }

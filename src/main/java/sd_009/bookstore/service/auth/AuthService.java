@@ -13,7 +13,7 @@ import sd_009.bookstore.entity.user.RoleType;
 import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.RoleRepository;
 import sd_009.bookstore.repository.UserRepository;
-import sd_009.bookstore.util.mapper.user.UserMapper;
+import sd_009.bookstore.util.mapper.user.UserMapperManual;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +31,7 @@ public class AuthService {
 
         String token = jwtService.generateToken(user.getEmail(), Map.of("roles", user.getRoles().stream().map(Role::getName)));
 
-        return UserMapper.mapToAuthResponse(user, token);
+        return UserMapperManual.mapToAuthResponse(user, token);
     }
 
     public AuthObject register(RegisterRequest registerRequest) {
@@ -51,6 +51,6 @@ public class AuthService {
 
         String jwtToken = jwtService.generateToken(savedUser.getEmail(), Map.of("roles", savedUser.getRoles().stream().map(Role::getName)));
 
-        return UserMapper.mapToAuthResponse(savedUser, jwtToken);
+        return UserMapperManual.mapToAuthResponse(savedUser, jwtToken);
     }
 }
