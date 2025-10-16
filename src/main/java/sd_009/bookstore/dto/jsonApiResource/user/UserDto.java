@@ -1,5 +1,8 @@
 package sd_009.bookstore.dto.jsonApiResource.user;
 
+import jsonapi.Id;
+import jsonapi.Resource;
+import jsonapi.ToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import sd_009.bookstore.entity.user.User;
@@ -13,12 +16,14 @@ import java.util.List;
  */
 @AllArgsConstructor
 @Getter
+@Resource(type = "user")
 public class UserDto implements Serializable {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
     private final String note;
-    private final Long id;
+    @Id
+    private final String id;
     private final String email;
     private final String password;
     private final String username;
@@ -27,5 +32,6 @@ public class UserDto implements Serializable {
     private final String address;
     private final String oauth2Id;
     private final Boolean isOauth2User;
+    @ToMany(name = "roles")
     private final List<RoleDto> roles;
 }

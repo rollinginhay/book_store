@@ -1,5 +1,7 @@
 package sd_009.bookstore.dto.jsonApiResource.user;
 
+import jsonapi.Id;
+import jsonapi.Resource;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import sd_009.bookstore.entity.user.Role;
@@ -12,11 +14,13 @@ import java.time.LocalDateTime;
  */
 @AllArgsConstructor
 @Getter
+@Resource(type = "role")
 public class RoleDto implements Serializable {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
     private final String note;
-    private final Long id;
+    @Id
+    private final String id;
     private final String name;
 }

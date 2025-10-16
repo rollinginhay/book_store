@@ -4,6 +4,7 @@ import com.squareup.moshi.JsonAdapter;
 import jsonapi.Document;
 import jsonapi.Links;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
@@ -21,6 +22,7 @@ import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentDetailService {
@@ -68,9 +70,7 @@ public class PaymentDetailService {
     @Transactional
     public String save(String json) {
         PaymentDetailDto dto = jsonApiValidator.readAndValidate(json, PaymentDetailDto.class);
-
         PaymentDetail saved = paymentDetailRepository.save(paymentDetailMapper.toEntity(dto));
-
         return getSingleAdapter().toJson(Document
                 .with(paymentDetailMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
