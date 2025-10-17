@@ -39,10 +39,11 @@ public class Receipt extends AuditableEntity {
 
     private Long grandTotal;
 
-    private String orderStatus;
-
     @Enumerated(EnumType.STRING)
     private OrderType orderType;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus orderStatus;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
     private User customer;
