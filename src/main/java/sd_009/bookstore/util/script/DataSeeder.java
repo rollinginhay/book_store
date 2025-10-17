@@ -1,12 +1,20 @@
 package sd_009.bookstore.util.script;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.entity.book.*;
+import sd_009.bookstore.entity.receipt.PaymentDetail;
+import sd_009.bookstore.entity.receipt.PaymentType;
+import sd_009.bookstore.entity.receipt.Receipt;
+import sd_009.bookstore.entity.receipt.ReceiptDetail;
+import sd_009.bookstore.repository.BookDetailRepository;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.GenreRepository;
+import sd_009.bookstore.repository.ReceiptRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,11 +25,43 @@ import java.util.List;
 public class DataSeeder {
     private final BookRepository bookRepository;
     private final GenreRepository genreRepository;
+    private final BookDetailRepository bookDetailRepository;
+    private final ReceiptRepository receiptRepository;
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void seedReceipt() {
+        PaymentDetail paymentDetail = PaymentDetail.builder()
+                .amount(999999L)
+                .paymentType(PaymentType.TRANSFER)
+                .provider("nothing")
+                .providerId("nothing")
+                .build();
+
+        ReceiptDetail receiptDetail = ReceiptDetail.builder()
+                .bookCopy(bookDetailRepository.findById(1L).get())
+                .pricePerUnit(5000L)
+                .quantity(10L)
+                .build();
+
+        Receipt receipt = Receipt.builder()
+                .customer(null)
+                .customerAddress(null)
+                .customerName(null)
+                .customerPhone(null)
+                .receiptDetails(List.of(receiptDetail))
+                .paymentDetail(paymentDetail)
+                .build();
+
+        receiptDetail.setReceipt(receipt);
+        paymentDetail.setReceipt(receipt);
+
+        receiptRepository.save(receipt);
+    }
 
     //commandline runner create async error when insert before schema is ready, use event listener instead
-//    @EventListener(ApplicationReadyEvent.class)
+    @EventListener(ApplicationReadyEvent.class)
     @Transactional
-    public void run() {
+    public void seedBook() {
         Genre genre1 = Genre.builder().name("genre 1").build();
         Genre genre2 = Genre.builder().name("genre 2").build();
         Genre genre3 = Genre.builder().name("unattached genre").build();

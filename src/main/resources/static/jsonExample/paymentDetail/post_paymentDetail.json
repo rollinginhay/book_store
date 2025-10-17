@@ -3,10 +3,8 @@
     "type": "paymentDetail",
     "attributes": {
       "amount": 999999,
-      "createdAt": "2025-10-16T14:39:14.3541416",
       "enabled": true,
-      "paymentType": "CASH",
-      "updatedAt": "2025-10-16T14:39:14.3541416"
+      "paymentType": "CASH"
     }
   }
 }

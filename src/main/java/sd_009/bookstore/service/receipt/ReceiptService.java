@@ -32,6 +32,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+
 public class ReceiptService {
     private final JsonApiAdapterProvider adapterProvider;
     private final JsonApiValidator validator;

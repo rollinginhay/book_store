@@ -1,6 +1,7 @@
 package sd_009.bookstore.service.receipt;
 
 import com.squareup.moshi.JsonAdapter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jsonapi.Document;
 import jsonapi.Links;
 import lombok.RequiredArgsConstructor;
