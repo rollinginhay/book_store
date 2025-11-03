@@ -1,0 +1,14 @@
+{
+  "data": {
+    "type": "cartDetail",
+    "attributes": {
+      "quantity": 1,
+      "amount": 150000,
+      "enabled": true
+    },
+    "relationships": {
+      "user": { "data": { "type": "user", "id": "1" } },
+      "bookDetail": { "data": { "type": "bookDetail", "id": "3" } }
+    }
+  }
+}

@@ -18,4 +18,5 @@ public record RegisterRequest(
         @ValidPhone(message = "Invalid phone number")
         String phoneNumber
 ) {
-}
+
+                }
