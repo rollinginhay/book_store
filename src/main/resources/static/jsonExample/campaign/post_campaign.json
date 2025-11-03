@@ -1,0 +1,12 @@
+{
+  "data": {
+    "type": "campaign",
+    "attributes": {
+      "name": "Summer Sale",
+      "campaignType": "PERCENTAGE_DISCOUNT",
+      "startDate": "2025-07-01",
+      "endDate": "2025-07-31",
+      "enabled": true
+    }
+  }
+}

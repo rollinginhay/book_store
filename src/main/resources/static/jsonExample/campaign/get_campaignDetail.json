@@ -1,0 +1,17 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/campaignDetail/1"
+  },
+  "data": {
+    "type": "campaignDetail",
+    "id": "1",
+    "attributes": {
+      "value": 0.2,
+      "enabled": true
+    },
+    "relationships": {
+      "campaign": { "data": { "type": "campaign", "id": "1" } },
+      "bookDetail": { "data": { "type": "bookDetail", "id": "5" } }
+    }
+  }
+}

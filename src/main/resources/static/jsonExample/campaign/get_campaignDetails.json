@@ -1,0 +1,31 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/campaign/1/relationships/campaignDetail"
+  },
+  "data": [
+    {
+      "type": "campaignDetail",
+      "id": "1",
+      "attributes": {
+        "value": 0.2,
+        "enabled": true
+      },
+      "relationships": {
+        "campaign": { "data": { "type": "campaign", "id": "1" } },
+        "bookDetail": { "data": { "type": "bookDetail", "id": "5" } }
+      }
+    },
+    {
+      "type": "campaignDetail",
+      "id": "2",
+      "attributes": {
+        "value": 0.1,
+        "enabled": true
+      },
+      "relationships": {
+        "campaign": { "data": { "type": "campaign", "id": "1" } },
+        "bookDetail": { "data": { "type": "bookDetail", "id": "7" } }
+      }
+    }
+  ]
+}

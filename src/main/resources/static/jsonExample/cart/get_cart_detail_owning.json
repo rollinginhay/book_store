@@ -1,0 +1,49 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/cartDetail/1/owning",
+    "first": null,
+    "last": null,
+    "next": null,
+    "prev": null
+  },
+  "data": {
+    "type": "cartDetail",
+    "id": "1",
+    "attributes": {
+      "quantity": 2,
+      "amount": 300000,
+      "enabled": true,
+      "createdAt": "2025-10-21T10:00:00",
+      "updatedAt": "2025-10-21T10:10:00"
+    },
+    "relationships": {
+      "user": {
+        "data": { "type": "user", "id": "1" }
+      },
+      "bookDetail": {
+        "data": { "type": "bookDetail", "id": "5" }
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "user",
+      "id": "1",
+      "attributes": {
+        "username": "admin",
+        "email": "admin@gmail.com",
+        "enabled": true
+      }
+    },
+    {
+      "type": "bookDetail",
+      "id": "5",
+      "attributes": {
+        "isbn": "978-6042103211",
+        "price": 150000,
+        "bookCondition": "new",
+        "enabled": true
+      }
+    }
+  ]
+}

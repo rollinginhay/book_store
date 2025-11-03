@@ -1,0 +1,13 @@
+{
+  "data": {
+    "type": "campaignDetail",
+    "attributes": {
+      "value": 0.15,
+      "enabled": true
+    },
+    "relationships": {
+      "campaign": { "data": { "type": "campaign", "id": "1" } },
+      "bookDetail": { "data": { "type": "bookDetail", "id": "5" } }
+    }
+  }
+}

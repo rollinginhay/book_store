@@ -3,9 +3,9 @@ spring:
     name: book-store
   #DB
   datasource:
-    url: jdbc:mysql://localhost:3307/book_store
+    url: jdbc:mysql://localhost:3306/book_store
     username: root
-    password: root
+    password: 1234567890
     driver-class-name: com.mysql.cj.jdbc.Driver
   #JPA
   jpa:
@@ -64,8 +64,7 @@ server:
   error:
     whitelabel:
       enabled: false
-
-#Jsonapi content type
+# Custom Config
 config:
   jsonapi:
     contentType: application/vnd.api+json

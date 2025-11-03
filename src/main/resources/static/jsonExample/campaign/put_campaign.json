@@ -1,0 +1,13 @@
+{
+  "data": {
+    "type": "campaign",
+    "id": "1",
+    "attributes": {
+      "name": "Summer Sale Updated",
+      "campaignType": "FLAT_DISCOUNT",
+      "startDate": "2025-07-05",
+      "endDate": "2025-08-05",
+      "enabled": true
+    }
+  }
+}
