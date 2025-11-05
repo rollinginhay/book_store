@@ -53,7 +53,7 @@ public class UserController {
                     description = "Success",
                     content = @Content(examples = @ExampleObject(
                             name = "Get user by id resp",
-                            externalValue = "/jsonExample/user/get_user_by_id.json"
+                            externalValue = "/jsonExample/user/get_user.json"
                     ))
             )
     )
