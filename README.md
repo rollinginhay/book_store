@@ -18,9 +18,11 @@ do NOT commit to main, make your own branch
 
 ---
 
+copy file application.example.yml, tạo file application.yml, copy nội dung trong file example qua, điển thông tin db các thứ riêng của mình vào application.yml
+
 điền thông tin url db: port, tên db, username password
 
-đổi tên application.example.yml thành application.yml
+KHÔNG commit file application.yml
 
 chạy app để tạo các bảng trong db
 
