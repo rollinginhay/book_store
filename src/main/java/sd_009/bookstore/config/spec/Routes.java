@@ -87,4 +87,32 @@ public enum Routes {
     public static final String MULTI_RECEIPT_RELATIONSHIP_PAYMENT_DETAIL = "/v1/receipt/{id}/relationships/paymentDetail";
     public static final String MULTI_RECEIPT_RELATIONSHIP_GENERIC = "/v1/receipt/{id}/relationships/{dependent}";
 
+    // CART DETAIL
+    public static final String GET_CART_DETAIL_BY_ID = "/v1/cartDetail/{id}";
+    public static final String POST_CART_DETAIL_CREATE = "/v1/cartDetail/create";
+    public static final String PUT_CART_DETAIL_UPDATE = "/v1/cartDetail/update";
+    public static final String DELETE_CART_DETAIL_DELETE = "/v1/cartDetail/{id}";
+    public static final String MULTI_USER_RELATIONSHIP_CART_DETAIL = "/v1/user/{id}/relationships/cartDetail";
+
+    // ===================== CAMPAIGN =====================
+    public static final String GET_CAMPAIGNS = "/v1/campaigns";
+    public static final String GET_CAMPAIGN_BY_ID = "/v1/campaign/{id}";
+    public static final String POST_CAMPAIGN_CREATE = "/v1/campaign/create";
+    public static final String PUT_CAMPAIGN_UPDATE = "/v1/campaign/update";
+    public static final String DELETE_CAMPAIGN_DELETE = "/v1/campaign/{id}";
+
+    public static final String GET_CAMPAIGN_DETAIL_BY_ID = "/v1/campaignDetail/{id}";
+    public static final String POST_CAMPAIGN_DETAIL_CREATE = "/v1/campaignDetail/create";
+    public static final String PUT_CAMPAIGN_DETAIL_UPDATE = "/v1/campaignDetail/update";
+    public static final String DELETE_CAMPAIGN_DETAIL_DELETE = "/v1/campaignDetail/{id}";
+    public static final String MULTI_CAMPAIGN_RELATIONSHIP_CAMPAIGN_DETAIL = "/v1/campaign/{id}/relationships/campaignDetail";
+
+
+    // ===================== USER =====================
+    public static final String GET_USERS = "/v1/users";
+    public static final String GET_USER_BY_ID = "/v1/user/{id}";
+    public static final String POST_USER_CREATE = "/v1/user/create";
+    public static final String PUT_USER_UPDATE = "/v1/user/update";
+    public static final String DELETE_USER_DELETE = "/v1/user/{id}";
+
 }
