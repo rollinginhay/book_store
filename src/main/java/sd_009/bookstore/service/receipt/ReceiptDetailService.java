@@ -10,9 +10,12 @@ import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
+import sd_009.bookstore.dto.jsonApiResource.book.BookDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDetailDto;
+import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.entity.receipt.Receipt;
 import sd_009.bookstore.entity.receipt.ReceiptDetail;
+import sd_009.bookstore.repository.BookDetailRepository;
 import sd_009.bookstore.repository.ReceiptDetailRepository;
 import sd_009.bookstore.repository.ReceiptRepository;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
@@ -30,6 +33,7 @@ public class ReceiptDetailService {
     private final ReceiptDetailMapper receiptDetailMapper;
     private final ReceiptDetailRepository receiptDetailRepository;
     private final ReceiptRepository receiptRepository;
+    private final BookDetailRepository bookDetailRepository;
 
     @Transactional
     public String findByReceiptId(Boolean enabled, Long bookId) {
@@ -98,14 +102,69 @@ public class ReceiptDetailService {
 
     @Transactional
     public void delete(Long id) {
-        receiptDetailRepository.findById(id).ifPresent(e -> {
-            //need to be deleted from shopping carts
-            //receipts query any bookdetail status
-            //need to disable from campaign detail
-            e.setEnabled(false);
-            receiptDetailRepository.save(e);
-        });
+        //need to be deleted from shopping carts
+        //receipts query any bookdetail status
+        //need to disable from campaign detail
+        receiptDetailRepository.findById(id).ifPresent(receiptDetailRepository::delete);
     }
+
+    @Transactional
+    public String attachOrReplaceRelationship(Long receiptDetailId, String json, String relationship) {
+        ReceiptDetail receiptDetail = receiptDetailRepository.findById(receiptDetailId).orElseThrow();
+
+        Class<?> dependentType;
+
+        if (relationship.equals("bookDetail")) {
+            dependentType = BookDetailDto.class;
+        } else {
+            throw new BadRequestException("Invalid relationship type");
+        }
+
+        var dto = jsonApiValidator.readAndValidate(json, dependentType);
+
+        switch (dto) {
+            case BookDetailDto bookDetailDto -> {
+                BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailDto.getId())).orElseThrow();
+                receiptDetail.setBookCopy(bookDetail);
+            }
+            case null, default ->
+                    throw new BadRequestException("Unsupported relationship type");
+        }
+        ReceiptDetail saved = receiptDetailRepository.save(receiptDetail);
+        return getSingleAdapter().toJson(Document
+                .with(receiptDetailMapper.toDto(saved))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_RECEIPT_DETAIL_BY_ID, saved.getId()))
+                        .build().toMap()))
+                .build());
+    }
+
+    //detach not needed, attach and replace only, otherwise delete
+//    @Transactional
+//    public <T> String detachRelationShip(Long receiptDetailId, String json, String relationship) {
+//        ReceiptDetail receiptDetail = receiptDetailRepository.findById(receiptDetailId).orElseThrow();
+//
+//        Class<?> dependentType;
+//
+//        if (relationship.equals("bookDetail")) {
+//            dependentType = BookDetailDto.class;
+//        } else {
+//            throw new BadRequestException("Invalid relationship type");
+//        }
+//
+//        var dto = jsonApiValidator.readAndValidate(json, dependentType);
+//
+//        switch (dto) {
+//            case BookDetailDto bookDetailDto -> {
+//                BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailDto.getId())).orElseThrow();
+//
+//                receiptDetail.setBookCopy(null);
+//            }
+//            case null, default ->
+//                    throw new BadRequestException("Unsupported relationship type");
+//        }
+//        return getSingleAdapter().toJson(Document.with(receiptDetailMapper.toDto(receiptDetailRepository.save(receiptDetail))).build());
+//    }
 
     private JsonAdapter<Document<ReceiptDetailDto>> getSingleAdapter() {
         return adapterProvider.singleResourceAdapter(ReceiptDetailDto.class);

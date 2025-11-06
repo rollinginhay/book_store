@@ -56,4 +56,15 @@ public class ReceiptDetailController {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(null);
     }
 
+    @Operation(
+            summary = "Attach relationship to receiptDetail",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
+                    @ExampleObject(name = "Attach bookDetail req", externalValue = "/jsonExample/bookDetail/get_bookDetail.json")
+            })),
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get receiptDetail by id resp", externalValue = "/jsonExample/receipt/get_receipt.json"))))
+    @PostMapping(Routes.MULTI_RECEIPT_DETAIL_RELATIONSHIP_GENERIC)
+    public ResponseEntity<Object> attachRelationship(@PathVariable(name = "id") Long id, @PathVariable(name = "dependent") String dependent, @RequestBody String json) {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(receiptDetailService.attachOrReplaceRelationship(id, json, dependent));
+    }
+
 }

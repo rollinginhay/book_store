@@ -109,8 +109,8 @@ public class ReceiptController {
     @Operation(
             summary = "Attach relationship to receipt",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
-                    @ExampleObject(name = "Attach genre req", externalValue = "/jsonExample/genre/get_genre.json"),
-                    @ExampleObject(name = "Attach receiptDetail", externalValue = "/jsonExample/receiptDetail/get_receiptDetail.json")
+                    @ExampleObject(name = "Attach paymentDetail req", externalValue = "/jsonExample/paymentDetail/get_paymentDetail.json"),
+                    @ExampleObject(name = "Attach receiptDetail req", externalValue = "/jsonExample/receiptDetail/get_receiptDetail.json")
             })),
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get receipt by id resp", externalValue = "/jsonExample/receipt/get_receipt.json"))))
     @PostMapping(Routes.MULTI_RECEIPT_RELATIONSHIP_GENERIC)
@@ -121,8 +121,8 @@ public class ReceiptController {
     @Operation(
             summary = "Detach relationship from receipt",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
-                    @ExampleObject(name = "Detach genre req", externalValue = "/jsonExample/genre/get_genre.json"),
-                    @ExampleObject(name = "Detach receiptDetail", externalValue = "/jsonExample/receiptDetail/get_receiptDetail.json")
+                    @ExampleObject(name = "Detach paymentDetail req", externalValue = "/jsonExample/paymentDetail/get_paymentDetail.json"),
+                    @ExampleObject(name = "Detach receiptDetail req", externalValue = "/jsonExample/receiptDetail/get_receiptDetail.json")
             })),
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get receipt by id resp", externalValue = "/jsonExample/receipt/get_receipt.json"))))
     @DeleteMapping(Routes.MULTI_RECEIPT_RELATIONSHIP_GENERIC)
