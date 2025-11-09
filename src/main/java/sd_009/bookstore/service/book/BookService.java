@@ -47,11 +47,23 @@ public class BookService {
     @Transactional
     public String find(Boolean enabled, String titleQuery, Pageable pageable) {
         Page<Book> page;
-        if (titleQuery == null || titleQuery.isEmpty()) {
-            page = bookRepository.findByEnabled(enabled, pageable);
+
+        // Nếu không truyền keyword
+        if (titleQuery == null || titleQuery.trim().isEmpty()) {
+            // Nếu có flag enabled thì lọc, không thì lấy tất cả
+            if (enabled != null) {
+                page = bookRepository.findByEnabled(enabled, pageable);
+            } else {
+                page = bookRepository.findAll(pageable);
+            }
         } else {
-            page = bookRepository.findByTitleContainingAndEnabled(titleQuery, enabled, pageable);
+            // Nếu có keyword -> lọc theo title (chỉ có findByTitle trong repo của m)
+            // => convert sang 1 trang (vì findByTitle trả Optional)
+            Optional<Book> found = bookRepository.findByTitle(titleQuery.trim());
+            List<Book> books = found.map(List::of).orElse(List.of());
+            page = new org.springframework.data.domain.PageImpl<>(books, pageable, books.size());
         }
+
         List<BookDto> dtos = page.getContent().stream().map(bookMapper::toDto).toList();
 
         LinkParamMapper<?> paramMapper = LinkParamMapper.<Book>builder()
@@ -66,7 +78,6 @@ public class BookService {
                         .self(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getSelfParams()))
                         .first(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getFirstParams()))
                         .last(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getLastParams()))
-                        //has to manually check for null in case of invalid pages
                         .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getNextParams()))
                         .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getPrevParams()))
                         .build().toMap()))

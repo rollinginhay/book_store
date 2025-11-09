@@ -17,6 +17,7 @@ import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.service.book.GenreService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,6 +31,20 @@ public class GenreController {
     @Operation(
             summary = "Get genres by query",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get genres resp", externalValue = "/jsonExample/genre/get_genres.json"))))
+    @GetMapping("/v1/genres/demo")
+    public ResponseEntity<Object> getDemoGenres() {
+        var genres = List.of(
+                Map.of("id", 1, "name", "Kỹ năng sống"),
+                Map.of("id", 2, "name", "Thiếu nhi"),
+                Map.of("id", 3, "name", "Kinh doanh"),
+                Map.of("id", 4, "name", "Sách trong nước"),
+                Map.of("id", 5, "name", "Sách nước ngoài")
+        );
+        return ResponseEntity.ok().body(genres);
+    }
+
+
+
     @GetMapping(Routes.GET_GENRES)
     public ResponseEntity<Object> getGenres(@RequestParam(required = false, name = "q") String keyword,
                                             @RequestParam(name = "e") Boolean enabled,

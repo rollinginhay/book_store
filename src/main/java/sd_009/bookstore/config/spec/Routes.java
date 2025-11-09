@@ -87,7 +87,9 @@ public enum Routes {
     public static final String MULTI_RECEIPT_RELATIONSHIP_PAYMENT_DETAIL = "/v1/receipt/{id}/relationships/paymentDetail";
     public static final String MULTI_RECEIPT_RELATIONSHIP_GENERIC = "/v1/receipt/{id}/relationships/{dependent}";
 
+
     // CART DETAIL
+    public static final String GET_ALL_CART_DETAIL_BY_USER_ID = "/v1/user/{userId}/relationships/cartDetail";
     public static final String GET_CART_DETAIL_BY_ID = "/v1/cartDetail/{id}";
     public static final String POST_CART_DETAIL_CREATE = "/v1/cartDetail/create";
     public static final String PUT_CART_DETAIL_UPDATE = "/v1/cartDetail/update";

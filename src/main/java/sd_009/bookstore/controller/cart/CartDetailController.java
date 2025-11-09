@@ -37,7 +37,7 @@ public class CartDetailController {
                     ))
             )
     )
-    @GetMapping("/v1/user/{userId}/relationships/cartDetail")
+    @GetMapping(Routes.GET_ALL_CART_DETAIL_BY_USER_ID)
     public ResponseEntity<Object> getCartByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf(contentType))
