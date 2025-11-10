@@ -1,0 +1,22 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/receipt/1"
+  },
+  "data": {
+    "type": "receipt",
+    "id": "1",
+    "attributes": {
+      "totalAmount": 450000,
+      "paymentMethod": "COD",
+      "status": "COMPLETED",
+      "createdAt": "2025-10-25T10:15:00",
+      "updatedAt": "2025-10-25T10:30:00",
+      "enabled": true
+    },
+    "relationships": {
+      "user": { "data": { "type": "user", "id": "1" } },
+      "paymentDetail": { "data": { "type": "paymentDetail", "id": "3" } },
+      "receiptDetail": { "data": { "type": "receiptDetail", "id": "7" } }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "data": {
+    "type": "receipt",
+    "id": "1",
+    "attributes": {
+      "totalAmount": 500000,
+      "status": "COMPLETED",
+      "enabled": true
+    }
+  }
+}
