@@ -32,27 +32,34 @@ public class GenreController {
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get genres resp", externalValue = "/jsonExample/genre/get_genres.json"))))
     @GetMapping(Routes.GET_GENRES)
     public ResponseEntity<Object> getGenres(@RequestParam(required = false, name = "q") String keyword,
-                                            @RequestParam(name = "e") Boolean enabled,
+                                            @RequestParam(required = false, name = "e") Boolean enabled,
                                             @RequestParam int page,
                                             @RequestParam int limit,
                                             @RequestParam(required = false) List<String> sort) {
         if (keyword == null) {
             keyword = "";
         }
+        if (enabled == null) {
+            enabled = true;
+        }
 
         Sort sortInstance = Sort.unsorted();
 
-        for (String query : sort) {
-            String[] queries = query.split(";");
-            String field = queries[0];
-            String order = queries[1];
+        if (sort != null && !sort.isEmpty()) {
+            for (String query : sort) {
+                String[] queries = query.split(";");
+                String field = queries[0];
+                String order = queries[1];
 
-            if (order.equals("asc")) {
-                sortInstance = sortInstance.and(Sort.by(field));
-            } else {
-                sortInstance = sortInstance.and(Sort.by(field).descending());
+                if (order.equals("asc")) {
+                    sortInstance = sortInstance.and(Sort.by(field));
+                } else {
+                    sortInstance = sortInstance.and(Sort.by(field).descending());
+                }
+
             }
-
+        } else {
+            sortInstance = Sort.by("createdAt").descending();
         }
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(genreService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
     }

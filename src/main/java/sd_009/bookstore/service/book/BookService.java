@@ -3,6 +3,7 @@ package sd_009.bookstore.service.book;
 import com.squareup.moshi.JsonAdapter;
 import jsonapi.Document;
 import jsonapi.Links;
+import jsonapi.Meta;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
+import sd_009.bookstore.dto.internal.JsonApiMetaObject;
 import sd_009.bookstore.dto.jsonApiResource.book.*;
 import sd_009.bookstore.entity.book.*;
 import sd_009.bookstore.repository.*;
@@ -70,6 +72,12 @@ public class BookService {
                         .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getNextParams()))
                         .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getPrevParams()))
                         .build().toMap()))
+                .meta(Meta.from(JsonApiMetaObject.builder()
+                        .firstPage(0)
+                        .lastPage(page.getTotalPages() - 1)
+                        .totalPages(page.getTotalPages()
+                        )
+                        .build()))
                 .build();
 
         return getListAdapter().toJson(doc);
