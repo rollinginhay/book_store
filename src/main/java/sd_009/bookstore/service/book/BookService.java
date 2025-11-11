@@ -45,25 +45,32 @@ public class BookService {
     private final GenreRepository genreRepository;
 
     @Transactional
-    public String find(Boolean enabled, String titleQuery, Pageable pageable) {
+    public String find(Boolean enabled, String titleQuery, Pageable pageable, String genreName) {
         Page<Book> page;
 
-        // Nếu không truyền keyword
-        if (titleQuery == null || titleQuery.trim().isEmpty()) {
+        // 🔹 Nếu có truyền genreName => lọc theo thể loại
+        if (genreName != null && !genreName.isBlank()) {
+            page = bookRepository.findByGenreName(genreName.trim(), pageable);
+        }
+
+        // 🔹 Nếu không có genre, xử lý như logic cũ
+        else if (titleQuery == null || titleQuery.trim().isEmpty()) {
             // Nếu có flag enabled thì lọc, không thì lấy tất cả
             if (enabled != null) {
                 page = bookRepository.findByEnabled(enabled, pageable);
             } else {
                 page = bookRepository.findAll(pageable);
             }
-        } else {
-            // Nếu có keyword -> lọc theo title (chỉ có findByTitle trong repo của m)
-            // => convert sang 1 trang (vì findByTitle trả Optional)
+        }
+
+        // 🔹 Nếu có keyword (title) => tìm chính xác tên sách
+        else {
             Optional<Book> found = bookRepository.findByTitle(titleQuery.trim());
             List<Book> books = found.map(List::of).orElse(List.of());
             page = new org.springframework.data.domain.PageImpl<>(books, pageable, books.size());
         }
 
+        // Chuyển sang DTO + JSON:API (giữ nguyên đoạn cũ của m)
         List<BookDto> dtos = page.getContent().stream().map(bookMapper::toDto).toList();
 
         LinkParamMapper<?> paramMapper = LinkParamMapper.<Book>builder()
@@ -85,6 +92,7 @@ public class BookService {
 
         return getListAdapter().toJson(doc);
     }
+
 
     public String findById(Long id) {
         Book found = bookRepository.findById(id).orElseThrow();

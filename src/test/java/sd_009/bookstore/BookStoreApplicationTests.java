@@ -35,7 +35,15 @@ class BookStoreApplicationTests {
 
     @Test
     void fetchingAllBooks() {
-        System.out.println(bookService.find(true, "", PageRequest.of(0, 10, Sort.by("title").descending())));
+        System.out.println(
+                bookService.find(
+                        true,                  // enabled
+                        "",                    // titleQuery
+                        PageRequest.of(0, 10, Sort.by("title").descending()),
+                        null                   // genreName (nếu chưa test lọc genre thì để null)
+                )
+        );
+
     }
 
     @Test

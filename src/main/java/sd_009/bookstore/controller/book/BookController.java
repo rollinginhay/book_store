@@ -31,27 +31,15 @@ public class BookController {
             summary = "Get books by query",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get books resp", externalValue = "/jsonExample/book/get_books.json"))))
 
-    @GetMapping("/v1/books/domestic")
-    public ResponseEntity<Object> getDomesticBooks() {
-        var books = List.of(
-                Map.of("id", 1, "title", "Đắc Nhân Tâm", "author", "Dale Carnegie", "price", 85000,
-                        "genreNames", List.of("Kỹ năng sống", "Sách trong nước")),
-                Map.of("id", 2, "title", "Tôi Tài Giỏi, Bạn Cũng Thế!", "author", "Adam Khoo", "price", 120000,
-                        "genreNames", List.of("Kỹ năng sống", "Sách trong nước"))
-        );
-        return ResponseEntity.ok().body(books);
-    }
-
-
-
     @GetMapping(Routes.GET_BOOKS)
-    public ResponseEntity<Object> getBooks(@RequestParam(required = false, name = "q") String keyword,
-                                           @RequestParam(required = false, name = "e") Boolean enabled,
-                                           @RequestParam(defaultValue = "0") int page,
-                                           @RequestParam(defaultValue = "10") int limit,
-                                           @RequestParam(required = false) List<String> sort) {
-        if (keyword == null) keyword = "";
-
+    public ResponseEntity<Object> getBooks(
+            @RequestParam(required = false, name = "q") String keyword,
+            @RequestParam(name = "e") Boolean enabled,
+            @RequestParam int page,
+            @RequestParam int limit,
+            @RequestParam(required = false) List<String> sort,
+            @RequestParam(required = false, name = "genre") String genreName // 🔹 thêm dòng này
+    ) {
         Sort sortInstance = Sort.unsorted();
         if (sort != null && !sort.isEmpty()) {
             for (String query : sort) {
@@ -59,16 +47,17 @@ public class BookController {
                 String field = queries[0];
                 String order = queries.length > 1 ? queries[1] : "asc";
 
-                sortInstance = sortInstance.and(order.equalsIgnoreCase("asc")
-                        ? Sort.by(field)
-                        : Sort.by(field).descending());
+                sortInstance = order.equalsIgnoreCase("asc")
+                        ? sortInstance.and(Sort.by(field))
+                        : sortInstance.and(Sort.by(field).descending());
             }
         }
 
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf(contentType))
-                .body(bookService.find(enabled, keyword, PageRequest.of(page, limit, sortInstance)));
+                .body(bookService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance), genreName));
     }
+
 
 
 
