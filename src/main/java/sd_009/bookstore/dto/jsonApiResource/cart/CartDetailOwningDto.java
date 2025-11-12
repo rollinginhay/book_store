@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 public class CartDetailOwningDto implements Serializable {
 
     @Id
-    private final String id;
+    private final Long id;
 
     private final Integer quantity;
     private final Double amount;

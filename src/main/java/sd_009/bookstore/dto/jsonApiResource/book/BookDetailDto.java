@@ -24,7 +24,7 @@ public class BookDetailDto implements Serializable {
     private final Boolean enabled;
     private final String note;
     @Id
-    private final String id;
+    private final Long id;
     private final String isbn11;
     private final String isbn13;
     private final String bookFormat;

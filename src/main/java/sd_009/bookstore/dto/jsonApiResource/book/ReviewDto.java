@@ -23,7 +23,7 @@ public class ReviewDto implements Serializable {
     private final Boolean enabled;
     private final String note;
     @Id
-    private final String id;
+    private final Long id;
     private final Integer rating;
     private final String comment;
 }

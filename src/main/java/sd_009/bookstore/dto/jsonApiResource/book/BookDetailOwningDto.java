@@ -22,7 +22,7 @@ public class BookDetailOwningDto implements Serializable {
     private final Boolean enabled;
     private final String note;
     @Id
-    private final String id;
+    private final Long id;
     @ToOne(name = "book")
     private final BookDto book;
     private final String isbn11;

@@ -23,7 +23,7 @@ public class ReceiptDetailDto implements Serializable {
     private final Boolean enabled;
     private final String note;
     @Id
-    private final String id;
+    private final Long id;
     @ToOne(name = "bookDetail")
     private final BookDetailDto bookCopy;
     private final Long pricePerUnit;
