@@ -38,21 +38,29 @@ public class BookController {
         if (keyword == null) {
             keyword = "";
         }
+        if (enabled == null) {
+            enabled = true;
+        }
 
         Sort sortInstance = Sort.unsorted();
 
-        for (String query : sort) {
-            String[] queries = query.split(";");
-            String field = queries[0];
-            String order = queries[1];
+        if (sort != null && !sort.isEmpty()) {
+            for (String query : sort) {
+                String[] queries = query.split(";");
+                String field = queries[0];
+                String order = queries[1];
 
-            if (order.equals("asc")) {
-                sortInstance = sortInstance.and(Sort.by(field));
-            } else {
-                sortInstance = sortInstance.and(Sort.by(field).descending());
+                if (order.equals("asc")) {
+                    sortInstance = sortInstance.and(Sort.by(field));
+                } else {
+                    sortInstance = sortInstance.and(Sort.by(field).descending());
+                }
+
             }
-
+        } else {
+            sortInstance = Sort.by("createdAt").descending();
         }
+
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
     }
 
