@@ -23,7 +23,7 @@ public class CreatorDto implements Serializable {
     private final Boolean enabled;
     private final String note;
     @Id
-    private final Long id;
+    private final String id;
     private final String name;
     private final String role;
 }

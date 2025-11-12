@@ -86,7 +86,7 @@ public class CampaignService {
         CampaignDto dto = validator.readAndValidate(json, CampaignDto.class);
         if (dto.getId() == null) throw new BadRequestException("No identifier found");
 
-        Campaign existing = campaignRepository.findById(dto.getId())
+        Campaign existing = campaignRepository.findById(Long.valueOf(dto.getId()))
                 .orElseThrow(() -> new BadRequestException("Campaign not found"));
 
         Campaign updated = campaignRepository.save(campaignMapper.partialUpdate(dto, existing));

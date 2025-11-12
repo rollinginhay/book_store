@@ -111,7 +111,7 @@ public class CartDetailService {
         CartDetailDto dto = jsonApiValidator.readAndValidate(json, CartDetailDto.class);
         if (dto.getId() == null) throw new BadRequestException("No identifier found");
 
-        CartDetail existing = cartDetailRepository.findById(dto.getId()).orElseThrow();
+        CartDetail existing = cartDetailRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
         CartDetail updated = cartDetailRepository.save(cartDetailMapper.partialUpdate(dto, existing));
 
         Document<CartDetailDto> doc = Document.with(cartDetailMapper.toDto(updated))

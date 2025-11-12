@@ -23,6 +23,6 @@ public class PublisherDto implements Serializable {
     private final Boolean enabled;
     private final String note;
     @Id
-    private final Long id;
+    private final String id;
     private final String name;
 }

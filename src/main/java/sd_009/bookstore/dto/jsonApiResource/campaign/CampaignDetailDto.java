@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 public class CampaignDetailDto implements Serializable {
-    private final Long id;
+    private final String id;
     private final Campaign campaign;
     private final BookDetail bookDetail;
     private final Double value;

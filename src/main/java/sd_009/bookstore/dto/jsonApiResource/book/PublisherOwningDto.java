@@ -20,7 +20,7 @@ public class PublisherOwningDto implements Serializable {
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
     private final String note;
-    private final Long id;
+    private final String id;
     private final String name;
     private final List<BookDto> books;
 }

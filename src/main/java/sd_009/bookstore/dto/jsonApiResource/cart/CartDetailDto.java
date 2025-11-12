@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Resource(type = "cartDetail")
 public class CartDetailDto implements Serializable {
     @Id
-    private final Long id;
+    private final String id;
     private final User user;
     private final BookDetail bookDetail;
     private final Long amount;
