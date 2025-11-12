@@ -1,0 +1,17 @@
+# IntelliJ IDEA / JetBrains
+.idea/
+*.iml
+
+# Maven build output
+/target/
+
+# System files
+*.log
+*.tmp
+
+# Local configuration (sensitive info)
+src/main/resources/application.yml
+
+# Node/npm cache (frontend)
+node_modules/
+dist/
