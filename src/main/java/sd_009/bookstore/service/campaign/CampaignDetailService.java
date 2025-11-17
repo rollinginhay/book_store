@@ -103,7 +103,7 @@ public class CampaignDetailService {
         CampaignDetailDto dto = validator.readAndValidate(json, CampaignDetailDto.class);
         if (dto.getId() == null) throw new BadRequestException("No identifier found");
 
-        CampaignDetail existing = campaignDetailRepository.findById(dto.getId())
+        CampaignDetail existing = campaignDetailRepository.findById(Long.valueOf(dto.getId()))
                 .orElseThrow(() -> new BadRequestException("CampaignDetail not found"));
 
         CampaignDetail updated = campaignDetailRepository.save(campaignDetailMapper.partialUpdate(dto, existing));

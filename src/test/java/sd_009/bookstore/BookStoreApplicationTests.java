@@ -5,7 +5,6 @@ import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
 import jsonapi.Document;
 import jsonapi.JsonApiFactory;
-import jsonapi.Links;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,14 +12,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
-import sd_009.bookstore.dto.jsonApiResource.book.PublisherDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.service.book.BookService;
 import sd_009.bookstore.util.mapper.book.BookMapper;
-
-import java.time.LocalDateTime;
-import java.util.Map;
 
 @SpringBootTest
 class BookStoreApplicationTests {
@@ -74,28 +69,6 @@ class BookStoreApplicationTests {
         System.out.println(dto);
     }
 
-    @Test
-    void bookDtoToJson() {
-
-        PublisherDto publisher = PublisherDto.builder()
-                .id("1")
-                .name("publisher")
-                .build();
-
-        BookDto dto = BookDto.builder()
-                .title("title")
-                .createdAt(LocalDateTime.now())
-                .publisher(publisher)
-                .build();
-
-        Document<BookDto> doc = Document.with(dto).links(Links.from(Map.of("self", "link.com"))).build();
-
-        JsonAdapter<Document<BookDto>> adapter = adapterProvider.singleResourceAdapter(BookDto.class);
-
-        String json = adapter.toJson(doc);
-
-        System.out.println(json);
-    }
 
 
 }

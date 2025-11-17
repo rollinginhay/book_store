@@ -38,8 +38,18 @@ public class BookController {
             @RequestParam int page,
             @RequestParam int limit,
             @RequestParam(required = false) List<String> sort,
-            @RequestParam(required = false, name = "genre") String genreName // 🔹 thêm dòng này
+            @RequestParam(required = false, name = "genre") String genreName // giữ filter của m
     ) {
+
+        // 🟦 Giữ logic của master để tránh null
+        if (keyword == null) {
+            keyword = "";
+        }
+        if (enabled == null) {
+            enabled = true;
+        }
+
+        // 🟦 Logic sort của m — an toàn hơn
         Sort sortInstance = Sort.unsorted();
         if (sort != null && !sort.isEmpty()) {
             for (String query : sort) {
@@ -51,12 +61,21 @@ public class BookController {
                         ? sortInstance.and(Sort.by(field))
                         : sortInstance.and(Sort.by(field).descending());
             }
+        } else {
+            // 🟦 Giữ default sort của master
+            sortInstance = Sort.by("createdAt").descending();
         }
 
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf(contentType))
-                .body(bookService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance), genreName));
+                .body(bookService.find(
+                        enabled,
+                        keyword,
+                        PageRequest.of(page, limit).withSort(sortInstance),
+                        genreName // giữ filter theo thể loại
+                ));
     }
+
 
 
 

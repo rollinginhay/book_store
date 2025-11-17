@@ -1,8 +1,6 @@
 package sd_009.bookstore.util.script;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +26,7 @@ public class DataSeeder {
     private final BookDetailRepository bookDetailRepository;
     private final ReceiptRepository receiptRepository;
 
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
     public void seedReceipt() {
         PaymentDetail paymentDetail = PaymentDetail.builder()
                 .amount(999999L)
@@ -59,7 +57,7 @@ public class DataSeeder {
     }
 
     //commandline runner create async error when insert before schema is ready, use event listener instead
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void seedBook() {
         Genre genre1 = Genre.builder().name("genre 1").build();

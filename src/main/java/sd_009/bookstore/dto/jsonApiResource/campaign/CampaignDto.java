@@ -15,7 +15,7 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public class CampaignDto implements Serializable {
-    private final Long id;
+    private final String id;
     private final String name;
     private final CampaignType campaignType;
     private final LocalDate startDate;
