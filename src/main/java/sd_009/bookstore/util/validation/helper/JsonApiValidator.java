@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 
+import java.io.IOException;
 import java.util.Set;
 
 @Component
@@ -27,7 +28,7 @@ public class JsonApiValidator {
 
             return data;
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

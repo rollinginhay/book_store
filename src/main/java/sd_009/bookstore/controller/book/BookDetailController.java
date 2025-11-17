@@ -24,11 +24,24 @@ public class BookDetailController {
 
     @Operation(
             summary = "Get bookDetail by id, with attached relationship",
-            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get bookDetail by id resp", externalValue = "/jsonExample/bookDetail/get_bookDetail.json"))))
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get bookDetail by id resp", externalValue = "/jsonExample/bookDetail/get_bookDetails.json"))))
+    @GetMapping(Routes.MULTI_BOOK_RELATIONSHIP_BOOK_DETAIL)
+    public ResponseEntity<Object> getBookDetailsByBookId(@PathVariable Long id, @RequestParam(required = false) Boolean enabled) {
+        if (enabled == null) {
+            enabled = true;
+        }
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookDetailService.findByBookId(enabled, id));
+    }
+
+    @Operation(
+            summary = "Get by BookId",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get bookDetail by bookId", externalValue = "/jsonExample/bookDetail/get_bookDetail.json"))))
+
     @GetMapping(Routes.GET_BOOK_DETAIL_BY_ID)
     public ResponseEntity<Object> getBookDetailById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookDetailService.findById(id));
     }
+
 
     @Operation(
             summary = "Create a new bookDetail",
