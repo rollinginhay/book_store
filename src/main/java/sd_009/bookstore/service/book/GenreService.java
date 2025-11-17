@@ -22,7 +22,9 @@ import sd_009.bookstore.dto.jsonApiResource.book.GenreOwningDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.Genre;
 import sd_009.bookstore.repository.BookRepository;
+import sd_009.bookstore.repository.GenreClosureRepository;
 import sd_009.bookstore.repository.GenreRepository;
+import sd_009.bookstore.util.mapper.book.BookMapper;
 import sd_009.bookstore.util.mapper.book.GenreMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
@@ -44,6 +46,10 @@ public class GenreService {
 
     private final JsonApiValidator jsonApiValidator;
     private final RestClient.Builder builder;
+
+    private final GenreClosureRepository genreClosureRepository;
+    private final BookMapper bookMapper;
+
 
     @Transactional
     public String find(Boolean enabled, String name, Pageable pageable) {

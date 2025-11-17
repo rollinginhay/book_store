@@ -38,4 +38,13 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
     @Query("SELECT b FROM Book b JOIN b.genres g WHERE g.name = :genreName AND b.enabled = true")
     Page<Book> findByGenreName(@Param("genreName") String genreName, Pageable pageable);
 
+    @Query("""
+    SELECT DISTINCT b 
+    FROM Book b 
+    JOIN b.genres g
+    WHERE g IN :genres
+""")
+    Page<Book> findAllByGenresIn(@Param("genres") List<Genre> genres, Pageable pageable);
+    Page<Book> findDistinctByGenresInAndEnabled(List<Genre> genres, Boolean enabled, Pageable pageable);
+
 }

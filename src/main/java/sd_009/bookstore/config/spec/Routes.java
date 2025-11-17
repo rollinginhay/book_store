@@ -117,4 +117,9 @@ public enum Routes {
     public static final String PUT_USER_UPDATE = "/v1/user/update";
     public static final String DELETE_USER_DELETE = "/v1/user/{id}";
 
+    // GENRE CLOSURE (Cây thể loại)
+    public static final String GET_GENRE_CLOSURES = "/v1/genreClosures";
+    public static final String GET_GENRE_CLOSURE_DESCENDANTS = "/v1/genreClosure/{ancestorId}/descendants";
+    public static final String GET_GENRE_CLOSURE_ANCESTORS = "/v1/genreClosure/{descendantId}/ancestors";
+
 }

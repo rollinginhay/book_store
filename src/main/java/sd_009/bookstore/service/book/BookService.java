@@ -45,6 +45,7 @@ public class BookService {
     private final PublisherRepository publisherRepository;
     private final SeriesRepository seriesRepository;
     private final GenreRepository genreRepository;
+    private final GenreClosureRepository genreClosureRepository;
 
     @Transactional
     public String find(Boolean enabled, String titleQuery, Pageable pageable, String genreName) {
@@ -102,6 +103,7 @@ public class BookService {
     }
 
 
+
     public String findById(Long id) {
         Book found = bookRepository.findById(id).orElseThrow();
 
@@ -116,6 +118,52 @@ public class BookService {
 
         return getSingleAdapter().toJson(doc);
     }
+
+    @Transactional(readOnly = true)
+    public String findBooksByGenre(Long genreId, Pageable pageable) {
+        // 1️⃣ Lấy tất cả ID thể loại con (bao gồm chính nó)
+        List<Long> descendantIds = genreClosureRepository.findAllDescendantIds(genreId);
+        if (descendantIds == null || descendantIds.isEmpty()) {
+            descendantIds = List.of(genreId);
+        }
+
+        // 2️⃣ Lấy entity Genre tương ứng
+        List<Genre> genres = genreRepository.findAllById(descendantIds);
+
+        // 3️⃣ Lấy sách thuộc các genre đó
+        Page<Book> page = bookRepository.findDistinctByGenresInAndEnabled(genres, true, pageable);
+
+        // 4️⃣ Map sang DTO
+        List<BookDto> dtos = page.getContent().stream().map(bookMapper::toDto).toList();
+
+        // 5️⃣ Tạo JSON:API document (dùng hệ adapter của m)
+        LinkParamMapper<Book> paramMapper = LinkParamMapper.<Book>builder()
+                .page(page)
+                .build();
+
+        Document<List<BookDto>> doc = Document
+                .with(dtos)
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getSelfParams()))
+                        .first(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getFirstParams()))
+                        .last(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getLastParams()))
+                        .next(paramMapper.getNextParams() == null ? null
+                                : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getNextParams()))
+                        .prev(paramMapper.getPrevParams() == null ? null
+                                : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getPrevParams()))
+                        .build().toMap()))
+                .meta(Meta.from(JsonApiMetaObject.builder()
+                        .firstPage(0)
+                        .lastPage(page.getTotalPages() - 1)
+                        .totalPages(page.getTotalPages())
+                        .build()))
+                .build();
+
+        // ✅ Trả về JSON
+        return adapterProvider.listResourceAdapter(BookDto.class).toJson(doc);
+    }
+
+
 
     @Transactional
     public String save(String json) {
