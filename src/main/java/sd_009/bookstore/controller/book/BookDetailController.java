@@ -23,17 +23,6 @@ public class BookDetailController {
     private final BookDetailService bookDetailService;
 
     @Operation(
-            summary = "Get bookDetail by id, with attached relationship",
-            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get bookDetail by id resp", externalValue = "/jsonExample/bookDetail/get_bookDetails.json"))))
-    @GetMapping(Routes.MULTI_BOOK_RELATIONSHIP_BOOK_DETAIL)
-    public ResponseEntity<Object> getBookDetailsByBookId(@PathVariable Long id, @RequestParam(required = false) Boolean enabled) {
-        if (enabled == null) {
-            enabled = true;
-        }
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookDetailService.findByBookId(enabled, id));
-    }
-
-    @Operation(
             summary = "Get by BookId",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get bookDetail by bookId", externalValue = "/jsonExample/bookDetail/get_bookDetail.json"))))
 
