@@ -25,8 +25,7 @@ public class BookDetailDto implements Serializable {
     private final String note;
     @Id
     private final String id;
-    private final String isbn11;
-    private final String isbn13;
+    private final String isbn;
     private final String bookFormat;
     private final String dimensions;
     private final Long printLength;
