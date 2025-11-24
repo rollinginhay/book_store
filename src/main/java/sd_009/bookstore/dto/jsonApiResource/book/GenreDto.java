@@ -1,5 +1,6 @@
 package sd_009.bookstore.dto.jsonApiResource.book;
 
+import jakarta.validation.constraints.NotBlank;
 import jsonapi.Id;
 import jsonapi.Resource;
 import lombok.AllArgsConstructor;
@@ -24,5 +25,6 @@ public class GenreDto implements Serializable {
     private final String note;
     @Id
     private final String id;
+    @NotBlank
     private final String name;
 }

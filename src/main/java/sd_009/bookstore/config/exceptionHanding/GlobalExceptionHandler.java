@@ -50,12 +50,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(DuplicateElementException.class)
-    public ResponseEntity<String> duplicateElementExceptionHandler(Exception e, WebRequest request) {
-        log.error("Duplicate element ex handler", e);
-        String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.BAD_REQUEST);
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-    }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<String> constraintViolationExceptionHandler(ConstraintViolationException e, WebRequest request) {
@@ -76,6 +70,13 @@ public class GlobalExceptionHandler {
         log.error("Arguments not valid ex handler", e);
         String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.NOT_FOUND);
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DuplicateElementException.class)
+    public ResponseEntity<String> duplicateElementExceptionHandler(Exception e, WebRequest request) {
+        log.error("Duplicate element ex handler", e);
+        String body = errorMapper.toApiErrorDoc(e, request, HttpStatus.CONFLICT);
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(IsDisabledException.class)

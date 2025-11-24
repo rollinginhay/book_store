@@ -23,12 +23,14 @@ public class BookDetailController {
     private final BookDetailService bookDetailService;
 
     @Operation(
-            summary = "Get bookDetail by id, with attached relationship",
-            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get bookDetail by id resp", externalValue = "/jsonExample/bookDetail/get_bookDetail.json"))))
+            summary = "Get by BookId",
+            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get bookDetail by bookId", externalValue = "/jsonExample/bookDetail/get_bookDetail.json"))))
+
     @GetMapping(Routes.GET_BOOK_DETAIL_BY_ID)
     public ResponseEntity<Object> getBookDetailById(@PathVariable Long id) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookDetailService.findById(id));
     }
+
 
     @Operation(
             summary = "Create a new bookDetail",

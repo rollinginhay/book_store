@@ -31,6 +31,7 @@ public class User extends AuditableEntity {
 
     private String oauth2Id;
 
+    @Builder.Default
     private Boolean isOauth2User = false;
 
     @ManyToMany(fetch = FetchType.EAGER)

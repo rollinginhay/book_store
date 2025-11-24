@@ -3,6 +3,7 @@ package sd_009.bookstore.util.mapper.misc;
 import com.squareup.moshi.JsonAdapter;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Path;
 import jsonapi.Document;
 import jsonapi.Error;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +11,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.WebRequest;
+import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
+import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Iterator;
 
 @Component
 @RequiredArgsConstructor
@@ -27,12 +31,25 @@ public class ErrorMapper {
             return adapter
                     .toJson(Document
                             .from(((ConstraintViolationException) e).getConstraintViolations().stream()
-                                    .map(err -> new Error(
-                                            null,
-                                            String.valueOf(status.value()),
-                                            null,
-                                            err.getMessage(),
-                                            req.getDescription(false)))
+                                    .map(err -> {
+                                                String fieldName = null;
+                                                Iterator<Path.Node> it = err.getPropertyPath().iterator();
+                                                Path.Node last = null;
+                                                while (it.hasNext()) {
+                                                    last = it.next();
+                                                }
+                                                if (last != null) {
+                                                    fieldName = last.getName();
+                                                }
+
+                                                return new Error(
+                                                        null,
+                                                        String.valueOf(status.value()),
+                                                        null,
+                                                        err.getMessage(),
+                                                        fieldName);
+                                            }
+                                    )
                                     .toList()));
         }
         if (e instanceof MethodArgumentNotValidException) {
@@ -45,12 +62,22 @@ public class ErrorMapper {
                                             String.valueOf(status.value()),
                                             null,
                                             err.getDefaultMessage(),
-                                            req.getDescription(false)))
+                                            err.getField()))
                                     .toList()));
         }
 
+        if (e instanceof DuplicateElementException) {
+            JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
+            return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, e.getMessage(), "server"))));
+        }
+        if (e instanceof DependencyConflictException) {
+            JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
+            return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, e.getMessage(), "server"))));
+        }
+
+
         JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
-        return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, e.getMessage(), req.getDescription(false)))));
+        return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, "Internal error", "server"))));
     }
 
     public void writeFilterErrorDoc(HttpServletResponse resp, int status, String message, String detail) throws IOException {

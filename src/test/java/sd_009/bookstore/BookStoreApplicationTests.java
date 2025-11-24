@@ -74,7 +74,4 @@ class BookStoreApplicationTests {
 
         System.out.println(dto);
     }
-
-
-
 }
