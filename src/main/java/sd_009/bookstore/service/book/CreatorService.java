@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
 import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
-import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
@@ -106,7 +105,14 @@ public class CreatorService {
                 throw new DuplicateElementException("Name already exists");
             }
 
-            throw new IsDisabledException("Creator is disabled. Can be reinstated");
+            existing.get().setEnabled(true);
+            Creator saved = creatorRepository.save(existing.get());
+            return getSingleAdapter().toJson(Document
+                    .with(creatorMapper.toDto(saved))
+                    .links(Links.from(JsonApiLinksObject.builder()
+                            .self(LinkMapper.toLink(Routes.GET_CREATOR_BY_ID, saved.getId()))
+                            .build().toMap()))
+                    .build());
         }
 
         Creator saved = creatorRepository.save(creatorMapper.toEntity(dto));

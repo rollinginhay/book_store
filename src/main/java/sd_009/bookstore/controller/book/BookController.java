@@ -58,7 +58,7 @@ public class BookController {
 
             }
         } else {
-            sortInstance = Sort.by("createdAt").descending();
+            sortInstance = Sort.by("updatedAt").descending();
         }
 
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));

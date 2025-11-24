@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
-import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
-import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
@@ -21,13 +19,14 @@ import sd_009.bookstore.dto.internal.JsonApiMetaObject;
 import sd_009.bookstore.dto.jsonApiResource.book.*;
 import sd_009.bookstore.entity.book.*;
 import sd_009.bookstore.repository.*;
-import sd_009.bookstore.util.mapper.book.*;
+import sd_009.bookstore.util.mapper.book.BookDetailMapper;
+import sd_009.bookstore.util.mapper.book.BookMapper;
+import sd_009.bookstore.util.mapper.book.ReviewMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -101,17 +100,7 @@ public class BookService {
     @Transactional
     public String save(String json) {
         BookDto dto = validator.readAndValidate(json, BookDto.class);
-
-        Optional<Book> existing = bookRepository.findByTitle(dto.getTitle());
-
-        if (existing.isPresent()) {
-            if (existing.get().getEnabled()) {
-                throw new DuplicateElementException("Name already exists");
-            }
-
-            throw new IsDisabledException("Book is disabled. Can be reinstated");
-        }
-
+        
         Book saved = bookRepository.save(bookMapper.toEntity(dto));
         return getSingleAdapter().toJson(Document
                 .with(bookMapper.toDto(saved))

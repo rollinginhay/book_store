@@ -59,7 +59,7 @@ public class GenreController {
 
             }
         } else {
-            sortInstance = Sort.by("createdAt").descending();
+            sortInstance = Sort.by("updatedAt").descending();
         }
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(genreService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
     }
