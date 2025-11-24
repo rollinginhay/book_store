@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import sd_009.bookstore.entity.book.Genre;
 import sd_009.bookstore.entity.book.GenreClosure;
 import sd_009.bookstore.entity.book.GenreClosureId;
 
@@ -28,6 +29,15 @@ public interface GenreClosureRepository extends JpaRepository<GenreClosure, Genr
 
     // 🔹 Kiểm tra tồn tại quan hệ cha–con
     boolean existsByAncestor_IdAndDescendant_Id(Long ancestorId, Long descendantId);
+
+    @Query("""
+    SELECT g
+    FROM GenreClosure gc
+    JOIN Genre g ON g.id = gc.descendant.id
+    WHERE gc.ancestor.id = :genreId
+      AND gc.depth > 0
+""")
+    List<Genre> findChildren(Long genreId);
 
 
 }

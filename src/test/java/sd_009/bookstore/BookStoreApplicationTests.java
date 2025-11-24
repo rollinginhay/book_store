@@ -14,8 +14,10 @@ import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.repository.BookRepository;
+import sd_009.bookstore.repository.GenreClosureRepository;
 import sd_009.bookstore.service.book.BookService;
 import sd_009.bookstore.util.mapper.book.BookMapper;
+import sd_009.bookstore.util.mapper.book.GenreMapper;
 
 @SpringBootTest
 class BookStoreApplicationTests {
@@ -27,6 +29,10 @@ class BookStoreApplicationTests {
     JsonApiAdapterProvider adapterProvider;
     @Autowired
     BookService bookService;
+    @Autowired
+    private GenreClosureRepository genreClosureRepository;
+    @Autowired
+    private GenreMapper genreMapper;
 
     @Test
     void fetchingAllBooks() {
@@ -64,7 +70,7 @@ class BookStoreApplicationTests {
     void bookToDto() {
         Book book = bookRepository.findAll().get(0);
 
-        BookDto dto = bookMapper.toDto(book);
+        BookDto dto = bookMapper.toDto(book, genreClosureRepository, genreMapper);
 
         System.out.println(dto);
     }

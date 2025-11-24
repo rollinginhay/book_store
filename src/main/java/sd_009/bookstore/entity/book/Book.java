@@ -56,5 +56,4 @@ public class Book extends AuditableEntity {
 
     private String imageUrl;
 
-
 }

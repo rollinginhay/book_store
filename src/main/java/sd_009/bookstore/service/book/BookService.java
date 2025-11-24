@@ -36,6 +36,7 @@ public class BookService {
     private final JsonApiAdapterProvider adapterProvider;
     private final JsonApiValidator validator;
     private final BookMapper bookMapper;
+    private final GenreMapper genreMapper;
     private final ReviewMapper reviewMapper;
     private final BookDetailMapper bookDetailMapper;
     private final BookRepository bookRepository;
@@ -53,8 +54,32 @@ public class BookService {
 
         // 🔹 Nếu có truyền genreName => lọc theo thể loại
         if (genreName != null && !genreName.isBlank()) {
-            page = bookRepository.findByGenreName(genreName.trim(), pageable);
+
+            // 1️⃣ Tìm genre cha theo tên
+            var parent = genreRepository.findByName(genreName.trim())
+                    .orElse(null);
+
+            if (parent == null) {
+                // Nếu không tìm thấy thể loại đó → trả rỗng
+                page = Page.empty(pageable);
+            } else {
+
+                // 2️⃣ Lấy toàn bộ con của nó (descendant)
+                List<Long> descendantIds =
+                        genreClosureRepository.findAllDescendantIds(parent.getId());
+
+                if (descendantIds == null || descendantIds.isEmpty()) {
+                    descendantIds = List.of(parent.getId());
+                }
+
+                // 3️⃣ Lấy entity Genre
+                List<Genre> genres = genreRepository.findAllById(descendantIds);
+
+                // 4️⃣ Query tất cả sách thuộc các genre đó
+                page = bookRepository.findDistinctByGenresInAndEnabled(genres, true, pageable);
+            }
         }
+
 
         // 🔹 Nếu không có genre, xử lý như logic cũ
         else if (titleQuery == null || titleQuery.trim().isEmpty()) {
@@ -74,7 +99,11 @@ public class BookService {
         }
 
         // Chuyển sang DTO + JSON:API (giữ nguyên đoạn cũ của m)
-        List<BookDto> dtos = page.getContent().stream().map(bookMapper::toDto).toList();
+        List<BookDto> dtos = page.getContent()
+                .stream()
+                .map(b -> bookMapper.toDto(b, genreClosureRepository, genreMapper))
+                .toList();
+
 
         LinkParamMapper<?> paramMapper = LinkParamMapper.<Book>builder()
                 .keyword(titleQuery)
@@ -107,7 +136,8 @@ public class BookService {
     public String findById(Long id) {
         Book found = bookRepository.findById(id).orElseThrow();
 
-        BookDto dto = bookMapper.toDto(found);
+        BookDto dto = bookMapper.toDto(found, genreClosureRepository, genreMapper);
+
 
         Document<BookDto> doc = Document
                 .with(dto)
@@ -134,7 +164,11 @@ public class BookService {
         Page<Book> page = bookRepository.findDistinctByGenresInAndEnabled(genres, true, pageable);
 
         // 4️⃣ Map sang DTO
-        List<BookDto> dtos = page.getContent().stream().map(bookMapper::toDto).toList();
+        List<BookDto> dtos = page.getContent()
+                .stream()
+                .map(b -> bookMapper.toDto(b, genreClosureRepository, genreMapper))
+                .toList();
+
 
         // 5️⃣ Tạo JSON:API document (dùng hệ adapter của m)
         LinkParamMapper<Book> paramMapper = LinkParamMapper.<Book>builder()
@@ -181,7 +215,7 @@ public class BookService {
 
         Book saved = bookRepository.save(bookMapper.toEntity(dto));
         return getSingleAdapter().toJson(Document
-                .with(bookMapper.toDto(saved))
+                .with(bookMapper.toDto(saved, genreClosureRepository, genreMapper))
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID, saved.getId()))
                         .build().toMap()))
@@ -196,7 +230,7 @@ public class BookService {
 
         Book saved = bookRepository.save(bookMapper.partialUpdate(dto, existing));
         return getSingleAdapter().toJson(Document
-                .with(bookMapper.toDto(saved))
+                .with(bookMapper.toDto(saved, genreClosureRepository, genreMapper))
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID, saved.getId()))
                         .build().toMap()))
@@ -278,7 +312,10 @@ public class BookService {
                     throw new BadRequestException("Unsupported relationship type");
         }
         Book saved = bookRepository.save(book);
-        return getSingleAdapter().toJson(Document.with(bookMapper.toDto(saved)).build());
+        return getSingleAdapter().toJson(
+                Document.with(bookMapper.toDto(saved, genreClosureRepository, genreMapper)).build()
+        );
+
     }
 
     @Transactional
@@ -345,7 +382,7 @@ public class BookService {
 
         Book saved = bookRepository.save(book);
         return getSingleAdapter().toJson(Document
-                .with(bookMapper.toDto(saved))
+                .with(bookMapper.toDto(saved, genreClosureRepository, genreMapper))
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID, saved.getId()))
                         .build().toMap()))
