@@ -27,6 +27,7 @@ import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -100,8 +101,9 @@ public class BookService {
     @Transactional
     public String save(String json) {
         BookDto dto = validator.readAndValidate(json, BookDto.class);
-        
-        Book saved = bookRepository.save(bookMapper.toEntity(dto));
+        Book book = bookRepository.save(bookMapper.toEntity(dto));
+        Book saved = bookRepository.save(refreshRelationship(book, json));
+
         return getSingleAdapter().toJson(Document
                 .with(bookMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
@@ -115,8 +117,8 @@ public class BookService {
         BookDto dto = validator.readAndValidate(json, BookDto.class);
 
         Book existing = bookRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
-
-        Book saved = bookRepository.save(bookMapper.partialUpdate(dto, existing));
+//        Book saved = bookRepository.save(bookMapper.partialUpdate(dto, existing));
+        Book saved = bookRepository.save(refreshRelationship(existing, json));
         return getSingleAdapter().toJson(Document
                 .with(bookMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
@@ -139,7 +141,26 @@ public class BookService {
     }
 
     @Transactional
-    public String attachOrReplaceRelationship(Long bookId, String json, String relationship) {
+    public Book refreshRelationship(Book book, String json) {
+        BookDto dto = validator.readAndValidate(json, BookDto.class);
+
+        log.info(dto.toString());
+
+        Publisher publisher = dto.getPublisher() == null ? null : publisherRepository.findById(Long.valueOf(dto.getPublisher().getId())).orElse(null);
+        Series series = dto.getSeries() == null ? null : seriesRepository.findById(Long.valueOf(dto.getSeries().getId())).orElse(null);
+        List<Genre> genres = dto.getGenres().stream().map(e -> genreRepository.findById(Long.valueOf(e.getId()))).flatMap(Optional::stream).toList();
+        List<Creator> creators = dto.getCreators().stream().map(e -> creatorRepository.findById(Long.valueOf(e.getId()))).flatMap(Optional::stream).toList();
+
+        book.setPublisher(publisher);
+        book.setSeries(series);
+        book.setGenres(genres);
+        book.setCreators(creators);
+
+        return bookRepository.save(book);
+    }
+
+    @Transactional
+    public String attachRelationShip(Long bookId, String json, String relationship) {
         Book book = bookRepository.findById(bookId).orElseThrow();
 
         Class<?> dependentType;
