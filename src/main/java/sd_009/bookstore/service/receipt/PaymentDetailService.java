@@ -133,5 +133,4 @@ public class PaymentDetailService {
     private JsonAdapter<Document<List<PaymentDetailDto>>> getListAdapter() {
         return adapterProvider.listResourceAdapter(PaymentDetailDto.class);
     }
-
 }
