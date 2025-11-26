@@ -75,77 +75,42 @@ class BookStoreApplicationTests {
     @Test
     void readJsonWithRelationship() throws IOException {
         String json = "{\n" +
-                "  \"links\": {\n" +
-                "    \"self\": \"http://localhost:8080/v1/books\",\n" +
-                "    \"first\": null,\n" +
-                "    \"last\": null,\n" +
-                "    \"next\": null,\n" +
-                "    \"prev\": null\n" +
-                "  },\n" +
                 "  \"data\": {\n" +
                 "    \"type\": \"book\",\n" +
-                "    \"id\": \"4\",\n" +
+                "    \"id\": \"0\",\n" +
+                "    \"attributes\": {\n" +
+                "      \"title\": \"sdfsdfsdfsdf\",\n" +
+                "      \"edition\": \"\",\n" +
+                "      \"language\": \"\",\n" +
+                "      \"published\": \"2025-11-06\",\n" +
+                "      \"imageUrl\": \"\",\n" +
+                "      \"blurb\": \"\"\n" +
+                "    },\n" +
                 "    \"relationships\": {\n" +
+                "      \"genres\": {\n" +
+                "        \"data\": []\n" +
+                "      },\n" +
+                "      \"creators\": {\n" +
+                "        \"data\": []\n" +
+                "      },\n" +
                 "      \"publisher\": {\n" +
                 "        \"data\": {\n" +
-                "          \"type\": \"publisher\",\n" +
-                "          \"id\": \"4\"\n" +
+                "          \"id\": \"1038\",\n" +
+                "          \"type\": \"publisher\"\n" +
                 "        }\n" +
                 "      },\n" +
                 "      \"series\": {\n" +
                 "        \"data\": {\n" +
-                "          \"type\": \"series\",\n" +
-                "          \"id\": \"4\"\n" +
+                "          \"id\": \"1037\",\n" +
+                "          \"type\": \"series\"\n" +
                 "        }\n" +
-                "      },\n" +
-                "      \"creators\": {\n" +
-                "        \"data\": [\n" +
-                "          {\n" +
-                "            \"type\": \"creator\",\n" +
-                "            \"id\": \"7\"\n" +
-                "          },\n" +
-                "          {\n" +
-                "            \"type\": \"creator\",\n" +
-                "            \"id\": \"8\"\n" +
-                "          }\n" +
-                "        ]\n" +
-                "      },\n" +
-                "      \"genres\": {\n" +
-                "        \"data\": [\n" +
-                "          {\n" +
-                "            \"type\": \"genre\",\n" +
-                "            \"id\": \"7\"\n" +
-                "          },\n" +
-                "          {\n" +
-                "            \"type\": \"genre\",\n" +
-                "            \"id\": \"8\"\n" +
-                "          }\n" +
-                "        ]\n" +
-                "      },\n" +
-                "      \"tags\": {\n" +
-                "        \"data\": []\n" +
-                "      },\n" +
-                "      \"reviews\": {\n" +
-                "        \"data\": []\n" +
-                "      },\n" +
-                "      \"bookCopies\": {\n" +
-                "        \"data\": []\n" +
                 "      }\n" +
-                "    },\n" +
-                "    \"attributes\": {\n" +
-                "      \"createdAt\": \"2025-09-24T22:05:14.789773\",\n" +
-                "      \"edition\": \"edition 1\",\n" +
-                "      \"enabled\": true,\n" +
-                "      \"language\": \"English\",\n" +
-                "      \"published\": \"2025-09-24T22:05:14.771472\",\n" +
-                "      \"title\": \"book 1\",\n" +
-                "      \"updatedAt\": \"2025-09-24T22:05:14.789773\"\n" +
                 "    }\n" +
                 "  },\n" +
                 "  \"included\": [\n" +
                 "    {\n" +
                 "      \"type\": \"publisher\",\n" +
-                "      \"id\": \"4\",\n" +
+                "      \"id\": \"1038\",\n" +
                 "      \"attributes\": {\n" +
                 "        \"createdAt\": \"2025-09-24T22:05:14.818099\",\n" +
                 "        \"enabled\": true,\n" +
@@ -155,7 +120,7 @@ class BookStoreApplicationTests {
                 "    },\n" +
                 "    {\n" +
                 "      \"type\": \"series\",\n" +
-                "      \"id\": \"4\",\n" +
+                "      \"id\": \"1037\",\n" +
                 "      \"attributes\": {\n" +
                 "        \"createdAt\": \"2025-09-24T22:05:14.855328\",\n" +
                 "        \"enabled\": true,\n" +
@@ -204,6 +169,7 @@ class BookStoreApplicationTests {
                 "      }\n" +
                 "    }\n" +
                 "  ]\n" +
+                "\n" +
                 "}";
 
         BookDto dto = validator.readAndValidate(json, BookDto.class);

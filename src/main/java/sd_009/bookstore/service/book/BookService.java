@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
@@ -100,9 +101,9 @@ public class BookService {
 
     @Transactional
     public String save(String json) {
-        BookDto dto = validator.readAndValidate(json, BookDto.class);
-        Book book = bookRepository.save(bookMapper.toEntity(dto));
-        Book saved = bookRepository.save(refreshRelationship(book, json));
+        Book book = buildEntityWithRelationships(json);
+
+        Book saved = bookRepository.save(book);
 
         return getSingleAdapter().toJson(Document
                 .with(bookMapper.toDto(saved))
@@ -114,11 +115,9 @@ public class BookService {
 
     @Transactional
     public String update(String json) {
-        BookDto dto = validator.readAndValidate(json, BookDto.class);
+        Book book = buildEntityWithRelationships(json);
 
-        Book existing = bookRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
-//        Book saved = bookRepository.save(bookMapper.partialUpdate(dto, existing));
-        Book saved = bookRepository.save(refreshRelationship(existing, json));
+        Book saved = bookRepository.save(book);
         return getSingleAdapter().toJson(Document
                 .with(bookMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
@@ -130,7 +129,7 @@ public class BookService {
     @Transactional
     public void delete(Long id) {
         bookRepository.findById(id).ifPresent(e -> {
-            List<BookDetail> associated = bookDetailRepository.findByBook(e);
+            List<BookDetail> associated = bookDetailRepository.findAllByBook(e, Sort.unsorted());
 
             if (!associated.isEmpty()) {
                 throw new DependencyConflictException("Cannot delete due to existing associations");
@@ -141,22 +140,22 @@ public class BookService {
     }
 
     @Transactional
-    public Book refreshRelationship(Book book, String json) {
+    public Book buildEntityWithRelationships(String json) {
         BookDto dto = validator.readAndValidate(json, BookDto.class);
-
-        log.info(dto.toString());
-
         Publisher publisher = dto.getPublisher() == null ? null : publisherRepository.findById(Long.valueOf(dto.getPublisher().getId())).orElse(null);
         Series series = dto.getSeries() == null ? null : seriesRepository.findById(Long.valueOf(dto.getSeries().getId())).orElse(null);
-        List<Genre> genres = dto.getGenres().stream().map(e -> genreRepository.findById(Long.valueOf(e.getId()))).flatMap(Optional::stream).toList();
-        List<Creator> creators = dto.getCreators().stream().map(e -> creatorRepository.findById(Long.valueOf(e.getId()))).flatMap(Optional::stream).toList();
+        List<Genre> genres = dto.getGenres() == null ? List.of() : dto.getGenres().stream().map(e -> genreRepository.findById(Long.valueOf(e.getId()))).flatMap(Optional::stream).toList();
+        List<Creator> creators = dto.getCreators() == null ? List.of() : dto.getCreators().stream().map(e -> creatorRepository.findById(Long.valueOf(e.getId()))).flatMap(Optional::stream).toList();
+
+        Book book = bookMapper.toEntity(dto);
+        if (book.getId() == 0) book.setId(null);
 
         book.setPublisher(publisher);
         book.setSeries(series);
         book.setGenres(genres);
         book.setCreators(creators);
 
-        return bookRepository.save(book);
+        return book;
     }
 
     @Transactional
@@ -300,7 +299,7 @@ public class BookService {
 
         switch (type) {
             case "bookDetail" -> {
-                List<BookDetail> dependents = bookDetailRepository.findByBook(book);
+                List<BookDetail> dependents = bookDetailRepository.findAllByBook(book, Sort.by("updatedAt").descending());
                 List<BookDetailDto> dtos = dependents.stream().map(bookDetailMapper::toDto).toList();
                 return adapterProvider.listResourceAdapter(BookDetailDto.class).toJson(Document
                         .with(dtos)
