@@ -86,9 +86,7 @@ public class BookService {
 
     public String findById(Long id) {
         Book found = bookRepository.findById(id).orElseThrow();
-
         BookDto dto = bookMapper.toDto(found);
-
         Document<BookDto> doc = Document
                 .with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()

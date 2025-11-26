@@ -31,6 +31,6 @@ public class BookDetailDto implements Serializable {
     private final Long printLength;
     private final Long stock;
     private final Long supplyPrice;
-    private final Long salesPrice;
+    private final Long salePrice;
     private final String bookCondition;
 }
