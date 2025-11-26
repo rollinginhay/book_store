@@ -29,7 +29,9 @@ public class BookDetail extends AuditableEntity {
 
     private Long stock;
 
-    private Long price;
+    private Long supplyPrice;
+
+    private Long salePrice;
 
     private String bookCondition;
 

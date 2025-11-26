@@ -27,14 +27,14 @@ public class ReceiptDto implements Serializable {
     private final String note;
     @Id
     private final String id;
-    private final Long subTotal;
-    private final Long discount;
-    private final Long tax;
-    private final Long serviceCost;
+    private final Double subTotal;
+    private final Double discount;
+    private final Double tax;
+    private final Double serviceCost;
     private final Boolean hasShipping;
     private final String shippingService;
     private final String shippingId;
-    private final Long grandTotal;
+    private final Double grandTotal;
     private final String orderStatus;
     private final OrderType orderType;
     @ToOne(name = "customer")

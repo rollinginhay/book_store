@@ -15,12 +15,15 @@ import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.receipt.PaymentDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
+import sd_009.bookstore.entity.AuditableEntity;
 import sd_009.bookstore.entity.receipt.PaymentDetail;
 import sd_009.bookstore.entity.receipt.Receipt;
 import sd_009.bookstore.entity.receipt.ReceiptDetail;
+import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.PaymentDetailRepository;
 import sd_009.bookstore.repository.ReceiptDetailRepository;
 import sd_009.bookstore.repository.ReceiptRepository;
+import sd_009.bookstore.repository.UserRepository;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.mapper.receipt.PaymentDetailMapper;
@@ -29,6 +32,7 @@ import sd_009.bookstore.util.mapper.receipt.ReceiptMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +46,7 @@ public class ReceiptService {
     private final ReceiptDetailRepository receiptDetailRepository;
     private final PaymentDetailRepository paymentDetailRepository;
     private final PaymentDetailMapper paymentDetailMapper;
+    private final UserRepository userRepository;
 
     @Transactional
     public String find(Boolean enabled, String titleQuery, Pageable pageable) {
@@ -91,9 +96,9 @@ public class ReceiptService {
 
     @Transactional
     public String save(String json) {
-        ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
+        Receipt receipt = buildEntityWithRelationships(json);
 
-        Receipt saved = receiptRepository.save(receiptMapper.toEntity(dto));
+        Receipt saved = receiptRepository.save(receipt);
         return getSingleAdapter().toJson(Document
                 .with(receiptMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
@@ -104,17 +109,43 @@ public class ReceiptService {
 
     @Transactional
     public String update(String json) {
-        ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
+        Receipt receipt = buildEntityWithRelationships(json);
 
-        Receipt existing = receiptRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
-
-        Receipt saved = receiptRepository.save(receiptMapper.partialUpdate(dto, existing));
+        Receipt saved = receiptRepository.save(receipt);
         return getSingleAdapter().toJson(Document
                 .with(receiptMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_RECEIPT_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
+    }
+
+    @Transactional
+    public Receipt buildEntityWithRelationships(String json) {
+        ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
+
+        List<ReceiptDetail> receiptDetails = dto.getReceiptDetails() == null ? List.of() : dto.getReceiptDetails().stream().map(e -> receiptDetailRepository.findById(Long.valueOf(e.getId()))).flatMap(Optional::stream).filter(AuditableEntity::getEnabled).toList();
+        PaymentDetail paymentDetail = dto.getPaymentDetail() == null ? null : paymentDetailRepository.findById(Long.valueOf(dto.getPaymentDetail().getId())).orElse(null);
+        User employee = dto.getEmployee() == null ? null : userRepository.findById(Long.valueOf(dto.getEmployee().getId())).orElse(null);
+        User customer = dto.getCustomer() == null ? null : userRepository.findById(Long.valueOf(dto.getCustomer().getId())).orElse(null);
+
+        Receipt receipt = receiptMapper.toEntity(dto);
+        if (receipt.getId() == 0) receipt.setId(null);
+
+        //calculate fields
+        Double subtotal = receiptDetails.stream().map(e -> e.getPricePerUnit() * e.getQuantity()).reduce(0D, Double::sum);
+        Double taxRate = 8 / 100D;
+        Double serviceCost = 0D;
+        if (receipt.getHasShipping()) serviceCost += 30000;
+        Double grandTotal = subtotal + (subtotal * taxRate) + serviceCost;
+        receipt.setGrandTotal(grandTotal);
+
+        receipt.setPaymentDetail(paymentDetail);
+        receipt.setReceiptDetails(receiptDetails);
+        receipt.setCustomer(customer);
+        receipt.setEmployee(employee);
+
+        return receipt;
     }
 
     @Transactional

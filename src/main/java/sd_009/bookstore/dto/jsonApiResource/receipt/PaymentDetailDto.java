@@ -26,5 +26,5 @@ public class PaymentDetailDto implements Serializable {
     private final PaymentType paymentType;
     private final String provider;
     private final String providerId;
-    private final Long amount;
+    private final Double amount;
 }

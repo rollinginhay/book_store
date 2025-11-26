@@ -83,7 +83,6 @@ public class BookDetailService {
 
         bookDetailDtos.stream().map(bookDetailMapper::toEntity).forEach(e -> {
             if (e.getId() == 0) e.setId(null);
-            log.info(e.toString());
             e.setBook(book);
             bookDetailRepository.save(e);
         });

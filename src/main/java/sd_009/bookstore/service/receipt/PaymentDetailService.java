@@ -7,17 +7,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.receipt.PaymentDetailDto;
-import sd_009.bookstore.entity.receipt.Receipt;
+import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
 import sd_009.bookstore.entity.receipt.PaymentDetail;
+import sd_009.bookstore.entity.receipt.Receipt;
 import sd_009.bookstore.repository.PaymentDetailRepository;
 import sd_009.bookstore.repository.ReceiptRepository;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.receipt.PaymentDetailMapper;
+import sd_009.bookstore.util.mapper.receipt.ReceiptMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class PaymentDetailService {
     private final PaymentDetailMapper paymentDetailMapper;
     private final PaymentDetailRepository paymentDetailRepository;
     private final ReceiptRepository receiptRepository;
+    private final ReceiptMapper receiptMapper;
 
     @Transactional
     public String findByReceiptId(Boolean enabled, Long bookId) {
@@ -69,29 +71,46 @@ public class PaymentDetailService {
 
     @Transactional
     public String save(String json) {
-        PaymentDetailDto dto = jsonApiValidator.readAndValidate(json, PaymentDetailDto.class);
-        PaymentDetail saved = paymentDetailRepository.save(paymentDetailMapper.toEntity(dto));
-        return getSingleAdapter().toJson(Document
-                .with(paymentDetailMapper.toDto(saved))
+        ReceiptDto receiptDto = jsonApiValidator.readAndValidate(json, ReceiptDto.class);
+        Receipt receipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();
+
+        PaymentDetailDto paymentDetailDto = receiptDto.getPaymentDetail();
+
+        PaymentDetail paymentDetail = paymentDetailMapper.toEntity(paymentDetailDto);
+
+        paymentDetail.setReceipt(receipt);
+        paymentDetail.setAmount(receipt.getGrandTotal());
+        paymentDetailRepository.save(paymentDetail);
+
+        Receipt updatedReceipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();
+
+        return adapterProvider.singleResourceAdapter(ReceiptDto.class).toJson(Document
+                .with(receiptMapper.toDto(updatedReceipt))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_PAYMENT_DETAIL_BY_ID, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_RECEIPT_BY_ID, updatedReceipt.getId()))
                         .build().toMap()))
                 .build());
     }
 
     @Transactional
     public String update(String json) {
-        PaymentDetailDto dto = jsonApiValidator.readAndValidate(json, PaymentDetailDto.class);
-        if (dto.getId() == null) {
-            throw new BadRequestException("No identifier found");
-        }
-        PaymentDetail existing = paymentDetailRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
-        PaymentDetail saved = paymentDetailRepository.save(paymentDetailMapper.partialUpdate(dto, existing));
+        ReceiptDto receiptDto = jsonApiValidator.readAndValidate(json, ReceiptDto.class);
+        Receipt receipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();
 
-        return getSingleAdapter().toJson(Document
-                .with(paymentDetailMapper.toDto(saved))
+        PaymentDetailDto paymentDetailDto = receiptDto.getPaymentDetail();
+
+        PaymentDetail paymentDetail = paymentDetailMapper.toEntity(paymentDetailDto);
+
+        paymentDetail.setReceipt(receipt);
+        paymentDetail.setAmount(receipt.getGrandTotal());
+        paymentDetailRepository.save(paymentDetail);
+
+        Receipt updatedReceipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();
+
+        return adapterProvider.singleResourceAdapter(ReceiptDto.class).toJson(Document
+                .with(receiptMapper.toDto(updatedReceipt))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_PAYMENT_DETAIL_BY_ID, saved.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_RECEIPT_BY_ID, updatedReceipt.getId()))
                         .build().toMap()))
                 .build());
     }
