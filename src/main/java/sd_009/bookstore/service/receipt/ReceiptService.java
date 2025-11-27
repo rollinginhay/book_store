@@ -133,7 +133,9 @@ public class ReceiptService {
         if (receipt.getId() == 0) receipt.setId(null);
 
         //calculate fields
-        Double subtotal = receiptDetails.stream().map(e -> e.getPricePerUnit() * e.getQuantity()).reduce(0D, Double::sum);
+        double subtotal = receiptDetails.stream()
+                .mapToDouble(e -> e.getPricePerUnit() * e.getQuantity())
+                .sum();
         Double taxRate = 8 / 100D;
         Double serviceCost = 0D;
         if (receipt.getHasShipping()) serviceCost += 30000;

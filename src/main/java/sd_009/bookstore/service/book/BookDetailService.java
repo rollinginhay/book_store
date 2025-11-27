@@ -19,9 +19,11 @@ import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.repository.BookDetailRepository;
 import sd_009.bookstore.repository.BookRepository;
+import sd_009.bookstore.repository.GenreClosureRepository;
 import sd_009.bookstore.util.mapper.book.BookDetailMapper;
 import sd_009.bookstore.util.mapper.book.BookDetailOwningMapper;
 import sd_009.bookstore.util.mapper.book.BookMapper;
+import sd_009.bookstore.util.mapper.book.GenreMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
@@ -33,6 +35,8 @@ public class BookDetailService {
     private static final Logger log = LoggerFactory.getLogger(BookDetailService.class);
     private final JsonApiAdapterProvider adapterProvider;
     private final JsonApiValidator jsonApiValidator;
+    private final GenreMapper genreMapper;
+    private final GenreClosureRepository genreClosureRepository;
 
     private final BookDetailMapper bookDetailMapper;
     private final BookDetailOwningMapper bookDetailOwningMapper;
@@ -90,7 +94,8 @@ public class BookDetailService {
         Book updatedBook = bookRepository.findById(Long.valueOf(bookDto.getId())).orElseThrow();
 
         return adapterProvider.singleResourceAdapter(BookDto.class).toJson(Document
-                .with(bookMapper.toDto(updatedBook))
+                .with(bookMapper.toDto(updatedBook, genreClosureRepository, genreMapper))
+
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID, updatedBook.getId()))
                         .build().toMap()))
@@ -113,7 +118,7 @@ public class BookDetailService {
         Book updatedBook = bookRepository.findById(Long.valueOf(bookDto.getId())).orElseThrow();
 
         return adapterProvider.singleResourceAdapter(BookDto.class).toJson(Document
-                .with(bookMapper.toDto(updatedBook))
+                .with(bookMapper.toDto(updatedBook, genreClosureRepository, genreMapper))
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_BOOK_BY_ID, updatedBook.getId()))
                         .build().toMap()))

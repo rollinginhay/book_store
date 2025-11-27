@@ -28,4 +28,6 @@ public class ReceiptDetailDto implements Serializable {
     private final BookDetailDto bookCopy;
     private final Double pricePerUnit;
     private final Double quantity;
+
+    private final Long bookDetailId;
 }

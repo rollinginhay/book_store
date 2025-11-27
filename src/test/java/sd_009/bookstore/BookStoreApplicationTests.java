@@ -49,14 +49,15 @@ class BookStoreApplicationTests {
     void fetchingAllBooks() {
         System.out.println(
                 bookService.find(
-                        true,                  // enabled
-                        "",                    // titleQuery
+                        true,                         // enabled
+                        "",                           // titleQuery
                         PageRequest.of(0, 10, Sort.by("title").descending()),
-                        null                   // genreName (nếu chưa test lọc genre thì để null)
+                        null,                         // genreName
+                        null                          // genreId (filter.genre)
                 )
         );
-
     }
+
 
     @Test
     void contextLoads() {

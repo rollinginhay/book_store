@@ -38,19 +38,15 @@ public class BookController {
             @RequestParam int page,
             @RequestParam int limit,
             @RequestParam(required = false) List<String> sort,
-            @RequestParam(required = false, name = "genre") String genreName // giữ filter của m
+
+            // 🔥 THÊM NÀY
+            @RequestParam(required = false, name = "filter.genre") Long genreId,
+
+            // 🔥 Giữ lại filter theo tên (logic cũ)
+            @RequestParam(required = false, name = "genre") String genreName
     ) {
-
-        // 🟦 Giữ logic của master để tránh null
-        if (keyword == null) {
-            keyword = "";
-        }
-        if (enabled == null) {
-            enabled = true;
-        }
-
-        // 🟦 Logic sort của m — an toàn hơn
         Sort sortInstance = Sort.unsorted();
+
         if (sort != null && !sort.isEmpty()) {
             for (String query : sort) {
                 String[] queries = query.split(";");
@@ -62,10 +58,10 @@ public class BookController {
                         : sortInstance.and(Sort.by(field).descending());
             }
         } else {
-            // 🟦 Giữ default sort của master
             sortInstance = Sort.by("createdAt").descending();
             sortInstance = Sort.by("updatedAt").descending();
         }
+
 
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf(contentType))
@@ -73,9 +69,11 @@ public class BookController {
                         enabled,
                         keyword,
                         PageRequest.of(page, limit).withSort(sortInstance),
-                        genreName // giữ filter theo thể loại
+                        genreName,
+                        genreId   // 🔥 TRUYỀN THÊM
                 ));
     }
+
 
 
 
@@ -84,10 +82,13 @@ public class BookController {
     @Operation(
             summary = "Get book by id, with attached relationship",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get book by id resp", externalValue = "/jsonExample/book/get_book.json"))))
-    @GetMapping(Routes.GET_BOOK_BY_ID)
+    @GetMapping(value = Routes.GET_BOOK_BY_ID, params = "!page")
     public ResponseEntity<Object> getBookById(@PathVariable Long id) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.findById(id));
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(contentType))
+                .body(bookService.findById(id));
     }
+
 
     @Operation(
             summary = "Create a new book",

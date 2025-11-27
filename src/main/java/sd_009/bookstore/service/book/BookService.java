@@ -22,6 +22,7 @@ import sd_009.bookstore.entity.book.*;
 import sd_009.bookstore.repository.*;
 import sd_009.bookstore.util.mapper.book.BookDetailMapper;
 import sd_009.bookstore.util.mapper.book.BookMapper;
+import sd_009.bookstore.util.mapper.book.GenreMapper;
 import sd_009.bookstore.util.mapper.book.ReviewMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
@@ -50,22 +51,26 @@ public class BookService {
     private final GenreClosureRepository genreClosureRepository;
 
     @Transactional
-    public String find(Boolean enabled, String titleQuery, Pageable pageable, String genreName) {
+    public String find(Boolean enabled, String titleQuery, Pageable pageable,
+                       String genreName, Long genreId) {
+
         Page<Book> page;
 
-        // 🔹 Nếu có truyền genreName => lọc theo thể loại
+        // ⭐ ƯU TIÊN LỌC THEO ID (FE đang dùng filter.genre=ID)
+        if (genreId != null) {
+            return findBooksByGenre(genreId, pageable);
+        }
+
+        // 🔥 GIỮ LOGIC CŨ LỌC THEO TÊN
         if (genreName != null && !genreName.isBlank()) {
 
-            // 1️⃣ Tìm genre cha theo tên
             var parent = genreRepository.findByName(genreName.trim())
                     .orElse(null);
 
             if (parent == null) {
-                // Nếu không tìm thấy thể loại đó → trả rỗng
                 page = Page.empty(pageable);
             } else {
 
-                // 2️⃣ Lấy toàn bộ con của nó (descendant)
                 List<Long> descendantIds =
                         genreClosureRepository.findAllDescendantIds(parent.getId());
 
@@ -73,18 +78,14 @@ public class BookService {
                     descendantIds = List.of(parent.getId());
                 }
 
-                // 3️⃣ Lấy entity Genre
                 List<Genre> genres = genreRepository.findAllById(descendantIds);
 
-                // 4️⃣ Query tất cả sách thuộc các genre đó
                 page = bookRepository.findDistinctByGenresInAndEnabled(genres, true, pageable);
             }
         }
 
-
-        // 🔹 Nếu không có genre, xử lý như logic cũ
+        // 🔹 Nếu không có genre
         else if (titleQuery == null || titleQuery.trim().isEmpty()) {
-            // Nếu có flag enabled thì lọc, không thì lấy tất cả
             if (enabled != null) {
                 page = bookRepository.findByEnabled(enabled, pageable);
             } else {
@@ -92,19 +93,17 @@ public class BookService {
             }
         }
 
-        // 🔹 Nếu có keyword (title) => tìm chính xác tên sách
+        // 🔹 Nếu có keyword
         else {
             Optional<Book> found = bookRepository.findByTitle(titleQuery.trim());
             List<Book> books = found.map(List::of).orElse(List.of());
             page = new org.springframework.data.domain.PageImpl<>(books, pageable, books.size());
         }
 
-        // Chuyển sang DTO + JSON:API (giữ nguyên đoạn cũ của m)
         List<BookDto> dtos = page.getContent()
                 .stream()
                 .map(b -> bookMapper.toDto(b, genreClosureRepository, genreMapper))
                 .toList();
-
 
         LinkParamMapper<?> paramMapper = LinkParamMapper.<Book>builder()
                 .keyword(titleQuery)
@@ -118,19 +117,21 @@ public class BookService {
                         .self(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getSelfParams()))
                         .first(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getFirstParams()))
                         .last(LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getLastParams()))
-                        .next(paramMapper.getNextParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getNextParams()))
-                        .prev(paramMapper.getPrevParams() == null ? null : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getPrevParams()))
+                        .next(paramMapper.getNextParams() == null ? null
+                                : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getNextParams()))
+                        .prev(paramMapper.getPrevParams() == null ? null
+                                : LinkMapper.toLinkWithQuery(Routes.GET_BOOKS, paramMapper.getPrevParams()))
                         .build().toMap()))
                 .meta(Meta.from(JsonApiMetaObject.builder()
                         .firstPage(0)
                         .lastPage(page.getTotalPages() - 1)
-                        .totalPages(page.getTotalPages()
-                        )
+                        .totalPages(page.getTotalPages())
                         .build()))
                 .build();
 
         return getListAdapter().toJson(doc);
     }
+
 
 
 

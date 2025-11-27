@@ -83,7 +83,7 @@ public class ReceiptDetailService {
         receiptDetails.forEach(e -> {
             if (e.getId() == 0) e.setId(null);
             BookDetail bookDetail = bookDetailRepository.findById(e.getBookCopy().getId()).orElseThrow();
-            e.setPricePerUnit(Double.valueOf(bookDetail.getSalePrice()));
+            e.setPricePerUnit(Long.valueOf(bookDetail.getSalePrice()));
             e.setBookCopy(bookDetail);
             e.setReceipt(receipt);
             receiptDetailRepository.save(e);
@@ -110,7 +110,7 @@ public class ReceiptDetailService {
         receiptDetails.forEach(e -> {
             if (e.getId() == 0) e.setId(null);
             BookDetail bookDetail = bookDetailRepository.findById(e.getBookCopy().getId()).orElseThrow();
-            e.setPricePerUnit(Double.valueOf(bookDetail.getSalePrice()));
+            e.setPricePerUnit(Long.valueOf(bookDetail.getSalePrice()));
             e.setBookCopy(bookDetail);
             e.setReceipt(receipt);
             receiptDetailRepository.save(e);

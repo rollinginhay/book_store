@@ -37,7 +37,7 @@ public class DataSeeder {
 
         ReceiptDetail receiptDetail = ReceiptDetail.builder()
                 .bookCopy(bookDetailRepository.findById(1L).get())
-                .pricePerUnit(999999D)
+                .pricePerUnit(999999L)
                 .quantity(999999L)
                 .build();
 
