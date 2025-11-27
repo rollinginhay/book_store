@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
 import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
-import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
@@ -104,7 +103,14 @@ public class PublisherService {
                 throw new DuplicateElementException("Name already exists");
             }
 
-            throw new IsDisabledException("Publisher is disabled. Can be reinstated");
+            existing.get().setEnabled(true);
+            Publisher saved = publisherRepository.save(existing.get());
+            return getSingleAdapter().toJson(Document
+                    .with(publisherMapper.toDto(saved))
+                    .links(Links.from(JsonApiLinksObject.builder()
+                            .self(LinkMapper.toLink(Routes.GET_PUBLISHER_BY_ID, saved.getId()))
+                            .build().toMap()))
+                    .build());
         }
 
         Publisher saved = publisherRepository.save(publisherMapper.toEntity(dto));

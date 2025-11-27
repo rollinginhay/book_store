@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
 import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
-import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
@@ -115,8 +114,14 @@ public class GenreService {
             if (existing.get().getEnabled()) {
                 throw new DuplicateElementException("Name already exists");
             }
-
-            throw new IsDisabledException("Genre is disabled. Can be reinstated");
+            existing.get().setEnabled(true);
+            Genre saved = genreRepository.save(existing.get());
+            return getSingleAdapter().toJson(Document
+                    .with(genreMapper.toDto(saved))
+                    .links(Links.from(JsonApiLinksObject.builder()
+                            .self(LinkMapper.toLink(Routes.GET_GENRE_BY_ID, saved.getId()))
+                            .build().toMap()))
+                    .build());
         }
 
         Genre saved = genreRepository.save(genreMapper.toEntity(dto));

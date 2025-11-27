@@ -25,7 +25,7 @@ public class ReceiptDetail extends AuditableEntity {
     @JoinColumn
     private BookDetail bookCopy;
 
-    private Long pricePerUnit;
+    private Double pricePerUnit;
 
     private Long quantity;
 

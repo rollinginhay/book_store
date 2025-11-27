@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
 import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
-import sd_009.bookstore.config.exceptionHanding.exception.IsDisabledException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
@@ -105,7 +104,14 @@ public class SeriesService {
                 throw new DuplicateElementException("Name already exists");
             }
 
-            throw new IsDisabledException("Series is disabled. Can be reinstated");
+            existing.get().setEnabled(true);
+            Series saved = seriesRepository.save(existing.get());
+            return getSingleAdapter().toJson(Document
+                    .with(seriesMapper.toDto(saved))
+                    .links(Links.from(JsonApiLinksObject.builder()
+                            .self(LinkMapper.toLink(Routes.GET_SERIES_BY_ID, saved.getId()))
+                            .build().toMap()))
+                    .build());
         }
 
         Series saved = seriesRepository.save(seriesMapper.toEntity(dto));

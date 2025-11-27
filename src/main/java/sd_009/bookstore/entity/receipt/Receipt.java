@@ -23,13 +23,13 @@ public class Receipt extends AuditableEntity {
     private Long id;
 
 
-    private Long subTotal;
+    private Double subTotal;
 
-    private Long discount;
+    private Double discount;
 
-    private Long tax;
+    private Double tax;
 
-    private Long serviceCost;
+    private Double serviceCost;
 
     private Boolean hasShipping;
 
@@ -37,7 +37,7 @@ public class Receipt extends AuditableEntity {
 
     private String shippingId;
 
-    private Long grandTotal;
+    private Double grandTotal;
 
     @Enumerated(EnumType.STRING)
     private OrderType orderType;

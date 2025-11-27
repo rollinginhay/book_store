@@ -58,7 +58,7 @@ public class CreatorController {
 
             }
         } else {
-            sortInstance = Sort.by("createdAt").descending();
+            sortInstance = Sort.by("updatedAt").descending();
         }
 
 

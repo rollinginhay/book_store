@@ -64,6 +64,7 @@ public class BookController {
         } else {
             // 🟦 Giữ default sort của master
             sortInstance = Sort.by("createdAt").descending();
+            sortInstance = Sort.by("updatedAt").descending();
         }
 
         return ResponseEntity.ok()
@@ -139,7 +140,7 @@ public class BookController {
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get book by id resp", externalValue = "/jsonExample/book/get_book.json"))))
     @PostMapping(Routes.MULTI_BOOK_RELATIONSHIP_GENERIC)
     public ResponseEntity<Object> attachRelationship(@PathVariable(name = "id") Long id, @PathVariable(name = "dependent") String dependent, @RequestBody String json) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachOrReplaceRelationship(id, json, dependent));
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.attachRelationShip(id, json, dependent));
     }
 
     @Operation(

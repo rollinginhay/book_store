@@ -27,5 +27,5 @@ public class PaymentDetail extends AuditableEntity {
 
     private String providerId;
 
-    private Long amount;
+    private Double amount;
 }

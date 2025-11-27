@@ -29,7 +29,7 @@ public class DataSeeder {
 //    @EventListener(ApplicationReadyEvent.class)
     public void seedReceipt() {
         PaymentDetail paymentDetail = PaymentDetail.builder()
-                .amount(999999L)
+                .amount(999999D)
                 .paymentType(PaymentType.TRANSFER)
                 .provider("nothing")
                 .providerId("nothing")
@@ -37,8 +37,8 @@ public class DataSeeder {
 
         ReceiptDetail receiptDetail = ReceiptDetail.builder()
                 .bookCopy(bookDetailRepository.findById(1L).get())
-                .pricePerUnit(5000L)
-                .quantity(10L)
+                .pricePerUnit(999999D)
+                .quantity(999999L)
                 .build();
 
         Receipt receipt = Receipt.builder()
@@ -78,7 +78,7 @@ public class DataSeeder {
                 .dimensions("1x1")
                 .printLength(999L)
                 .stock(999L)
-                .price(999L)
+                .salePrice(999L)
                 .bookCondition("new")
                 .build();
         BookDetail bookDetail2 = BookDetail.builder()
@@ -88,7 +88,7 @@ public class DataSeeder {
                 .dimensions("1x1")
                 .printLength(999L)
                 .stock(999L)
-                .price(899L)
+                .salePrice(899L)
                 .bookCondition("old")
                 .build();
 

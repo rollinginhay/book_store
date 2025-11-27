@@ -1,10 +1,14 @@
 package sd_009.bookstore;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
 import jsonapi.Document;
 import jsonapi.JsonApiFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,7 +22,12 @@ import sd_009.bookstore.repository.GenreClosureRepository;
 import sd_009.bookstore.service.book.BookService;
 import sd_009.bookstore.util.mapper.book.BookMapper;
 import sd_009.bookstore.util.mapper.book.GenreMapper;
+import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
+import java.io.File;
+import java.io.IOException;
+
+@Slf4j
 @SpringBootTest
 class BookStoreApplicationTests {
     @Autowired
@@ -33,6 +42,8 @@ class BookStoreApplicationTests {
     private GenreClosureRepository genreClosureRepository;
     @Autowired
     private GenreMapper genreMapper;
+    @Autowired
+    JsonApiValidator validator;
 
     @Test
     void fetchingAllBooks() {
@@ -73,5 +84,117 @@ class BookStoreApplicationTests {
         BookDto dto = bookMapper.toDto(book, genreClosureRepository, genreMapper);
 
         System.out.println(dto);
+    }
+
+    @Test
+    void readJsonWithRelationship() throws IOException {
+        String json = "{\n" +
+                "  \"data\": {\n" +
+                "    \"type\": \"book\",\n" +
+                "    \"id\": \"0\",\n" +
+                "    \"attributes\": {\n" +
+                "      \"title\": \"sdfsdfsdfsdf\",\n" +
+                "      \"edition\": \"\",\n" +
+                "      \"language\": \"\",\n" +
+                "      \"published\": \"2025-11-06\",\n" +
+                "      \"imageUrl\": \"\",\n" +
+                "      \"blurb\": \"\"\n" +
+                "    },\n" +
+                "    \"relationships\": {\n" +
+                "      \"genres\": {\n" +
+                "        \"data\": []\n" +
+                "      },\n" +
+                "      \"creators\": {\n" +
+                "        \"data\": []\n" +
+                "      },\n" +
+                "      \"publisher\": {\n" +
+                "        \"data\": {\n" +
+                "          \"id\": \"1038\",\n" +
+                "          \"type\": \"publisher\"\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"series\": {\n" +
+                "        \"data\": {\n" +
+                "          \"id\": \"1037\",\n" +
+                "          \"type\": \"series\"\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"included\": [\n" +
+                "    {\n" +
+                "      \"type\": \"publisher\",\n" +
+                "      \"id\": \"1038\",\n" +
+                "      \"attributes\": {\n" +
+                "        \"createdAt\": \"2025-09-24T22:05:14.818099\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"name\": \"publisher 1\",\n" +
+                "        \"updatedAt\": \"2025-09-24T22:05:14.818099\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"type\": \"series\",\n" +
+                "      \"id\": \"1037\",\n" +
+                "      \"attributes\": {\n" +
+                "        \"createdAt\": \"2025-09-24T22:05:14.855328\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"name\": \"series 1\",\n" +
+                "        \"updatedAt\": \"2025-09-24T22:05:14.855328\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"type\": \"creator\",\n" +
+                "      \"id\": \"7\",\n" +
+                "      \"attributes\": {\n" +
+                "        \"createdAt\": \"2025-09-24T22:05:14.872646\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"name\": \"creator 1\",\n" +
+                "        \"updatedAt\": \"2025-09-24T22:05:14.872646\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"type\": \"creator\",\n" +
+                "      \"id\": \"8\",\n" +
+                "      \"attributes\": {\n" +
+                "        \"createdAt\": \"2025-09-24T22:05:14.875645\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"name\": \"creator 2\",\n" +
+                "        \"updatedAt\": \"2025-09-24T22:05:14.875645\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"type\": \"genre\",\n" +
+                "      \"id\": \"7\",\n" +
+                "      \"attributes\": {\n" +
+                "        \"createdAt\": \"2025-09-24T22:05:14.877645\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"name\": \"genre 1\",\n" +
+                "        \"updatedAt\": \"2025-09-24T22:05:14.877645\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"type\": \"genre\",\n" +
+                "      \"id\": \"8\",\n" +
+                "      \"attributes\": {\n" +
+                "        \"createdAt\": \"2025-09-24T22:05:14.880794\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"name\": \"genre 2\",\n" +
+                "        \"updatedAt\": \"2025-09-24T22:05:14.880794\"\n" +
+                "      }\n" +
+                "    }\n" +
+                "  ]\n" +
+                "\n" +
+                "}";
+
+        BookDto dto = validator.readAndValidate(json, BookDto.class);
+        File output = new File("src/test/resources/output/book.json");
+        // Make sure parent directories exist
+        output.getParentFile().mkdirs();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        // optional but usually needed to avoid timestamps
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        // Write JSON (pretty-printed)
+        mapper.writerWithDefaultPrettyPrinter().writeValue(output, dto);
     }
 }

@@ -26,6 +26,6 @@ public class ReceiptDetailDto implements Serializable {
     private final String id;
     @ToOne(name = "bookDetail")
     private final BookDetailDto bookCopy;
-    private final Long pricePerUnit;
-    private final Long quantity;
+    private final Double pricePerUnit;
+    private final Double quantity;
 }

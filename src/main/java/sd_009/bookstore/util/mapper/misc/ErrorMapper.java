@@ -11,8 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.WebRequest;
-import sd_009.bookstore.config.exceptionHanding.exception.DependencyConflictException;
-import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 
 import java.io.IOException;
@@ -65,17 +63,6 @@ public class ErrorMapper {
                                             err.getField()))
                                     .toList()));
         }
-
-        if (e instanceof DuplicateElementException) {
-            JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
-            return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, e.getMessage(), "server"))));
-        }
-        if (e instanceof DependencyConflictException) {
-            JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
-            return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, e.getMessage(), "server"))));
-        }
-
-
         JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
         return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, "Internal error", "server"))));
     }

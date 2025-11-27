@@ -18,7 +18,8 @@ public class CartDetail extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne
+    @JoinColumn
     private User user;
 
     @ManyToOne(fetch = FetchType.EAGER)
