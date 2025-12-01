@@ -1,29 +1,34 @@
 package sd_009.bookstore.dto.jsonApiResource.campaign;
 
-import lombok.*;
-import sd_009.bookstore.entity.campaign.CampaignDetail;
+import jsonapi.Id;
+import jsonapi.Resource;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import sd_009.bookstore.entity.campaign.CampaignType;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * DTO for {@link .entity.Campaign}
  */
 @Getter
 @AllArgsConstructor
+@Resource(type = "campaign")
 public class CampaignDto implements Serializable {
+    @Id
     private final String id;
     private final String name;
     private final CampaignType campaignType;
-    private final LocalDate startDate;
-    private final LocalDate endDate;
-    private final List<CampaignDetail> campaignDetails;
+    private final LocalDateTime startDate;
+    private final LocalDateTime endDate;
+    //    private final List<CampaignDetail> campaignDetails;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
     private final String note;
+    private Double minTotal;
+    private Double percentage;
+    private Double maxDiscount;
 }
 

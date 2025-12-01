@@ -4,6 +4,7 @@ import com.squareup.moshi.JsonAdapter;
 import jsonapi.Document;
 import jsonapi.Links;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
@@ -18,6 +19,7 @@ import sd_009.bookstore.util.mapper.campaign.CampaignMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -32,8 +34,9 @@ public class CampaignService {
     // 🔹 Lấy tất cả campaign
     @Transactional(readOnly = true)
     public String findAll() {
-        List<Campaign> list = campaignRepository.findAll();
-        List<CampaignDto> dtos = list.stream().map(campaignMapper::toDto).toList();
+        List<Campaign> list = campaignRepository.findAllByEnabled(true, Sort.by("updatedAt").descending());
+        List<Campaign> filterList = list.stream().filter(e -> e.getEndDate().isAfter(LocalDateTime.now())).toList();
+        List<CampaignDto> dtos = filterList.stream().map(campaignMapper::toDto).toList();
 
         Document<List<CampaignDto>> doc = Document.with(dtos)
                 .links(Links.from(JsonApiLinksObject.builder()
@@ -84,7 +87,8 @@ public class CampaignService {
     @Transactional
     public String update(String json) {
         CampaignDto dto = validator.readAndValidate(json, CampaignDto.class);
-        if (dto.getId() == null) throw new BadRequestException("No identifier found");
+        if (dto.getId() == null)
+            throw new BadRequestException("No identifier found");
 
         Campaign existing = campaignRepository.findById(Long.valueOf(dto.getId()))
                 .orElseThrow(() -> new BadRequestException("Campaign not found"));
