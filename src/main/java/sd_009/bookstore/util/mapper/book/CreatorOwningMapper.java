@@ -1,8 +1,8 @@
 package sd_009.bookstore.util.mapper.book;
 
 import org.mapstruct.*;
-import sd_009.bookstore.entity.book.Creator;
 import sd_009.bookstore.dto.jsonApiResource.book.CreatorOwningDto;
+import sd_009.bookstore.entity.book.Creator;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, uses = {BookMapper.class})
 public interface CreatorOwningMapper {

@@ -1,6 +1,9 @@
 package sd_009.bookstore.entity.book;
 
-import jakarta.persistence.*;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import lombok.*;
 
 @AllArgsConstructor

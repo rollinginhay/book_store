@@ -1,9 +1,9 @@
 package sd_009.bookstore.util.mapper.receipt;
 
 import org.mapstruct.*;
+import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
 import sd_009.bookstore.entity.receipt.PaymentDetail;
 import sd_009.bookstore.entity.receipt.Receipt;
-import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
 import sd_009.bookstore.util.mapper.user.UserMapper;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, uses = {UserMapper.class, UserMapper.class, PaymentDetailMapper.class})
