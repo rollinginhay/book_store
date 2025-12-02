@@ -85,12 +85,16 @@ public class CartDetailService {
     public String save(String json) {
         CartDetailDto dto = jsonApiValidator.readAndValidate(json, CartDetailDto.class);
 
-        User user = userRepository.findById(dto.getUser().getId()).orElseThrow();
-        BookDetail bookDetail = bookDetailRepository.findById(dto.getBookDetail().getId()).orElseThrow();
+        User user = userRepository.findById(Long.valueOf(dto.getUserId()))
+                .orElseThrow();
+
+        BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(dto.getBookDetailId()))
+                .orElseThrow();
 
         CartDetail entity = cartDetailMapper.toEntity(dto);
         entity.setUser(user);
         entity.setBookDetail(bookDetail);
+
 
         CartDetail saved = cartDetailRepository.save(entity);
 
