@@ -141,16 +141,23 @@ public class ReceiptService {
 
         //calculate fields
         if (receipt.getReceiptDetails() != null && !receipt.getReceiptDetails().isEmpty()) {
-            Double subtotal = receiptDetails.stream().map(e -> e.getPricePerUnit() * e.getQuantity()).reduce(0D, Double::sum);
+            Double subtotal = receiptDetails.stream()
+                    .mapToDouble(e -> e.getPricePerUnit() * e.getQuantity())
+                    .sum();
+
             Double taxRate = 8D;
             Double serviceCost = 0D;
+
             if (receipt.getHasShipping()) serviceCost += 30000;
+
             Double grandTotal = (subtotal - dto.getDiscount()) * (100 + taxRate) / 100 + serviceCost;
+
             receipt.setTax(taxRate);
             receipt.setSubTotal(subtotal);
             receipt.setDiscount(dto.getDiscount());
             receipt.setServiceCost(serviceCost);
             receipt.setGrandTotal(grandTotal);
+
         }
         PaymentDetail paymentDetail = PaymentDetail.builder()
                 .amount(receipt.getGrandTotal())
