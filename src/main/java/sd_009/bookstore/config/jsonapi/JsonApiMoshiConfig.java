@@ -6,6 +6,13 @@ import jsonapi.JsonApiFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import sd_009.bookstore.dto.jsonApiResource.book.*;
+import sd_009.bookstore.dto.jsonApiResource.campaign.CampaignDto;
+import sd_009.bookstore.dto.jsonApiResource.cart.CartDetailDto;
+import sd_009.bookstore.dto.jsonApiResource.receipt.PaymentDetailDto;
+import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDetailDto;
+import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
+import sd_009.bookstore.dto.jsonApiResource.user.RoleDto;
+import sd_009.bookstore.dto.jsonApiResource.user.UserDto;
 
 import java.time.LocalDateTime;
 
@@ -21,7 +28,13 @@ public class JsonApiMoshiConfig {
                 .addType(PublisherDto.class)
                 .addType(ReviewDto.class)
                 .addType(SeriesDto.class)
-                .addType(TagDto.class)
+                .addType(ReceiptDto.class)
+                .addType(ReceiptDetailDto.class)
+                .addType(PaymentDetailDto.class)
+                .addType(CampaignDto.class)
+                .addType(UserDto.class)
+                .addType(CartDetailDto.class)
+                .addType(RoleDto.class)
                 .build();
     }
 

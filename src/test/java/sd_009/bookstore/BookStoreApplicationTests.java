@@ -1,5 +1,6 @@
 package sd_009.bookstore;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -16,6 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.dto.jsonApiResource.book.BookDto;
+import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDetailDto;
+import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
 import sd_009.bookstore.entity.book.Book;
 import sd_009.bookstore.repository.BookRepository;
 import sd_009.bookstore.repository.GenreClosureRepository;
@@ -26,6 +29,9 @@ import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Slf4j
 @SpringBootTest
@@ -198,4 +204,32 @@ class BookStoreApplicationTests {
         // Write JSON (pretty-printed)
         mapper.writerWithDefaultPrettyPrinter().writeValue(output, dto);
     }
+
+        @Test
+        void loadJsonAsString () throws Exception {
+            InputStream is = getClass().getResourceAsStream("/receipt.json");
+
+            String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+            ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
+
+            List<ReceiptDetailDto> receiptDetailDtos = dto.getReceiptDetails();
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
+            // optional but usually needed to avoid timestamps
+            mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            String result;
+            try {
+                result = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(receiptDetailDtos);
+            } catch (JsonProcessingException e) {
+                result = "failed to map";
+            }
+            log.warn("receiptDetails: {}", result);
+        }
+
+
+
+
+
 }

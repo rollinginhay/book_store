@@ -1,11 +1,4 @@
 {
-  "links": {
-    "self": "http://localhost:8080/v1/receipt/25",
-    "first": null,
-    "last": null,
-    "next": null,
-    "prev": null
-  },
   "data": {
     "type": "receipt",
     "id": "25",
@@ -132,6 +125,14 @@
     {
       "type": "receiptDetail",
       "id": "73",
+      "relationships": {
+        "bookDetail": {
+          "data": {
+            "type": "bookDetail",
+            "id": "73"
+          }
+        }
+      },
       "attributes": {
         "createdAt": "2025-10-04T01:27:01.159034",
         "enabled": true,
@@ -143,6 +144,14 @@
     {
       "type": "receiptDetail",
       "id": "74",
+      "relationships": {
+        "bookDetail": {
+          "data": {
+            "type": "bookDetail",
+            "id": "74"
+          }
+        }
+      },
       "attributes": {
         "createdAt": "2025-08-30T15:35:15.15904",
         "enabled": true,
@@ -154,6 +163,14 @@
     {
       "type": "receiptDetail",
       "id": "75",
+      "relationships": {
+        "bookDetail": {
+          "data": {
+            "type": "bookDetail",
+            "id": "75"
+          }
+        }
+      },
       "attributes": {
         "createdAt": "2025-09-21T05:04:55.159053",
         "enabled": true,
@@ -180,6 +197,57 @@
         "enabled": true,
         "name": "ROLE_EMPLOYEE",
         "updatedAt": "2025-10-28T19:41:05.15273"
+      }
+    },
+    {
+      "type": "bookDetail",
+      "id": "73",
+      "attributes": {
+        "bookCondition": "New",
+        "bookFormat": "Paperback",
+        "createdAt": "2025-09-17T02:33:54.150595",
+        "dimensions": "20x13 cm",
+        "enabled": true,
+        "isbn": "9780000000073",
+        "printLength": 470,
+        "salePrice": 150000,
+        "stock": 8,
+        "supplyPrice": 140000,
+        "updatedAt": "2025-11-25T02:41:47.150584"
+      }
+    },
+    {
+      "type": "bookDetail",
+      "id": "74",
+      "attributes": {
+        "bookCondition": "Used",
+        "bookFormat": "Hardcover",
+        "createdAt": "2025-08-30T17:37:50.150619",
+        "dimensions": "20x13 cm",
+        "enabled": true,
+        "isbn": "9780000000074",
+        "printLength": 460,
+        "salePrice": 165000,
+        "stock": 5,
+        "supplyPrice": 155000,
+        "updatedAt": "2025-10-29T15:15:11.150607"
+      }
+    },
+    {
+      "type": "bookDetail",
+      "id": "75",
+      "attributes": {
+        "bookCondition": "New",
+        "bookFormat": "Paperback",
+        "createdAt": "2025-09-08T08:51:31.150631",
+        "dimensions": "20x13 cm",
+        "enabled": true,
+        "isbn": "9780000000075",
+        "printLength": 290,
+        "salePrice": 68000,
+        "stock": 9,
+        "supplyPrice": 63000,
+        "updatedAt": "2025-10-02T03:53:37.150642"
       }
     }
   ]
