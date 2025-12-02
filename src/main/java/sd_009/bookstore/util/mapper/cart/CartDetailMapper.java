@@ -1,8 +1,9 @@
 package sd_009.bookstore.util.mapper.cart;
 
 import org.mapstruct.*;
-import sd_009.bookstore.entity.cart.CartDetail;
 import sd_009.bookstore.dto.jsonApiResource.cart.CartDetailDto;
+import sd_009.bookstore.entity.cart.CartDetail;
+
 @Mapper(
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
         componentModel = "spring"

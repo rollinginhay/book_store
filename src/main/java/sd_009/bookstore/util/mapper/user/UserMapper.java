@@ -1,8 +1,8 @@
 package sd_009.bookstore.util.mapper.user;
 
 import org.mapstruct.*;
-import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.dto.jsonApiResource.user.UserDto;
+import sd_009.bookstore.entity.user.User;
 
 @Mapper(
         unmappedTargetPolicy = ReportingPolicy.IGNORE,

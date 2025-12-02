@@ -1,6 +1,8 @@
-use book_store;
+use
+book_store;
 start transaction;
-SET SQL_SAFE_UPDATES = 0;
+SET
+SQL_SAFE_UPDATES = 0;
 --  genre
 INSERT INTO genre (created_at, updated_at, enabled, note, name)
 VALUES ('2025-09-24 08:35:57.143809', '2025-10-03 13:58:25.143879', b'1', NULL,
@@ -1831,4 +1833,37 @@ VALUES ('2025-09-05 22:19:21.160324', '2025-10-10 11:03:43.160337', b'1', NULL,
         'Very engaging story.', 4, 35, 47),
        ('2025-09-03 12:30:16.160693', '2025-11-15 14:53:11.160703', b'1', NULL,
         'A fantastic experience.', 5, 37, 49);
+
+INSERT INTO campaign
+(enabled, end_date, start_date, created_at, updated_at, name, note,
+ campaign_type, max_discount, min_total, percentage)
+VALUES (b'1', '2025-12-31', '2025-12-01', NOW(6), NOW(6),
+        'Giảm 5% tối đa 100.000 đ', 'Year-end discount event',
+        'PERCENTAGE_DISCOUNT', 100000, 1000000, 5.0);
+
+INSERT INTO campaign
+(enabled, end_date, start_date, created_at, updated_at, name, note,
+ campaign_type, max_discount, min_total, percentage)
+VALUES (b'1', '2025-12-31', '2025-08-01', NOW(6), NOW(6),
+        'Giảm 10% tối đa 500.000 đ', 'Discount for students',
+        'PERCENTAGE_DISCOUNT', 500000, 5000000, 5.0);
+
+INSERT INTO campaign
+(enabled, end_date, start_date, created_at, updated_at, name, note,
+ campaign_type, max_discount, min_total, percentage)
+VALUES (b'0', '2024-05-10', '2024-04-25', NOW(6), NOW(6), 'Spring Clearance',
+        'Old stock clearance', 'PERCENTAGE_DISCOUNT', 150000, 500000, 10.0);
+
+INSERT INTO campaign
+(enabled, end_date, start_date, created_at, updated_at, name, note,
+ campaign_type, max_discount, min_total, percentage)
+VALUES (b'1', '2025-02-14', '2025-02-01', NOW(6), NOW(6), 'Valentine Special',
+        'Gift items promotion', 'FLAT_DISCOUNT', 50000, 300000, NULL);
+
+INSERT INTO campaign
+(enabled, end_date, start_date, created_at, updated_at, name, note,
+ campaign_type, max_discount, min_total, percentage)
+VALUES (b'1', '2025-10-31', '2025-10-01', NOW(6), NOW(6),
+        'Halloween Spooktacular', 'Limited time spooky deals',
+        'PERCENTAGE_DISCOUNT', 100000, 400000, 20.0);
 commit;

@@ -4,7 +4,8 @@ package sd_009.bookstore.dto.jsonApiResource.cart;
 import jsonapi.Id;
 import jsonapi.RelationshipsObject;
 import jsonapi.Resource;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.entity.user.User;
 

@@ -1,6 +1,7 @@
 package sd_009.bookstore.dto.jsonApiResource.campaign;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.entity.campaign.Campaign;
 
