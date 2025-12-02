@@ -33,4 +33,5 @@ public class UserDto implements Serializable {
     private final Boolean isOauth2User;
     @ToMany(name = "roles")
     private final List<RoleDto> roles;
+
 }

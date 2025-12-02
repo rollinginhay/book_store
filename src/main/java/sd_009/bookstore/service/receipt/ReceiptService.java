@@ -16,9 +16,7 @@ import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.receipt.PaymentDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
-import sd_009.bookstore.entity.receipt.PaymentDetail;
-import sd_009.bookstore.entity.receipt.Receipt;
-import sd_009.bookstore.entity.receipt.ReceiptDetail;
+import sd_009.bookstore.entity.receipt.*;
 import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.*;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
@@ -120,7 +118,7 @@ public class ReceiptService {
     }
 
     @Transactional
-    public Receipt buildEntityWithRelationships(String json)  {
+    public Receipt buildEntityWithRelationships(String json) {
         ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
 
         List<ReceiptDetail> receiptDetails = dto.getReceiptDetails() == null ? List.of() :
@@ -150,12 +148,24 @@ public class ReceiptService {
             receipt.setServiceCost(serviceCost);
             receipt.setGrandTotal(grandTotal);
         }
-        PaymentDetail paymentDetail = PaymentDetail.builder()
-                .amount(receipt.getGrandTotal())
-                .paymentType(dto.getPaymentDetail().getPaymentType())
-                .receipt(receipt)
-                .build();
+        PaymentDetail paymentDetail = null;
+        if (dto.getOrderType() == OrderType.DIRECT && !dto.getHasShipping()) {
+            paymentDetail = PaymentDetail.builder()
+                    .amount(receipt.getGrandTotal())
+                    .paymentType(dto.getPaymentDetail().getPaymentType())
+                    .receipt(receipt)
+                    .build();
+            receipt.setOrderStatus(OrderStatus.PAID);
+        }
 
+        if (dto.getOrderType() == OrderType.DIRECT && dto.getHasShipping()) {
+            paymentDetail = PaymentDetail.builder()
+                    .amount(receipt.getGrandTotal())
+                    .paymentType(dto.getPaymentDetail().getPaymentType())
+                    .receipt(receipt)
+                    .build();
+            receipt.setOrderStatus(OrderStatus.IN_TRANSIT);
+        }
         receipt.setPaymentDetail(paymentDetail);
         receipt.setReceiptDetails(receiptDetails);
         receiptDetails.forEach(e -> e.setReceipt(receipt));
