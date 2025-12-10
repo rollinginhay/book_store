@@ -1,6 +1,7 @@
 package sd_009.bookstore.util.mapper.user;
 
 import sd_009.bookstore.dto.jsonApiResource.user.AuthObject;
+import sd_009.bookstore.entity.user.Role;
 import sd_009.bookstore.entity.user.User;
 
 public class UserMapperManual {
@@ -11,6 +12,7 @@ public class UserMapperManual {
                 .email(user.getEmail())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .roles(user.getRoles().stream().map(Role::getName).toList())
                 .jwtToken(jwtToken)
                 .build();
     }
