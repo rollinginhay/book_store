@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
 public class CartDetailDto implements Serializable {
     @Id
     private final String id;
-    private final User user;
-    private final BookDetail bookDetail;
+    private final String userId;
+    private final String bookDetailId;
     private final Long amount;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;

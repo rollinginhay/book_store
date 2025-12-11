@@ -1,0 +1,19 @@
+{
+  "data": {
+    "type": "user",
+    "attributes": {
+      "username": "new_user",
+      "email": "newuser@gmail.com",
+      "password": "12345678",
+      "personName": "Phạm Văn C",
+      "phoneNumber": "0999888777",
+      "address": "TP. Hồ Chí Minh",
+      "enabled": true
+    },
+    "relationships": {
+      "roles": {
+        "data": [{ "type": "role", "id": "1" }]
+      }
+    }
+  }
+}

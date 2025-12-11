@@ -15,6 +15,7 @@ import sd_009.bookstore.repository.RoleRepository;
 import sd_009.bookstore.repository.UserRepository;
 import sd_009.bookstore.util.mapper.user.UserMapperManual;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,26 @@ public class AuthService {
 
         return UserMapperManual.mapToAuthResponse(user, token);
     }
+
+    public AuthObject loginOnline(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.email())
+                .orElseThrow(() -> new UnauthorizedException("Invalid Email or Password"));
+
+        // Tạo claims và thêm userId
+        Map<String, Object> claims = new HashMap<>();
+        System.out.println("User ID: " + user.getId());
+        claims.put("id", user.getId());
+
+        claims.put("roles", user.getRoles().stream()
+                .map(Role::getName)
+                .toList()
+        );
+
+        String token = jwtService.generateTokenOnline(user.getEmail(), claims);
+
+        return UserMapperManual.mapToAuthResponse(user, token);
+    }
+
 
     public AuthObject register(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.email())) {

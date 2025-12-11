@@ -72,6 +72,35 @@ public class ReceiptController {
     public ResponseEntity<Object> createReceipt(@RequestBody String json) {
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(receiptService.save(json));
     }
+    @Operation(
+            summary = "Create a new receipt",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            examples = @ExampleObject(
+                                    name = "Create receipt req",
+                                    externalValue = "/jsonExample/receipt/post_receipt.json"
+                            )
+                    )
+            ),
+            responses = @ApiResponse(
+                    responseCode = "201",
+                    description = "Created",
+                    content = @Content(
+                            examples = @ExampleObject(
+                                    name = "Create receipt resp",
+                                    externalValue = "/jsonExample/receipt/get_receipt.json"
+                            )
+                    )
+            )
+    )
+    @PostMapping(Routes.POST_RECEIPT_CREATE_ONLINE)
+    public ResponseEntity<Object> createReceiptOnline(@RequestBody String json) {
+        String responseJson = receiptService.saveOneline(json);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .contentType(MediaType.valueOf(contentType))
+                .body(responseJson);
+    }
 
     @Operation(
             summary = "Update a receipt",

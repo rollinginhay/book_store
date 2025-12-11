@@ -113,7 +113,7 @@ public class CartDetailController {
     public ResponseEntity<Object> createCartDetail(@RequestBody String json) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.valueOf(contentType))
-                .body(cartDetailService.save(json));
+                .body(cartDetailService.saveOnline(json));
     }
 
     // 🔹 Cập nhật sản phẩm trong giỏ hàng

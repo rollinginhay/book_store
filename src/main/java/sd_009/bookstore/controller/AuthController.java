@@ -30,6 +30,10 @@ public class AuthController {
     public ResponseEntity<AuthObject> login(@Valid @RequestBody LoginRequest loginRequest) {
         return ResponseEntity.ok(authService.login(loginRequest));
     }
+    @PostMapping("/loginOnline")
+    public ResponseEntity<AuthObject> loginOnline(@Valid @RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(authService.loginOnline(loginRequest));
+    }
 
     @Operation(description = "Manually register a new user")
     @ApiResponse(responseCode = "200", description = "Register success", content = @Content(schema = @Schema(implementation = AuthObject.class)))

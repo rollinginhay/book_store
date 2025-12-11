@@ -1,0 +1,254 @@
+{
+  "data": {
+    "type": "receipt",
+    "id": "25",
+    "relationships": {
+      "customer": {
+        "data": {
+          "type": "user",
+          "id": "49"
+        }
+      },
+      "employee": {
+        "data": {
+          "type": "user",
+          "id": "50"
+        }
+      },
+      "paymentDetail": {
+        "data": {
+          "type": "paymentDetail",
+          "id": "25"
+        }
+      },
+      "receiptDetails": {
+        "data": [
+          {
+            "type": "receiptDetail",
+            "id": "73"
+          },
+          {
+            "type": "receiptDetail",
+            "id": "74"
+          },
+          {
+            "type": "receiptDetail",
+            "id": "75"
+          }
+        ]
+      }
+    },
+    "attributes": {
+      "createdAt": "2025-10-26T07:28:40.157296",
+      "customerAddress": "171 Main St",
+      "customerName": "Yvonne Erickson",
+      "customerPhone": "555-0049",
+      "discount": 0,
+      "enabled": true,
+      "grandTotal": 438640,
+      "hasShipping": true,
+      "orderStatus": "PAID",
+      "orderType": "ONLINE",
+      "paymentDate": "2025-11-24T00:00:00",
+      "serviceCost": 25000,
+      "shippingId": "LW9Q1KXPZA",
+      "shippingService": "GHN",
+      "subTotal": 383000,
+      "tax": 8,
+      "updatedAt": "2025-11-06T14:17:41.157303"
+    }
+  },
+  "included": [
+    {
+      "type": "user",
+      "id": "49",
+      "relationships": {
+        "roles": {
+          "data": [
+            {
+              "type": "role",
+              "id": "3"
+            }
+          ]
+        }
+      },
+      "attributes": {
+        "address": "171 Main St",
+        "createdAt": "2025-09-01T15:01:19.154698",
+        "email": "user49@example.com",
+        "enabled": true,
+        "isOauth2User": false,
+        "personName": "Yvonne Erickson",
+        "phoneNumber": "555-0049",
+        "updatedAt": "2025-11-17T20:06:30.154723",
+        "username": "yvonne49"
+      }
+    },
+    {
+      "type": "user",
+      "id": "50",
+      "relationships": {
+        "roles": {
+          "data": [
+            {
+              "type": "role",
+              "id": "2"
+            }
+          ]
+        }
+      },
+      "attributes": {
+        "address": "172 Main St",
+        "createdAt": "2025-09-16T14:51:45.15473",
+        "email": "user50@example.com",
+        "enabled": true,
+        "isOauth2User": false,
+        "personName": "Zane Holloway",
+        "phoneNumber": "555-0050",
+        "updatedAt": "2025-10-17T08:14:59.154736",
+        "username": "zane50"
+      }
+    },
+    {
+      "type": "paymentDetail",
+      "id": "25",
+      "attributes": {
+        "amount": 438640,
+        "createdAt": "2025-09-06T04:45:07.16012",
+        "enabled": true,
+        "paymentType": "TRANSFER",
+        "provider": "VNPAY",
+        "providerId": "TXN25MKQ8P",
+        "updatedAt": "2025-10-15T05:35:41.160126"
+      }
+    },
+    {
+      "type": "receiptDetail",
+      "id": "73",
+      "relationships": {
+        "bookDetail": {
+          "data": {
+            "type": "bookDetail",
+            "id": "73"
+          }
+        }
+      },
+      "attributes": {
+        "createdAt": "2025-10-04T01:27:01.159034",
+        "enabled": true,
+        "pricePerUnit": 150000,
+        "quantity": 1,
+        "updatedAt": "2025-10-13T05:32:36.159027"
+      }
+    },
+    {
+      "type": "receiptDetail",
+      "id": "74",
+      "relationships": {
+        "bookDetail": {
+          "data": {
+            "type": "bookDetail",
+            "id": "74"
+          }
+        }
+      },
+      "attributes": {
+        "createdAt": "2025-08-30T15:35:15.15904",
+        "enabled": true,
+        "pricePerUnit": 165000,
+        "quantity": 1,
+        "updatedAt": "2025-09-23T20:31:06.159047"
+      }
+    },
+    {
+      "type": "receiptDetail",
+      "id": "75",
+      "relationships": {
+        "bookDetail": {
+          "data": {
+            "type": "bookDetail",
+            "id": "75"
+          }
+        }
+      },
+      "attributes": {
+        "createdAt": "2025-09-21T05:04:55.159053",
+        "enabled": true,
+        "pricePerUnit": 68000,
+        "quantity": 1,
+        "updatedAt": "2025-10-25T17:36:33.15906"
+      }
+    },
+    {
+      "type": "role",
+      "id": "3",
+      "attributes": {
+        "createdAt": "2025-09-14T10:10:20.152749",
+        "enabled": true,
+        "name": "ROLE_USER",
+        "updatedAt": "2025-09-21T02:42:11.152743"
+      }
+    },
+    {
+      "type": "role",
+      "id": "2",
+      "attributes": {
+        "createdAt": "2025-10-01T13:15:40.152736",
+        "enabled": true,
+        "name": "ROLE_EMPLOYEE",
+        "updatedAt": "2025-10-28T19:41:05.15273"
+      }
+    },
+    {
+      "type": "bookDetail",
+      "id": "73",
+      "attributes": {
+        "bookCondition": "New",
+        "bookFormat": "Paperback",
+        "createdAt": "2025-09-17T02:33:54.150595",
+        "dimensions": "20x13 cm",
+        "enabled": true,
+        "isbn": "9780000000073",
+        "printLength": 470,
+        "salePrice": 150000,
+        "stock": 8,
+        "supplyPrice": 140000,
+        "updatedAt": "2025-11-25T02:41:47.150584"
+      }
+    },
+    {
+      "type": "bookDetail",
+      "id": "74",
+      "attributes": {
+        "bookCondition": "Used",
+        "bookFormat": "Hardcover",
+        "createdAt": "2025-08-30T17:37:50.150619",
+        "dimensions": "20x13 cm",
+        "enabled": true,
+        "isbn": "9780000000074",
+        "printLength": 460,
+        "salePrice": 165000,
+        "stock": 5,
+        "supplyPrice": 155000,
+        "updatedAt": "2025-10-29T15:15:11.150607"
+      }
+    },
+    {
+      "type": "bookDetail",
+      "id": "75",
+      "attributes": {
+        "bookCondition": "New",
+        "bookFormat": "Paperback",
+        "createdAt": "2025-09-08T08:51:31.150631",
+        "dimensions": "20x13 cm",
+        "enabled": true,
+        "isbn": "9780000000075",
+        "printLength": 290,
+        "salePrice": 68000,
+        "stock": 9,
+        "supplyPrice": 63000,
+        "updatedAt": "2025-10-02T03:53:37.150642"
+      }
+    }
+  ]
+}

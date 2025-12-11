@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .build();
     }
 
+
     private CorsConfigurationSource corsConfig() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of("*"));

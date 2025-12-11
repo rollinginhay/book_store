@@ -1,0 +1,11 @@
+{
+  "data": {
+    "type": "creator",
+    "attributes": {
+      "id": "1",
+      "name": "edited creator",
+      "note": "string",
+      "role": "Illustrator"
+    }
+  }
+}

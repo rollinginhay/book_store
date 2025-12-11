@@ -1,0 +1,19 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/series/129",
+    "first": null,
+    "last": null,
+    "next": null,
+    "prev": null
+  },
+  "data": {
+    "type": "series",
+    "id": "129",
+    "attributes": {
+      "createdAt": "2025-10-14T10:20:02.219498",
+      "enabled": true,
+      "name": "new series",
+      "updatedAt": "2025-10-14T10:20:02.219498"
+    }
+  }
+}

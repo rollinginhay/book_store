@@ -1,0 +1,39 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/users",
+    "first": null,
+    "last": null,
+    "next": null,
+    "prev": null
+  },
+  "data": [
+    {
+      "type": "user",
+      "id": "1",
+      "attributes": {
+        "username": "admin",
+        "email": "admin@gmail.com",
+        "personName": "Nguyễn Văn A",
+        "phoneNumber": "0987654321",
+        "enabled": true
+      },
+      "relationships": {
+        "roles": { "data": [{ "type": "role", "id": "2" }] }
+      }
+    },
+    {
+      "type": "user",
+      "id": "2",
+      "attributes": {
+        "username": "user1",
+        "email": "user1@gmail.com",
+        "personName": "Trần Thị B",
+        "phoneNumber": "0912345678",
+        "enabled": true
+      },
+      "relationships": {
+        "roles": { "data": [{ "type": "role", "id": "1" }] }
+      }
+    }
+  ]
+}

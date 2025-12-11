@@ -1,5 +1,7 @@
 package sd_009.bookstore.service.receipt;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.moshi.JsonAdapter;
 import jsonapi.Document;
 import jsonapi.Links;
@@ -43,6 +45,7 @@ public class ReceiptService {
     private final PaymentDetailMapper paymentDetailMapper;
     private final UserRepository userRepository;
     private final BookDetailRepository bookDetailRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public String find(Boolean enabled, String titleQuery, Pageable pageable) {
@@ -103,6 +106,85 @@ public class ReceiptService {
                         .build().toMap()))
                 .build());
     }
+    @Transactional
+    public String saveOneline(String json) {
+
+        // Build receipt from JSON (attributes + basic fields)
+        Receipt receipt = buildEntityWithRelationships(json);
+
+        //------------------------------------------
+        // LẤY CUSTOMER_ID & EMPLOYEE_ID TỪ JSON
+        //------------------------------------------
+        JsonNode root;
+        try {
+            root = objectMapper.readTree(json);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid JSON");
+        }
+
+        JsonNode relationships = root.path("data").path("relationships");
+
+        // CUSTOMER
+        if (relationships.has("customer")) {
+            String customerId = relationships
+                    .path("customer").path("data").path("id").asText();
+
+            User customer = userRepository.findById(Long.valueOf(customerId))
+                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+            receipt.setCustomer(customer);
+        }
+
+        // EMPLOYEE
+        if (relationships.has("employee") && !relationships.path("employee").path("data").isMissingNode()) {
+            JsonNode employeeNode = relationships.path("employee").path("data");
+            if (!employeeNode.isNull() && employeeNode.has("id")) {
+                String employeeId = employeeNode.path("id").asText();
+                if (!employeeId.isEmpty()) {
+                    User employee = userRepository.findById(Long.valueOf(employeeId))
+                            .orElseThrow(() -> new RuntimeException("Employee not found"));
+                    receipt.setEmployee(employee);
+                }
+            }
+        }
+
+
+        //------------------------------------------
+        // SAVE RECEIPT
+        //------------------------------------------
+        Receipt savedReceipt = receiptRepository.save(receipt);
+
+        //------------------------------------------
+        // SAVE RECEIPT DETAILS
+        //------------------------------------------
+        if (receipt.getReceiptDetails() != null && !receipt.getReceiptDetails().isEmpty()) {
+            receipt.getReceiptDetails().forEach(rd -> rd.setReceipt(savedReceipt));
+            receiptDetailRepository.saveAll(receipt.getReceiptDetails());
+        }
+
+        //------------------------------------------
+        // SAVE PAYMENT DETAIL
+        //------------------------------------------
+        if (receipt.getPaymentDetail() != null) {
+            receipt.getPaymentDetail().setReceipt(savedReceipt);
+            paymentDetailRepository.save(receipt.getPaymentDetail());
+        }
+
+        //------------------------------------------
+        // TRẢ VỀ DTO JSON:API
+        //------------------------------------------
+        Receipt finalReceipt = receiptRepository.findById(savedReceipt.getId())
+                .orElseThrow();
+
+        return getSingleAdapter().toJson(
+                Document.with(receiptMapper.toDto(finalReceipt))
+                        .links(Links.from(JsonApiLinksObject.builder()
+                                .self(LinkMapper.toLink(Routes.GET_RECEIPT_BY_ID, finalReceipt.getId()))
+                                .build().toMap()))
+                        .build()
+        );
+    }
+
+
 
     @Transactional
     public String update(String json) {
@@ -172,6 +254,68 @@ public class ReceiptService {
         receipt.setCustomer(customer);
         receipt.setEmployee(employee);
         return receipt;
+    }
+    @Transactional
+    public Receipt buildAndSaveReceipt(String json) {
+        ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
+
+        List<ReceiptDetail> receiptDetails = dto.getReceiptDetails() == null ? List.of() :
+                dto.getReceiptDetails().stream()
+                        .map(e -> receiptDetailMapper.toEntity(e))
+                        .toList();
+        receiptDetails.forEach(e -> e.setId(null));
+        receiptDetails.forEach(e -> e.setBookCopy(bookDetailRepository.findById(e.getBookCopy().getId()).orElse(null)));
+
+        User employee = dto.getEmployee() == null ? null : userRepository.findById(Long.valueOf(dto.getEmployee().getId())).orElse(null);
+        User customer = dto.getCustomer() == null ? null : userRepository.findById(Long.valueOf(dto.getCustomer().getId())).orElse(null);
+
+        Receipt receipt = receiptMapper.toEntity(dto);
+        if(receipt.getId() == 0) receipt.setId(null); // đảm bảo null để DB sinh tự động
+        receipt.setCustomer(customer);
+        receipt.setEmployee(employee);
+
+        // save receipt trước
+        receipt = receiptRepository.save(receipt); // ✅ ID được sinh
+
+        // calculate totals
+        if (receipt.getReceiptDetails() != null && !receipt.getReceiptDetails().isEmpty()) {
+            Double subtotal = receiptDetails.stream().map(e -> e.getPricePerUnit() * e.getQuantity()).reduce(0D, Double::sum);
+            Double taxRate = 8D;
+            Double serviceCost = 0D;
+            if (receipt.getHasShipping()) serviceCost += 30000;
+            Double grandTotal = (subtotal - dto.getDiscount()) * (100 + taxRate) / 100 + serviceCost;
+            receipt.setTax(taxRate);
+            receipt.setSubTotal(subtotal);
+            receipt.setDiscount(dto.getDiscount());
+            receipt.setServiceCost(serviceCost);
+            receipt.setGrandTotal(grandTotal);
+        }
+
+        // tạo paymentDetail sau khi receipt đã có ID
+        PaymentDetail paymentDetail = null;
+        if (dto.getPaymentDetail() != null) {
+            paymentDetail = PaymentDetail.builder()
+                    .amount(receipt.getGrandTotal())
+                    .paymentType(dto.getPaymentDetail().getPaymentType())
+                    .receipt(receipt)
+                    .build();
+            receipt.setPaymentDetail(paymentDetail);
+
+            if (dto.getOrderType() == OrderType.DIRECT && !dto.getHasShipping()) receipt.setOrderStatus(OrderStatus.PAID);
+            if (dto.getOrderType() == OrderType.DIRECT && dto.getHasShipping()) receipt.setOrderStatus(OrderStatus.IN_TRANSIT);
+        }
+
+        // gắn receiptDetails
+        Receipt tempReceipt = receiptMapper.toEntity(dto);
+        tempReceipt = receiptRepository.save(tempReceipt);
+
+        final Receipt receiptFinal = tempReceipt;  // Biến final dùng trong lambda
+
+        receiptDetails.forEach(e -> e.setReceipt(receiptFinal));
+
+
+        // save lại Receipt để cascade PaymentDetail & ReceiptDetail
+        return receiptRepository.save(receipt);
     }
 
     @Transactional

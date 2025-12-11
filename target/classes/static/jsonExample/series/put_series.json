@@ -1,0 +1,10 @@
+{
+  "data": {
+    "type": "series",
+    "id": "78",
+    "attributes": {
+      "name": "series update",
+      "note": "string"
+    }
+  }
+}

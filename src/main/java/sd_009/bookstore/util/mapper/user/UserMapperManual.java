@@ -6,6 +6,7 @@ import sd_009.bookstore.entity.user.User;
 public class UserMapperManual {
     public static AuthObject mapToAuthResponse(User user, String jwtToken) {
         return AuthObject.builder()
+                .userId(user.getId().toString())
                 .oauthId(user.getOauth2Id())
                 .username(user.getUsername())
                 .email(user.getEmail())

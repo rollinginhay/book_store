@@ -10,11 +10,25 @@ import sd_009.bookstore.entity.cart.CartDetail;
 )
 public interface CartDetailMapper {
 
-    CartDetail toEntity(CartDetailDto dto);
+//    CartDetail toEntity(CartDetailDto dto);
+//
+//    CartDetailDto toDto(CartDetail entity);
+//
+//    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+//    CartDetail partialUpdate(CartDetailDto dto, @MappingTarget CartDetail entity);
+//
+@Mapping(source = "userId", target = "user.id")
+@Mapping(source = "bookDetailId", target = "bookDetail.id")
+CartDetail toEntity(CartDetailDto dto);
 
+    @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "bookDetail.id", target = "bookDetailId")
     CartDetailDto toDto(CartDetail entity);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(source = "userId", target = "user.id")
+    @Mapping(source = "bookDetailId", target = "bookDetail.id")
     CartDetail partialUpdate(CartDetailDto dto, @MappingTarget CartDetail entity);
+
 }
 

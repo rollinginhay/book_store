@@ -81,6 +81,7 @@ public enum Routes {
     public static final String GET_RECEIPTS = "/v1/receipts";
     public final static String GET_RECEIPT_BY_ID = "/v1/receipt/{id}";
     public static final String POST_RECEIPT_CREATE = "/v1/receipt/create";
+    public static final String POST_RECEIPT_CREATE_ONLINE = "/v1/receipt/createOnline";
     public static final String PUT_RECEIPT_UPDATE = "/v1/receipt/update";
     public static final String DELETE_RECEIPT_DELETE = "/v1/receipt/{id}";
     public static final String MULTI_RECEIPT_RELATIONSHIP_RECEIPT_DETAIL = "/v1/receipt/{id}/relationships/receiptDetail";
@@ -114,5 +115,4 @@ public enum Routes {
     public static final String POST_USER_CREATE = "/v1/user/create";
     public static final String PUT_USER_UPDATE = "/v1/user/update";
     public static final String DELETE_USER_DELETE = "/v1/user/{id}";
-
 }

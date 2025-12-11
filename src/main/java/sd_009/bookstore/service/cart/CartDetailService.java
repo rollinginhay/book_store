@@ -81,16 +81,41 @@ public class CartDetailService {
     // ===============================================================
     // 🔹 Tạo mới 1 cart detail
     // ===============================================================
+//    @Transactional
+//    public String save(String json) {
+//        CartDetailDto dto = jsonApiValidator.readAndValidate(json, CartDetailDto.class);
+//
+//        User user = userRepository.findById(dto.getUser().getId()).orElseThrow();
+//        BookDetail bookDetail = bookDetailRepository.findById(dto.getBookDetail().getId()).orElseThrow();
+//
+//        CartDetail entity = cartDetailMapper.toEntity(dto);
+//        entity.setUser(user);
+//        entity.setBookDetail(bookDetail);
+//
+//        CartDetail saved = cartDetailRepository.save(entity);
+//
+//        Document<CartDetailDto> doc = Document.with(cartDetailMapper.toDto(saved))
+//                .links(Links.from(JsonApiLinksObject.builder()
+//                        .self(LinkMapper.toLink(Routes.GET_CART_DETAIL_BY_ID, saved.getId()))
+//                        .build().toMap()))
+//                .build();
+//
+//        return getSingleAdapter().toJson(doc);
+//    }
     @Transactional
-    public String save(String json) {
+    public String saveOnline(String json) {
         CartDetailDto dto = jsonApiValidator.readAndValidate(json, CartDetailDto.class);
 
-        User user = userRepository.findById(dto.getUser().getId()).orElseThrow();
-        BookDetail bookDetail = bookDetailRepository.findById(dto.getBookDetail().getId()).orElseThrow();
+        User user = userRepository.findById(Long.valueOf(dto.getUserId()))
+                .orElseThrow();
+
+        BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(dto.getBookDetailId()))
+                .orElseThrow();
 
         CartDetail entity = cartDetailMapper.toEntity(dto);
         entity.setUser(user);
         entity.setBookDetail(bookDetail);
+
 
         CartDetail saved = cartDetailRepository.save(entity);
 
@@ -102,6 +127,7 @@ public class CartDetailService {
 
         return getSingleAdapter().toJson(doc);
     }
+
 
     // ===============================================================
     // 🔹 Cập nhật giỏ hàng

@@ -7,6 +7,7 @@ import java.util.Collection;
 
 @Builder
 public record AuthObject(
+        String userId,
         String oauthId,
         String email,
         String username,
