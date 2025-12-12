@@ -1,0 +1,33 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/campaigns",
+    "first": null,
+    "last": null,
+    "next": null,
+    "prev": null
+  },
+  "data": [
+    {
+      "type": "campaign",
+      "id": "1",
+      "attributes": {
+        "name": "Summer Sale",
+        "campaignType": "PERCENTAGE_DISCOUNT",
+        "startDate": "2025-07-01",
+        "endDate": "2025-07-31",
+        "enabled": true
+      }
+    },
+    {
+      "type": "campaign",
+      "id": "2",
+      "attributes": {
+        "name": "Back To School",
+        "campaignType": "FLAT_DISCOUNT",
+        "startDate": "2025-08-15",
+        "endDate": "2025-09-15",
+        "enabled": true
+      }
+    }
+  ]
+}

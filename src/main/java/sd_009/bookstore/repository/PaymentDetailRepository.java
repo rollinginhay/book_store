@@ -12,4 +12,6 @@ import java.util.List;
 public interface PaymentDetailRepository extends JpaRepository<PaymentDetail, Long>, JpaSpecificationExecutor<PaymentDetail> {
 
     List<PaymentDetail> findByReceipt(Receipt receipt);
+
+    PaymentDetail findByProviderId(String providerId);
 }

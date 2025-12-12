@@ -1,0 +1,31 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/receipts"
+  },
+  "data": [
+    {
+      "type": "receipt",
+      "id": "1",
+      "attributes": {
+        "totalAmount": 450000,
+        "status": "COMPLETED",
+        "enabled": true
+      },
+      "relationships": {
+        "user": { "data": { "type": "user", "id": "1" } }
+      }
+    },
+    {
+      "type": "receipt",
+      "id": "2",
+      "attributes": {
+        "totalAmount": 300000,
+        "status": "PENDING",
+        "enabled": true
+      },
+      "relationships": {
+        "user": { "data": { "type": "user", "id": "2" } }
+      }
+    }
+  ]
+}

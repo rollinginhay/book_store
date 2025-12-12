@@ -1,0 +1,33 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/book/154/relationships/review",
+    "first": null,
+    "last": null,
+    "next": null,
+    "prev": null
+  },
+  "data": [
+    {
+      "type": "review",
+      "id": "287",
+      "attributes": {
+        "comment": "comment",
+        "createdAt": "2025-10-15T02:54:54.50316",
+        "enabled": true,
+        "rating": 5,
+        "updatedAt": "2025-10-15T02:54:54.50316"
+      }
+    },
+    {
+      "type": "review",
+      "id": "288",
+      "attributes": {
+        "comment": "comment",
+        "createdAt": "2025-10-15T02:54:54.510809",
+        "enabled": true,
+        "rating": 4,
+        "updatedAt": "2025-10-15T02:54:54.510809"
+      }
+    }
+  ]
+}

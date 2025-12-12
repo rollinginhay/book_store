@@ -3,9 +3,9 @@ spring:
     name: book-store
   #DB
   datasource:
-    url: jdbc:mysql://localhost:3307/book_store
+    url: jdbc:mysql://localhost:3306/book_store
     username: root
-    password: root
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
   #JPA
   jpa:
@@ -34,45 +34,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: https://accounts.google.com
-          #Mail
-          mail:
-            host: live.smtp.mailtrap.io
-            port: 587
-            username: api
-            password: 44c85c5ddf2fb84adab05491e44b29f7
-            properties:
-              mail:
-                smtp:
-                  auth: true
-                  starttls:
-                    enable: true
-
-          # Cấu hình custom
-          app:
-            mail:
-              from-email: "no-reply@demomailtrap.co"
-              from-name: "Dino Bookstore"
-
-  #Mail
-  mail:
-    host: live.smtp.mailtrap.io
-    port: 587
-    username: api
-    password: 44c85c5ddf2fb84adab05491e44b29f7
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-
-  # Cấu hình custom
-  app:
-    mail:
-      from-email: "no-reply@demomailtrap.co"
-      from-name: "Dino Bookstore"
-
-
 #LOGGING
 logging:
   level:

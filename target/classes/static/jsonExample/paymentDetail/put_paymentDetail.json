@@ -1,0 +1,11 @@
+{
+  "data": {
+    "type": "paymentDetail",
+    "id": "1",
+    "attributes": {
+      "amount": 999999,
+      "enabled": true,
+      "paymentType": "CASH"
+    }
+  }
+}

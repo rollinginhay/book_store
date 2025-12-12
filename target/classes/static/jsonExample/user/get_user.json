@@ -1,0 +1,50 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/user/1",
+    "first": null,
+    "last": null,
+    "next": null,
+    "prev": null
+  },
+  "data": {
+    "type": "user",
+    "id": "1",
+    "attributes": {
+      "username": "admin",
+      "email": "admin@gmail.com",
+      "personName": "Nguyễn Văn A",
+      "phoneNumber": "0987654321",
+      "address": "Hà Nội",
+      "enabled": true,
+      "isOauth2User": false,
+      "createdAt": "2025-10-20T10:00:00",
+      "updatedAt": "2025-10-21T09:45:00"
+    },
+    "relationships": {
+      "roles": {
+        "data": [
+          { "type": "role", "id": "1" },
+          { "type": "role", "id": "2" }
+        ]
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "role",
+      "id": "1",
+      "attributes": {
+        "name": "ROLE_USER",
+        "enabled": true
+      }
+    },
+    {
+      "type": "role",
+      "id": "2",
+      "attributes": {
+        "name": "ROLE_ADMIN",
+        "enabled": true
+      }
+    }
+  ]
+}

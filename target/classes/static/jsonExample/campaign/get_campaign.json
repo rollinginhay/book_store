@@ -1,0 +1,22 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/campaign/1",
+    "first": null,
+    "last": null,
+    "next": null,
+    "prev": null
+  },
+  "data": {
+    "type": "campaign",
+    "id": "1",
+    "attributes": {
+      "name": "Summer Sale",
+      "campaignType": "PERCENTAGE_DISCOUNT",
+      "startDate": "2025-07-01",
+      "endDate": "2025-07-31",
+      "enabled": true,
+      "createdAt": "2025-06-15T08:00:00",
+      "updatedAt": "2025-06-20T10:00:00"
+    }
+  }
+}

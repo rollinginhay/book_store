@@ -30,6 +30,16 @@ public class JwtService {
 
         return Jwts.builder().subject(subject).claims(claims).issuedAt(Date.from(Instant.now())).expiration(Date.from(Instant.now().plusMillis(expiration))).signWith(Keys.hmacShaKeyFor(secret.getBytes())).compact();
     }
+    public String generateTokenOnline(String subject, Map<String, Object> claims) {
+        log.info("Generating JWT token for: {}", subject);
+
+        return Jwts.builder().subject(subject).
+                claims(claims)
+                .issuedAt(Date.from(Instant.now()))
+                .expiration(Date.from(Instant.now().plusMillis(expiration)))
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes())).compact();
+    }
+
 
     public Boolean validateToken(String token) {
         try {

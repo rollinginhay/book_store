@@ -22,4 +22,5 @@ public interface CartDetailMapper {
     @Mapping(source = "userId", target = "user.id")
     @Mapping(source = "bookDetailId", target = "bookDetail.id")
     CartDetail partialUpdate(CartDetailDto dto, @MappingTarget CartDetail entity);
+
 }

@@ -23,13 +23,15 @@ import java.time.LocalDateTime;
 public class CartDetailDto {
 
     @Id
-    private String id;
-
-    private String userId;
-    private String bookDetailId;
-
-    private Long amount;
-    private Boolean enabled;
+    private final String id;
+    private final String userId;
+    private final String bookDetailId;
+    private final Long amount;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
+    private final Boolean enabled;
+    private final String note;
+}
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

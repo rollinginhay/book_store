@@ -6,6 +6,7 @@ import jsonapi.ToMany;
 import jsonapi.ToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.lang.Nullable;
 import sd_009.bookstore.dto.jsonApiResource.user.UserDto;
 import sd_009.bookstore.entity.receipt.OrderType;
 import sd_009.bookstore.entity.receipt.Receipt;
@@ -39,7 +40,8 @@ public class ReceiptDto implements Serializable {
     private final OrderType orderType;
     @ToOne(name = "customer")
     private final UserDto customer;
-    @ToOne(name = "employee")
+    @ToOne(name = "employee" )
+    @Nullable
     private final UserDto employee;
     private final String customerName;
     private final String customerPhone;
