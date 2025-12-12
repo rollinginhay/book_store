@@ -24,6 +24,10 @@ public class OAuthFailureHandler implements AuthenticationFailureHandler {
         log.error("Oauth failure ex handler", exception);
 
         errorMapper.writeFilterErrorDoc(response, HttpStatus.UNAUTHORIZED.value(), "Authentication failed", request.getRequestURI());
-
+//        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+//        response.setContentType("application/json");
+//        response.getWriter().write(
+//                "{\"error\": \"Authentication failed: " + exception.getMessage() + "\"}"
+//        );
     }
 }

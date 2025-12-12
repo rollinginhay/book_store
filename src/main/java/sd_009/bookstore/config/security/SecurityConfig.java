@@ -109,6 +109,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/v1/receipt/update").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/v1/receiptDetail/update").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/v1/paymentDetail/update").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/v1/receipt/**").authenticated()
+
 
                         // DELETE Requests - Require ADMIN role
                         .requestMatchers(HttpMethod.DELETE, "/v1/book/**").hasRole("ADMIN")

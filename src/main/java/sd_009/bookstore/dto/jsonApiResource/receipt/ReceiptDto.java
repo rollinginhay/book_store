@@ -7,6 +7,8 @@ import jsonapi.ToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.lang.Nullable;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import sd_009.bookstore.dto.jsonApiResource.user.UserDto;
 import sd_009.bookstore.entity.receipt.OrderType;
 import sd_009.bookstore.entity.receipt.Receipt;
@@ -20,35 +22,51 @@ import java.util.List;
  */
 @Resource(type = "receipt")
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
+@Setter
 public class ReceiptDto implements Serializable {
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
-    private final Boolean enabled;
-    private final String note;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Boolean enabled;
+    private String note;
+
     @Id
-    private final String id;
-    private final Double subTotal;
-    private final Double discount;
-    private final Double tax;
-    private final Double serviceCost;
-    private final Boolean hasShipping;
-    private final String shippingService;
-    private final String shippingId;
-    private final Double grandTotal;
-    private final String orderStatus;
-    private final OrderType orderType;
+    private String id;
+
+    private Double subTotal;
+    private Double discount;
+    private Double tax;
+    private Double serviceCost;
+    private Boolean hasShipping;
+    private String shippingService;
+    private String shippingId;
+    private Double grandTotal;
+
+    // 🔥 2 field BẮT BUỘC phải có (json gửi lên)
+    private String paymentMethod;
+    private String status;
+
+    private String orderStatus;
+    private OrderType orderType;
+
     @ToOne(name = "customer")
-    private final UserDto customer;
-    @ToOne(name = "employee" )
+    private UserDto customer;
+
+    @ToOne(name = "employee")
     @Nullable
-    private final UserDto employee;
-    private final String customerName;
-    private final String customerPhone;
-    private final String customerAddress;
-    private final LocalDateTime paymentDate;
+    private UserDto employee;
+
+    private String customerName;
+    private String customerPhone;
+    private String customerAddress;
+
+    private LocalDateTime paymentDate;
+
     @ToOne(name = "paymentDetail")
-    private final PaymentDetailDto paymentDetail;
+    private PaymentDetailDto paymentDetail;
+
     @ToMany(name = "receiptDetails")
-    private final List<ReceiptDetailDto> receiptDetails;
+    private List<ReceiptDetailDto> receiptDetails;
 }

@@ -6,6 +6,8 @@ import jsonapi.RelationshipsObject;
 import jsonapi.Resource;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.entity.user.User;
 
@@ -23,17 +25,15 @@ import java.time.LocalDateTime;
 public class CartDetailDto {
 
     @Id
-    private final String id;
-    private final String userId;
-    private final String bookDetailId;
-    private final Long amount;
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
-    private final Boolean enabled;
-    private final String note;
-}
+    private String id;
+
+    private String userId;
+    private String bookDetailId;
+    private Long amount;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private Boolean enabled;
     private String note;
 }

@@ -10,9 +10,12 @@ import sd_009.bookstore.entity.book.BookDetail;
 )
 public interface BookDetailMapper {
 
-    @Mapping(target = "book", ignore = true)   // <<<<<< THÊM DÒNG NÀY
+    // ENTITY → DTO
+    // CẮT VÒNG LẶP: BookDetailDto.book → BookDto.bookCopies → BookDetailDto → ...
+    @Mapping(target = "book.bookCopies", ignore = true)
     BookDetailDto toDto(BookDetail entity);
 
+    // DTO → ENTITY (KHÔNG ignore book để không phá logic liên kết)
     @Mapping(target = "book", ignore = true)
     BookDetail toEntity(BookDetailDto dto);
 

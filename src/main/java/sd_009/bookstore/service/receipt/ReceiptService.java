@@ -205,6 +205,20 @@ public class ReceiptService {
     }
 
     @Transactional
+    public String updateStatusOnly(Long id, String newStatus) {
+        Receipt receipt = receiptRepository.findById(id).orElseThrow();
+
+        receipt.setOrderStatus(OrderStatus.valueOf(newStatus));
+
+        Receipt saved = receiptRepository.save(receipt);
+
+        return getSingleAdapter().toJson(
+                Document.with(receiptMapper.toDto(saved)).build()
+        );
+    }
+
+
+    @Transactional
     public Receipt buildEntityWithRelationships(String json) {
         ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
 
@@ -291,7 +305,10 @@ public class ReceiptService {
 
         // calculate totals
         if (receipt.getReceiptDetails() != null && !receipt.getReceiptDetails().isEmpty()) {
-            Double subtotal = receiptDetails.stream().map(e -> e.getPricePerUnit() * e.getQuantity()).reduce(0D, Double::sum);
+            double subtotal = receiptDetails.stream()
+                    .mapToDouble(e -> e.getPricePerUnit() * e.getQuantity())
+                    .sum();
+
             Double taxRate = 8D;
             Double serviceCost = 0D;
             if (receipt.getHasShipping()) serviceCost += 30000;

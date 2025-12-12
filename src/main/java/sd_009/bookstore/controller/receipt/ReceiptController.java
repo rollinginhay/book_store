@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.service.receipt.ReceiptService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,31 +32,37 @@ public class ReceiptController {
             summary = "Get receipts by query",
             responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get receipts resp", externalValue = "/jsonExample/receipt/get_receipts.json"))))
     @GetMapping(Routes.GET_RECEIPTS)
-    public ResponseEntity<Object> getReceipts(@RequestParam(required = false, name = "q") String keyword,
-                                              @RequestParam(name = "e") Boolean enabled,
-                                              @RequestParam int page,
-                                              @RequestParam int limit,
-                                              @RequestParam(required = false) List<String> sort) {
-        if (keyword == null) {
-            keyword = "";
-        }
+    public ResponseEntity<Object> getReceipts(
+            @RequestParam(required = false, name = "q") String keyword,
+            @RequestParam(name = "e") Boolean enabled,
+            @RequestParam int page,
+            @RequestParam int limit,
+            @RequestParam(required = false) List<String> sort
+    ) {
+        if (keyword == null) keyword = "";
 
         Sort sortInstance = Sort.unsorted();
 
-        for (String query : sort) {
-            String[] queries = query.split(";");
-            String field = queries[0];
-            String order = queries[1];
+        if (sort != null && !sort.isEmpty()) {
+            for (String s : sort) {
+                String[] parts = s.split(";");
+                String field = parts[0];
+                String order = parts.length > 1 ? parts[1] : "asc";
 
-            if (order.equals("asc")) {
-                sortInstance = sortInstance.and(Sort.by(field));
-            } else {
-                sortInstance = sortInstance.and(Sort.by(field).descending());
+                sortInstance = order.equalsIgnoreCase("asc")
+                        ? sortInstance.and(Sort.by(field).ascending())
+                        : sortInstance.and(Sort.by(field).descending());
             }
-
         }
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(receiptService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
+
+        Pageable pageable = PageRequest.of(page, limit, sortInstance);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(contentType))
+                .body(receiptService.find(enabled, keyword, pageable));
     }
+
+
 
     @Operation(
             summary = "Get receipt by id, with attached relationship",
@@ -110,6 +118,17 @@ public class ReceiptController {
     public ResponseEntity<Object> updateReceipt(@RequestBody String json) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(receiptService.update(json));
     }
+
+    @PatchMapping("/v1/receipt/{id}/status")
+    public ResponseEntity<Object> updateStatusOnly(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body
+    ) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(contentType))
+                .body(receiptService.updateStatusOnly(id, body.get("orderStatus")));
+    }
+
 
     @Operation(description = "Delete a receipt")
     @ApiResponse(responseCode = "200", description = "Success")
