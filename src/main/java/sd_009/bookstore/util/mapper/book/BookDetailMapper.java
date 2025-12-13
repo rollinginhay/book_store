@@ -10,10 +10,8 @@ import sd_009.bookstore.entity.book.BookDetail;
 )
 public interface BookDetailMapper {
 
-    @Mapping(target = "book", ignore = true)   // <<<<<< THÊM DÒNG NÀY
     BookDetailDto toDto(BookDetail entity);
 
-    @Mapping(target = "book", ignore = true)
     BookDetail toEntity(BookDetailDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

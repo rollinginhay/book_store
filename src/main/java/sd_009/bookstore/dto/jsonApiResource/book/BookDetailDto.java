@@ -2,7 +2,6 @@ package sd_009.bookstore.dto.jsonApiResource.book;
 
 import jsonapi.Id;
 import jsonapi.Resource;
-import jsonapi.ToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,8 +33,5 @@ public class BookDetailDto implements Serializable {
     private final Long supplyPrice;
     private final Long salePrice;
     private final String bookCondition;
-    @ToOne(name = "book")
-    private final BookDto book;
-
 
 }

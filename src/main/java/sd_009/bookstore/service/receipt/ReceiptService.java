@@ -18,6 +18,7 @@ import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.receipt.PaymentDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
+import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.entity.receipt.*;
 import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.*;
@@ -208,8 +209,14 @@ public class ReceiptService {
                         .stream()
                         .map(e -> receiptDetailMapper.toEntity(e))
                         .toList();
+
+        List<BookDetail> bookDetails = dto.getReceiptDetails().stream().map(e -> e.getBookCopy().getId()).map(e -> bookDetailRepository.findById(Long.valueOf(e)).get()).toList();
+        receiptDetails.forEach(e -> {
+            ReceiptDetailDto receiptDetailDto = dto.getReceiptDetails().stream().filter(rdDto -> e.getId().toString().equals(rdDto.getId())).findFirst().get();
+            BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(receiptDetailDto.getBookCopy().getId())).orElseThrow();
+            e.setBookCopy(bookDetail);
+        });
         receiptDetails.forEach(e -> e.setId(null));
-        receiptDetails.forEach(e -> e.setBookCopy(bookDetailRepository.findById(e.getBookCopy().getId()).orElse(null)));
 
         User employee = dto.getEmployee() == null ? null : userRepository.findById(Long.valueOf(dto.getEmployee().getId())).orElse(null);
         User customer = dto.getCustomer() == null ? null : userRepository.findById(Long.valueOf(dto.getCustomer().getId())).orElse(null);

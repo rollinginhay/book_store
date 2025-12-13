@@ -205,31 +205,29 @@ class BookStoreApplicationTests {
         mapper.writerWithDefaultPrettyPrinter().writeValue(output, dto);
     }
 
-        @Test
-        void loadJsonAsString () throws Exception {
-            InputStream is = getClass().getResourceAsStream("/receipt.json");
+    @Test
+    void loadJsonAsString() throws Exception {
+        InputStream is = getClass().getResourceAsStream("/receipt.json");
 
-            String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
-            ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
+        ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
 
-            List<ReceiptDetailDto> receiptDetailDtos = dto.getReceiptDetails();
+        List<ReceiptDetailDto> receiptDetailDtos = dto.getReceiptDetails();
+        receiptDetailDtos.get(0).getBookCopy().getId();
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-            // optional but usually needed to avoid timestamps
-            mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-            String result;
-            try {
-                result = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(receiptDetailDtos);
-            } catch (JsonProcessingException e) {
-                result = "failed to map";
-            }
-            log.warn("receiptDetails: {}", result);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        // optional but usually needed to avoid timestamps
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        String result;
+        try {
+            result = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(receiptDetailDtos);
+        } catch (JsonProcessingException e) {
+            result = "failed to map";
         }
-
-
-
+        log.warn("receiptDetails: {}", result);
+    }
 
 
 }
