@@ -80,6 +80,8 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
 
         AuthObject authResp = UserMapperManual.mapToAuthResponse(user, jwtToken);
 
+        log.warn("Authenticated user id: {}", authResp.userId());
+
 
         // Serialize AuthObject to JSON and encode for URL
         String authJson = objectMapper.writeValueAsString(authResp);
