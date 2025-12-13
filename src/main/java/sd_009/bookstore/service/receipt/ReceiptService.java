@@ -210,7 +210,6 @@ public class ReceiptService {
                         .map(e -> receiptDetailMapper.toEntity(e))
                         .toList();
 
-        List<BookDetail> bookDetails = dto.getReceiptDetails().stream().map(e -> e.getBookCopy().getId()).map(e -> bookDetailRepository.findById(Long.valueOf(e)).get()).toList();
         receiptDetails.forEach(e -> {
             ReceiptDetailDto receiptDetailDto = dto.getReceiptDetails().stream().filter(rdDto -> e.getId().toString().equals(rdDto.getId())).findFirst().get();
             BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(receiptDetailDto.getBookCopy().getId())).orElseThrow();

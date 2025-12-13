@@ -19,7 +19,6 @@ public interface BookMapper {
     Book toEntity(BookDto dto);
 
     @Mapping(target = "genres", ignore = true)
-    @Mapping(target = "id", source = "book.id")
     BookDto toDto(Book book,
                   @Context GenreClosureRepository repo,
                   @Context GenreMapper genreMapper);
