@@ -1,9 +1,0 @@
-{
-  "data": {
-    "type": "receiptDetail",
-    "attributes": {
-      "pricePerUnit": 5000,
-      "quantity": 10
-    }
-  }
-}

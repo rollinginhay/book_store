@@ -18,10 +18,6 @@ import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.receipt.PaymentDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
-import sd_009.bookstore.entity.AuditableEntity;
-import sd_009.bookstore.entity.receipt.PaymentDetail;
-import sd_009.bookstore.entity.receipt.Receipt;
-import sd_009.bookstore.entity.receipt.ReceiptDetail;
 import sd_009.bookstore.entity.receipt.*;
 import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.*;
@@ -33,7 +29,6 @@ import sd_009.bookstore.util.mapper.receipt.ReceiptMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -111,6 +106,7 @@ public class ReceiptService {
                         .build().toMap()))
                 .build());
     }
+
     @Transactional
     public String saveOneline(String json) {
 
@@ -190,7 +186,6 @@ public class ReceiptService {
     }
 
 
-
     @Transactional
     public String update(String json) {
         Receipt receipt = buildEntityWithRelationships(json);
@@ -267,6 +262,7 @@ public class ReceiptService {
         receipt.setEmployee(employee);
         return receipt;
     }
+
     @Transactional
     public Receipt buildAndSaveReceipt(String json) {
         ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
@@ -282,7 +278,8 @@ public class ReceiptService {
         User customer = dto.getCustomer() == null ? null : userRepository.findById(Long.valueOf(dto.getCustomer().getId())).orElse(null);
 
         Receipt receipt = receiptMapper.toEntity(dto);
-        if(receipt.getId() == 0) receipt.setId(null); // đảm bảo null để DB sinh tự động
+        if (receipt.getId() == 0)
+            receipt.setId(null); // đảm bảo null để DB sinh tự động
         receipt.setCustomer(customer);
         receipt.setEmployee(employee);
 
@@ -291,7 +288,7 @@ public class ReceiptService {
 
         // calculate totals
         if (receipt.getReceiptDetails() != null && !receipt.getReceiptDetails().isEmpty()) {
-            Double subtotal = receiptDetails.stream().map(e -> e.getPricePerUnit() * e.getQuantity()).reduce(0D, Double::sum);
+            Double subtotal = receiptDetails.stream().map(e -> Double.valueOf(e.getPricePerUnit()) * Double.valueOf(e.getQuantity())).reduce(0D, Double::sum);
             Double taxRate = 8D;
             Double serviceCost = 0D;
             if (receipt.getHasShipping()) serviceCost += 30000;
@@ -313,8 +310,10 @@ public class ReceiptService {
                     .build();
             receipt.setPaymentDetail(paymentDetail);
 
-            if (dto.getOrderType() == OrderType.DIRECT && !dto.getHasShipping()) receipt.setOrderStatus(OrderStatus.PAID);
-            if (dto.getOrderType() == OrderType.DIRECT && dto.getHasShipping()) receipt.setOrderStatus(OrderStatus.IN_TRANSIT);
+            if (dto.getOrderType() == OrderType.DIRECT && !dto.getHasShipping())
+                receipt.setOrderStatus(OrderStatus.PAID);
+            if (dto.getOrderType() == OrderType.DIRECT && dto.getHasShipping())
+                receipt.setOrderStatus(OrderStatus.IN_TRANSIT);
         }
 
         // gắn receiptDetails

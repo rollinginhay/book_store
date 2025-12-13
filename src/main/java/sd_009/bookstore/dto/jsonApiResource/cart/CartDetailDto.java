@@ -2,14 +2,11 @@ package sd_009.bookstore.dto.jsonApiResource.cart;
 
 
 import jsonapi.Id;
-import jsonapi.RelationshipsObject;
 import jsonapi.Resource;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import sd_009.bookstore.entity.book.BookDetail;
-import sd_009.bookstore.entity.user.User;
+import lombok.Setter;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -17,7 +14,6 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Resource(type = "cartDetail")
 public class CartDetailDto {
@@ -31,9 +27,4 @@ public class CartDetailDto {
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
     private final String note;
-}
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private String note;
 }

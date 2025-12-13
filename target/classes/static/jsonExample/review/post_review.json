@@ -1,9 +1,0 @@
-{
-  "data": {
-    "type": "review",
-    "attributes": {
-      "comment": "comment",
-      "rating": 4
-    }
-  }
-}

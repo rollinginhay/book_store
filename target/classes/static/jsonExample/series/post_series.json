@@ -1,9 +1,0 @@
-{
-  "data": {
-    "type": "series",
-    "attributes": {
-      "name": "new series",
-      "note": "string"
-    }
-  }
-}
