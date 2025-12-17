@@ -79,10 +79,7 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
         String jwtToken = jwtService.generateToken(user.getEmail(), Map.of("roles", user.getRoles().stream().map(Role::getName).toList()));
 
         AuthObject authResp = UserMapperManual.mapToAuthResponse(user, jwtToken);
-
-        log.warn("Authenticated user id: {}", authResp.userId());
-
-
+        
         // Serialize AuthObject to JSON and encode for URL
         String authJson = objectMapper.writeValueAsString(authResp);
         String encodedAuthData = URLEncoder.encode(authJson, StandardCharsets.UTF_8);
@@ -92,8 +89,6 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
                 .queryParam("auth", encodedAuthData)
                 .build()
                 .toUriString();
-
-        log.info("OAuth2 login successful for user: {}. Redirecting to: {}", email, frontendUrl + redirectPath);
 
         response.sendRedirect(redirectUrl);
 //        response.setContentType("application/vnd.api+json");

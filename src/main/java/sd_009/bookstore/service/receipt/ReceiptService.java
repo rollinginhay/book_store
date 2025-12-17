@@ -29,6 +29,7 @@ import sd_009.bookstore.util.mapper.receipt.ReceiptDetailMapper;
 import sd_009.bookstore.util.mapper.receipt.ReceiptMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -99,6 +100,7 @@ public class ReceiptService {
         Receipt receipt = buildEntityWithRelationships(json);
         receiptDetailRepository.saveAll(receipt.getReceiptDetails());
         paymentDetailRepository.save(receipt.getPaymentDetail());
+        receipt.setPaymentDate(LocalDateTime.now());
         Receipt saved = receiptRepository.save(receipt);
         return getSingleAdapter().toJson(Document
                 .with(receiptMapper.toDto(saved))
