@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -60,29 +59,30 @@ public class CampaignDetailController {
                 .body(campaignDetailService.findById(id));
     }
 
-    @Operation(
-            summary = "Create new campaign detail",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    content = @Content(examples = @ExampleObject(
-                            name = "Create campaignDetail req",
-                            externalValue = "/jsonExample/campaign/post_campaignDetail.json"
-                    ))
-            ),
-            responses = @ApiResponse(
-                    responseCode = "201",
-                    description = "Created",
-                    content = @Content(examples = @ExampleObject(
-                            name = "Create campaignDetail resp",
-                            externalValue = "/jsonExample/campaign/get_campaignDetail.json"
-                    ))
-            )
-    )
-    @PostMapping(Routes.POST_CAMPAIGN_DETAIL_CREATE)
-    public ResponseEntity<Object> create(@RequestBody String json) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .contentType(MediaType.valueOf(contentType))
-                .body(campaignDetailService.save(json));
-    }
+//    @Operation(
+//            summary = "Create new campaign detail",
+//            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+//                    content = @Content(examples = @ExampleObject(
+//                            name = "Create campaignDetail req",
+//                            externalValue = "/jsonExample/campaign/post_campaignDetail.json"
+//                    ))
+//            ),
+//            responses = @ApiResponse(
+//                    responseCode = "201",
+//                    description = "Created",
+//                    content = @Content(examples = @ExampleObject(
+//                            name = "Create campaignDetail resp",
+//                            externalValue = "/jsonExample/campaign/get_campaignDetail.json"
+//                    ))
+//            )
+//    )
+//
+//    @PostMapping(Routes.POST_CAMPAIGN_DETAIL_CREATE)
+//    public ResponseEntity<Object> create(@RequestBody String json) {
+//        return ResponseEntity.status(HttpStatus.CREATED)
+//                .contentType(MediaType.valueOf(contentType))
+//                .body(campaignDetailService.save(json));
+//    }
 
     @Operation(
             summary = "Update campaign detail",
