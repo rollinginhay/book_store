@@ -1853,7 +1853,7 @@ INSERT INTO campaign
  campaign_type, max_discount, min_total, percentage)
 VALUES (b'1', '2026-12-31', '2025-08-01', NOW(6), NOW(6),
         'Xả hàng giảm 20%', 'Stock discount',
-        'PERCENTAGE_PRODUCT', null, null, null);
+        'PERCENTAGE_PRODUCT', null, null, 20.0);
 
 INSERT INTO `book_store`.`campaign_detail`
 (`created_at`,
