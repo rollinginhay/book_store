@@ -17,7 +17,7 @@ public class PaymentDetail extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     private Receipt receipt;
 
     @Enumerated(EnumType.STRING)

@@ -1837,33 +1837,97 @@ VALUES ('2025-09-05 22:19:21.160324', '2025-10-10 11:03:43.160337', b'1', NULL,
 INSERT INTO campaign
 (enabled, end_date, start_date, created_at, updated_at, name, note,
  campaign_type, max_discount, min_total, percentage)
-VALUES (b'1', '2025-12-31', '2025-12-01', NOW(6), NOW(6),
+VALUES (b'1', '2026-12-31', '2025-12-01', NOW(6), NOW(6),
         'Giảm 5% tối đa 100.000 đ', 'Year-end discount event',
-        'PERCENTAGE_DISCOUNT', 100000, 1000000, 5.0);
+        'PERCENTAGE_RECEIPT', 100000, 1000000, 5.0);
 
 INSERT INTO campaign
 (enabled, end_date, start_date, created_at, updated_at, name, note,
  campaign_type, max_discount, min_total, percentage)
-VALUES (b'1', '2025-12-31', '2025-08-01', NOW(6), NOW(6),
+VALUES (b'1', '2026-12-31', '2025-08-01', NOW(6), NOW(6),
         'Giảm 10% tối đa 500.000 đ', 'Discount for students',
-        'PERCENTAGE_DISCOUNT', 500000, 5000000, 5.0);
+        'PERCENTAGE_RECEIPT', 500000, 5000000, 5.0);
 
 INSERT INTO campaign
 (enabled, end_date, start_date, created_at, updated_at, name, note,
  campaign_type, max_discount, min_total, percentage)
-VALUES (b'0', '2024-05-10', '2024-04-25', NOW(6), NOW(6), 'Spring Clearance',
-        'Old stock clearance', 'PERCENTAGE_DISCOUNT', 150000, 500000, 10.0);
+VALUES (b'1', '2026-12-31', '2025-08-01', NOW(6), NOW(6),
+        'Xả hàng giảm 20%', 'Stock discount',
+        'PERCENTAGE_PRODUCT', null, null, null);
 
-INSERT INTO campaign
-(enabled, end_date, start_date, created_at, updated_at, name, note,
- campaign_type, max_discount, min_total, percentage)
-VALUES (b'1', '2025-02-14', '2025-02-01', NOW(6), NOW(6), 'Valentine Special',
-        'Gift items promotion', 'FLAT_DISCOUNT', 50000, 300000, NULL);
-
-INSERT INTO campaign
-(enabled, end_date, start_date, created_at, updated_at, name, note,
- campaign_type, max_discount, min_total, percentage)
-VALUES (b'1', '2025-10-31', '2025-10-01', NOW(6), NOW(6),
-        'Halloween Spooktacular', 'Limited time spooky deals',
-        'PERCENTAGE_DISCOUNT', 100000, 400000, 20.0);
+INSERT INTO `book_store`.`campaign_detail`
+(`created_at`,
+ `enabled`,
+ `note`,
+ `updated_at`,
+ `value`,
+ `book_detail_id`,
+ `campaign_id`)
+VALUES ('2025-08-01',
+        b'1',
+        null,
+        '2025-08-01',
+        20.0,
+        1,
+        1);
+INSERT INTO `book_store`.`campaign_detail`
+(`created_at`,
+ `enabled`,
+ `note`,
+ `updated_at`,
+ `value`,
+ `book_detail_id`,
+ `campaign_id`)
+VALUES ('2025-08-01',
+        b'1',
+        null,
+        '2025-08-01',
+        20.0,
+        2,
+        1);
+INSERT INTO `book_store`.`campaign_detail`
+(`created_at`,
+ `enabled`,
+ `note`,
+ `updated_at`,
+ `value`,
+ `book_detail_id`,
+ `campaign_id`)
+VALUES ('2025-08-01',
+        b'1',
+        null,
+        '2025-08-01',
+        20.0,
+        3,
+        1);
+INSERT INTO `book_store`.`campaign_detail`
+(`created_at`,
+ `enabled`,
+ `note`,
+ `updated_at`,
+ `value`,
+ `book_detail_id`,
+ `campaign_id`)
+VALUES ('2025-08-01',
+        b'1',
+        null,
+        '2025-08-01',
+        20.0,
+        4,
+        1);
+INSERT INTO `book_store`.`campaign_detail`
+(`created_at`,
+ `enabled`,
+ `note`,
+ `updated_at`,
+ `value`,
+ `book_detail_id`,
+ `campaign_id`)
+VALUES ('2025-08-01',
+        b'1',
+        null,
+        '2025-08-01',
+        20.0,
+        5,
+        1);
 commit;
