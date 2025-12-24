@@ -87,6 +87,7 @@ public enum Routes {
     public static final String MULTI_RECEIPT_RELATIONSHIP_RECEIPT_DETAIL = "/v1/receipt/{id}/relationships/receiptDetail";
     public static final String MULTI_RECEIPT_RELATIONSHIP_PAYMENT_DETAIL = "/v1/receipt/{id}/relationships/paymentDetail";
     public static final String MULTI_RECEIPT_RELATIONSHIP_GENERIC = "/v1/receipt/{id}/relationships/{dependent}";
+    public static final String GET_RECEIPTS_LIST = "/v1/receipts/list"; // hiển thị receipt admin
 
 
     // CART DETAIL

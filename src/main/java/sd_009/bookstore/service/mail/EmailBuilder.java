@@ -9,20 +9,26 @@ public class EmailBuilder {
     public static String buildOrderEmail(Receipt receipt, PaymentDetail paymentDetail) {
 
         StringBuilder sb = new StringBuilder();
+        String paymentTime = receipt.getPaymentDate() != null
+                ? receipt.getPaymentDate().toString().replace("T", " ")
+                : "Chưa thanh toán";
+        String paymentMethod = paymentDetail != null && paymentDetail.getPaymentType() != null
+                ? paymentDetail.getPaymentType().name()
+                : "Thanh toán khi nhận hàng";
 
-        sb.append("<div style='font-family:Arial,sans-serif;background:#f7f7f7;padding:20px;'>");
-
-        // ===== HEADER =====
-        sb.append("<div style='max-width:650px;margin:auto;background:white;border-radius:12px;overflow:hidden;"
-                + "box-shadow:0 4px 15px rgba(0,0,0,0.1)'>");
-
-        sb.append("<div style=\"background:linear-gradient(135deg,#8b0000,#b30000,#cc0000);"
-                + "padding:25px;text-align:center;color:white;\">"
-                + "<h2 style='margin:0;font-size:24px;'>Thông báo xác nhận đơn hàng DinoBookStore!</h2>"
-                + "</div>");
-
-        // ===== GREETING =====
-        sb.append("<div style='padding:25px;'>");
+//        sb.append("<div style='font-family:Arial,sans-serif;background:#f7f7f7;padding:20px;'>");
+//
+//        // ===== HEADER =====
+//        sb.append("<div style='max-width:650px;margin:auto;background:white;border-radius:12px;overflow:hidden;"
+//                + "box-shadow:0 4px 15px rgba(0,0,0,0.1)'>");
+//
+//        sb.append("<div style=\"background:linear-gradient(135deg,#8b0000,#b30000,#cc0000);"
+//                + "padding:25px;text-align:center;color:white;\">"
+//                + "<h2 style='margin:0;font-size:24px;'>Thông báo xác nhận đơn hàng DinoBookStore!</h2>"
+//                + "</div>");
+//
+//        // ===== GREETING =====
+//        sb.append("<div style='padding:25px;'>");
         sb.append("""
             <p style='font-size:14px; color:#333; margin:20px 0 6px 0;'>
                 Kính gửi Quý khách 
@@ -50,7 +56,7 @@ public class EmailBuilder {
 
         sb.append("<p style='font-size:15px;color:#444;margin:0 0 25px 0;'>"
                 + "Thời gian đặt: <strong>"
-                + receipt.getPaymentDate().toString().replace("T", " ")
+                + paymentTime
                 + "</strong></p>");
 
         // ===== CUSTOMER INFO =====
@@ -97,7 +103,8 @@ public class EmailBuilder {
                     + "<td style='padding:8px;border-bottom:1px solid #eee;text-align:center;'>"
                     + d.getQuantity() + "</td>"
                     + "<td style='padding:8px;border-bottom:1px solid #eee;text-align:right;'>"
-                    + String.format("%,d₫", d.getPricePerUnit()) + "</td>"
+                    + String.format("%,d₫", d.getPricePerUnit().longValue())
+                    + "</td>"
                     + "</tr>");
         }
 
@@ -116,19 +123,19 @@ public class EmailBuilder {
                 </h3>
 
                 <p style='margin:6px 0;font-size:14px;'>
-                    <strong>Tổng tiền hàng:</strong> """ + String.format("%,d₫", receipt.getSubTotal()) + """
+                    <strong>Tổng tiền hàng:</strong> """ + String.format("%,d₫", receipt.getSubTotal().longValue()) + """
                 </p>
 
                 <p style='margin:6px 0;font-size:14px;'>
-                    <strong>Phí vận chuyển:</strong> """ + String.format("%,d₫", receipt.getServiceCost()) + """
+                    <strong>Phí vận chuyển:</strong> """ + String.format("%,d₫", receipt.getServiceCost().longValue()) + """
                 </p>
 
                 <p style='margin:6px 0;font-size:14px;'>
-                    <strong>Phương thức thanh toán:</strong> """ + paymentDetail.getPaymentType() + """
+                    <strong>Phương thức thanh toán:</strong> """ + paymentMethod + """
                 </p>
 
                 <p style='margin:10px 0;font-size:16px;color:#c40000;font-weight:bold;'>
-                    Tổng thanh toán: """ + String.format("%,d₫", receipt.getGrandTotal()) + """
+                    Tổng thanh toán: """ + String.format("%,d₫", receipt.getGrandTotal().longValue()) + """
                 </p>
 
             </div>
@@ -156,7 +163,81 @@ public class EmailBuilder {
 
         sb.append("</div></div>");
 
-        return sb.toString();
+        return wrapLayout(
+                "Thông báo xác nhận đơn hàng DinoBookStore!",
+                sb.toString()
+        );
+
+    }
+
+
+    private static String wrapLayout(String title, String bodyHtml) {
+        return """
+    <div style='font-family:Arial,sans-serif;background:#f7f7f7;padding:20px;'>
+      <div style='max-width:650px;margin:auto;background:white;border-radius:12px;
+                  overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.1)'>
+
+        <div style="background:linear-gradient(135deg,#8b0000,#b30000,#cc0000);
+                    padding:25px;text-align:center;color:white;">
+          <h2 style='margin:0;font-size:24px;'>%s</h2>
+        </div>
+
+        <div style='padding:25px;'>
+          %s
+        </div>
+
+      </div>
+    </div>
+    """.formatted(title, bodyHtml);
+    }
+
+
+    public static String buildOrderStatusEmail(
+            Receipt receipt,
+            String oldStatus,
+            String newStatus
+    ) {
+
+        String body = """
+        <p style='font-size:14px;color:#333;'>
+            Kính gửi <strong style='color:#d60000;'>%s</strong>,
+        </p>
+
+        <p style='font-size:14px;color:#333;line-height:1.6;'>
+            Đơn hàng <strong>#%d</strong> của bạn vừa được cập nhật trạng thái.
+        </p>
+
+        <div style='background:#fafafa;padding:15px;border-radius:8px;
+                    border:1px solid #eee;margin:20px 0;'>
+            <p><strong>Trạng thái cũ:</strong> %s</p>
+            <p><strong>Trạng thái mới:</strong>
+               <span style='color:#c40000;font-weight:bold;'>%s</span>
+            </p>
+        </div>
+
+        <div style='text-align:center;margin-top:20px;'>
+            <a href='http://localhost:3000/order/%d'
+               style='display:inline-block;padding:12px 22px;background:#cc0000;
+                      color:white;text-decoration:none;border-radius:8px;font-weight:bold;'>
+                Xem chi tiết đơn hàng
+            </a>
+        </div>
+
+        <p style='margin-top:25px;color:#666;font-size:13px;'>
+            Nếu bạn không thực hiện thay đổi này, vui lòng liên hệ DinoBookStore.
+        </p>
+    """.formatted(
+                receipt.getCustomerName(),
+                receipt.getId(),
+                oldStatus,
+                newStatus,
+                receipt.getId()
+        );
+
+        return wrapLayout(
+                "Cập nhật trạng thái đơn hàng #" + receipt.getId(),
+                body
+        );
     }
 
 }
