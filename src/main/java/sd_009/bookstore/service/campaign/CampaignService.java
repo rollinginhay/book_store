@@ -34,9 +34,9 @@ public class CampaignService {
     // 🔹 Lấy tất cả campaign
     @Transactional(readOnly = true)
     public String findAll() {
+        // Chỉ filter theo enabled, không filter theo endDate để hiển thị tất cả
         List<Campaign> list = campaignRepository.findAllByEnabled(true, Sort.by("updatedAt").descending());
-        List<Campaign> filterList = list.stream().filter(e -> e.getEndDate().isAfter(LocalDateTime.now())).toList();
-        List<CampaignDto> dtos = filterList.stream().map(campaignMapper::toDto).toList();
+        List<CampaignDto> dtos = list.stream().map(campaignMapper::toDto).toList();
 
         Document<List<CampaignDto>> doc = Document.with(dtos)
                 .links(Links.from(JsonApiLinksObject.builder()
