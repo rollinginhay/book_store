@@ -1,0 +1,52 @@
+{
+  "links": {
+    "self": "http://localhost:8080/v1/vouchers",
+    "first": null,
+    "last": null,
+    "next": null,
+    "prev": null
+  },
+  "data": [
+    {
+      "type": "voucher",
+      "id": "1",
+      "attributes": {
+        "name": "Giảm giá 20% cho đơn hàng trên 500.000đ",
+        "voucherType": "PERCENTAGE_DISCOUNT",
+        "startDate": "2025-01-01T00:00:00",
+        "endDate": "2025-12-31T23:59:59",
+        "minTotal": 500000.0,
+        "percentage": 20.0,
+        "maxDiscount": 100000.0,
+        "code": "VCH00001",
+        "used": false,
+        "enabled": true,
+        "note": "Áp dụng cho tất cả sản phẩm",
+        "createdAt": "2024-12-20T10:00:00",
+        "updatedAt": "2024-12-20T10:00:00"
+      }
+    },
+    {
+      "type": "voucher",
+      "id": "2",
+      "attributes": {
+        "name": "Giảm 50.000đ cho đơn hàng trên 300.000đ",
+        "voucherType": "FLAT_DISCOUNT",
+        "startDate": "2025-02-01T00:00:00",
+        "endDate": "2025-02-28T23:59:59",
+        "minTotal": 300000.0,
+        "percentage": null,
+        "maxDiscount": 50000.0,
+        "code": "VCH00002",
+        "used": false,
+        "enabled": true,
+        "note": "Chỉ áp dụng cho sách",
+        "createdAt": "2024-12-21T10:00:00",
+        "updatedAt": "2024-12-21T10:00:00"
+      }
+    }
+  ]
+}
+
+
+
