@@ -93,36 +93,98 @@ public class UserService {
 
     @Transactional
     public User buildEntityWithRelationships(String json) {
-        UserDto dto = jsonApiValidator.readAndValidate(json, UserDto.class);
+        // Validate và parse JSON
+        UserDto dto;
+        try {
+            dto = jsonApiValidator.readAndValidate(json, UserDto.class);
+        } catch (IllegalArgumentException e) {
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && errorMsg.contains("resource identifier")) {
+                throw new BadRequestException("JSON không hợp lệ: Mỗi role trong relationships.roles.data phải có cả 'type' và 'id'. " +
+                        "Format đúng: {\"type\": \"role\", \"id\": \"1\"}. " +
+                        "Nếu không muốn gửi roles, hãy bỏ phần 'relationships' hoàn toàn.");
+            }
+            throw new BadRequestException("JSON không hợp lệ: " + errorMsg);
+        } catch (RuntimeException e) {
+            // Catch RuntimeException từ JsonApiValidator
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && (errorMsg.contains("resource identifier") || errorMsg.contains("id") || errorMsg.contains("lid"))) {
+                throw new BadRequestException("JSON không hợp lệ: Mỗi role trong relationships.roles.data phải có cả 'type' và 'id'. " +
+                        "Format đúng: {\"type\": \"role\", \"id\": \"1\"}. " +
+                        "Nếu không muốn gửi roles, hãy bỏ phần 'relationships' hoàn toàn.");
+            }
+            throw new BadRequestException("Lỗi parse JSON: " + errorMsg);
+        } catch (Exception e) {
+            throw new BadRequestException("Lỗi parse JSON: " + e.getMessage());
+        }
+        
+        // Kiểm tra email/phoneNumber đã tồn tại chưa (cho create)
         Optional<User> existing = userRepository.findByEmailOrPhoneNumber(dto.getEmail(), dto.getPhoneNumber());
-
         if (existing.isPresent()) {
-            throw new BadRequestException("Chùng email hoặc SDT");
+            throw new BadRequestException("Email hoặc số điện thoại đã tồn tại");
         }
 
+        // Xử lý roles: nếu có trong request thì convert, không thì set default
         List<RoleDto> roleDtos = dto.getRoles();
-        List<Role> roles = List.of();
+        List<Role> roles;
         if (roleDtos == null || roleDtos.isEmpty()) {
-            roles = List.of(roleRepository.findByName("ROLE_USER").orElseThrow());
+            // Không có roles trong request -> set default role
+            roles = List.of(roleRepository.findByName("ROLE_USER").orElseThrow(
+                    () -> new BadRequestException("Role ROLE_USER không tồn tại trong hệ thống")
+            ));
+        } else {
+            // Có roles trong request -> convert từ RoleDto sang Role entity
+            // Validate: tất cả roles phải có id hợp lệ
+            for (RoleDto roleDto : roleDtos) {
+                if (roleDto.getId() == null || roleDto.getId().isEmpty()) {
+                    throw new BadRequestException("Role phải có id hợp lệ");
+                }
+            }
+            
+            roles = roleDtos.stream()
+                    .map(roleDto -> {
+                        try {
+                            return roleRepository.findById(Long.valueOf(roleDto.getId()));
+                        } catch (NumberFormatException e) {
+                            throw new BadRequestException("Role id không hợp lệ: " + roleDto.getId());
+                        }
+                    })
+                    .flatMap(Optional::stream)
+                    .toList();
+            
+            if (roles.isEmpty()) {
+                throw new BadRequestException("Không tìm thấy role nào hợp lệ");
+            }
         }
 
+        // Map DTO sang Entity
         User user = userMapper.toEntity(dto);
         if (user.getId() == null || user.getId() == 0) {
             user.setId(null);
         }
+        
+        // Set roles
         user.setRoles(roles);
+        
+        // Auto-generate username nếu không có
         if (user.getUsername() == null || user.getUsername().isEmpty()) {
             if (user.getEmail() == null || user.getEmail().isEmpty()) {
-                user.setUsername("user" + String.valueOf(Instant.now().getEpochSecond()));
+                user.setUsername("user" + Instant.now().getEpochSecond());
             } else {
                 user.setUsername(user.getEmail().split("@")[0]);
             }
         }
 
+        // Set các giá trị mặc định cho OAuth2
         user.setIsOauth2User(false);
         user.setOauth2Id(null);
-        user.setPassword(user.getPassword() == null ? passwordEncoder.encode(user.getUsername()) : passwordEncoder.encode(user.getPassword()));
-        user.setRoles(roles);
+        
+        // Encode password: nếu không có password thì dùng username làm password mặc định
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getUsername()));
+        } else {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
 
         return user;
     }
@@ -132,23 +194,103 @@ public class UserService {
     // ===============================================================
     @Transactional
     public String update(String json) {
-        UserDto dto = jsonApiValidator.readAndValidate(json, UserDto.class);
-        if (dto.getId() == null || dto.getId().equals("0"))
-            throw new BadRequestException("User không tồn tại");
-
-        User existing = userRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
-
-        List<RoleDto> roleDtos = dto.getRoles();
-        List<Role> roles = existing.getRoles();
-        if (roleDtos == null || roleDtos.isEmpty()) {
-            roles = List.of(roleRepository.findByName("ROLE_USER").orElseThrow());
+        UserDto dto;
+        try {
+            dto = jsonApiValidator.readAndValidate(json, UserDto.class);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() != null && e.getMessage().contains("resource identifier")) {
+                throw new BadRequestException("JSON không hợp lệ: Mỗi role trong relationships phải có cả 'type' và 'id'. Vui lòng kiểm tra lại format JSON request.");
+            }
+            throw new BadRequestException("JSON không hợp lệ: " + e.getMessage());
+        } catch (Exception e) {
+            throw new BadRequestException("Lỗi parse JSON: " + e.getMessage());
+        }
+        
+        // Validate ID
+        if (dto.getId() == null || dto.getId().equals("0")) {
+            throw new BadRequestException("ID user không hợp lệ");
         }
 
-        User updated = userRepository.save(userMapper.partialUpdate(dto, existing));
+        Long userId = Long.valueOf(dto.getId());
+        User existing = userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("User không tồn tại"));
 
-        Document<UserDto> doc = Document.with(userMapper.toDto(updated))
+        // Kiểm tra email unique (không được trùng với user khác, nhưng có thể giữ nguyên email của chính user đó)
+        if (dto.getEmail() != null && !dto.getEmail().isEmpty()) {
+            // Chỉ check duplicate nếu email thay đổi
+            boolean emailChanged = !dto.getEmail().equals(existing.getEmail());
+            if (emailChanged) {
+                Optional<User> userWithEmail = userRepository.findByEmail(dto.getEmail());
+                if (userWithEmail.isPresent()) {
+                    throw new BadRequestException("Email đã được sử dụng bởi user khác");
+                }
+            }
+        }
+        
+        // Kiểm tra phoneNumber unique (không được trùng với user khác, nhưng có thể giữ nguyên phoneNumber của chính user đó)
+        if (dto.getPhoneNumber() != null && !dto.getPhoneNumber().isEmpty()) {
+            // Chỉ check duplicate nếu phoneNumber thay đổi
+            boolean phoneNumberChanged = existing.getPhoneNumber() == null || 
+                                        !dto.getPhoneNumber().equals(existing.getPhoneNumber());
+            if (phoneNumberChanged) {
+                // Query để tìm user có phoneNumber này
+                // Dùng email không bao giờ tồn tại để trigger OR query, sẽ chỉ match phoneNumber
+                Optional<User> userWithPhone = userRepository.findByEmailOrPhoneNumber(
+                        "___CHECK_PHONE_NUMBER_UNIQUE___", 
+                        dto.getPhoneNumber()
+                );
+                if (userWithPhone.isPresent() && !userWithPhone.get().getId().equals(userId)) {
+                    throw new BadRequestException("Số điện thoại đã được sử dụng bởi user khác");
+                }
+            }
+        }
+
+        // Xử lý roles: nếu có trong request thì update, không thì giữ nguyên
+        // Set roles trước partialUpdate vì MapStruct không map relationships tự động
+        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
+            // Validate: tất cả roles phải có id hợp lệ
+            for (RoleDto roleDto : dto.getRoles()) {
+                if (roleDto.getId() == null || roleDto.getId().isEmpty()) {
+                    throw new BadRequestException("Role phải có id hợp lệ");
+                }
+            }
+            
+            List<Role> roles = dto.getRoles().stream()
+                    .map(roleDto -> {
+                        try {
+                            return roleRepository.findById(Long.valueOf(roleDto.getId()));
+                        } catch (NumberFormatException e) {
+                            throw new BadRequestException("Role id không hợp lệ: " + roleDto.getId());
+                        }
+                    })
+                    .flatMap(Optional::stream)
+                    .toList();
+            
+            if (roles.isEmpty()) {
+                throw new BadRequestException("Không tìm thấy role nào hợp lệ");
+            }
+            
+            existing.setRoles(roles);
+        }
+        // Nếu roles không có trong request, giữ nguyên roles hiện tại
+
+        // Partial update các trường khác (roles và password sẽ được xử lý riêng)
+        // createdAt sẽ không bị update vì được set @CreatedDate trong AuditableEntity
+        User updated = userMapper.partialUpdate(dto, existing);
+        
+        // Xử lý password: chỉ update nếu có trong request
+        // PartialUpdate có thể set password từ DTO (plain text), cần encode lại
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            updated.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        // Nếu password không có trong request, giữ nguyên password hiện tại (đã được giữ bởi partialUpdate)
+        
+        // Lưu user
+        User saved = userRepository.save(updated);
+
+        Document<UserDto> doc = Document.with(userMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_USER_BY_ID, updated.getId()))
+                        .self(LinkMapper.toLink(Routes.GET_USER_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build();
 

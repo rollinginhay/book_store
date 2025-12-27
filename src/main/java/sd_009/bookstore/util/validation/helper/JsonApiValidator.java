@@ -28,8 +28,13 @@ public class JsonApiValidator {
 
             return data;
 
+        } catch (IllegalArgumentException e) {
+            // Re-throw để service layer có thể catch và xử lý
+            throw e;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Lỗi đọc JSON: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi parse JSON: " + e.getMessage(), e);
         }
     }
 }
