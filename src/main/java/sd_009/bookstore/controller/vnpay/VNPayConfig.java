@@ -13,9 +13,9 @@ import java.util.*;
 @Component
 public class VNPayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_TmnCode = "M432NUUL";
-    public static String vnp_HashSecret = "C0TBSKKM7FBAQELPL00Z99VVFINUU8BX";
-    public static String vnp_apiUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+    public static String vnp_TmnCode = "7UN6DD4W";
+    public static String vnp_HashSecret = "YNQ5CQ1QSGDEBVHN3F9CWOY265LFHTB5";
+    public static String vnp_apiUrl = " https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 
     public static String md5(String message) {
         String digest = null;

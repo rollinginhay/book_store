@@ -100,6 +100,33 @@ public class ReceiptDetailService {
     }
 
     @Transactional
+    public String saveOnline(String json) {
+        ReceiptDto receiptDto = jsonApiValidator.readAndValidate(json, ReceiptDto.class);
+        Receipt receipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();
+
+        List<ReceiptDetailDto> receiptDetailDtos = receiptDto.getReceiptDetails();
+
+        List<ReceiptDetail> receiptDetails = receiptDetailDtos.stream().map(receiptDetailMapper::toEntity).toList();
+        receiptDetails.forEach(e -> {
+            if (e.getId() == 0) e.setId(null);
+            BookDetail bookDetail = bookDetailRepository.findById(e.getBookCopy().getId()).orElseThrow();
+            e.setPricePerUnit(Long.valueOf(bookDetail.getSalePrice()));
+            e.setBookCopy(bookDetail);
+            e.setReceipt(receipt);
+            receiptDetailRepository.save(e);
+        });
+
+        Receipt updatedReceipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();
+
+        return adapterProvider.singleResourceAdapter(ReceiptDto.class).toJson(Document
+                .with(receiptMapper.toDto(updatedReceipt))
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_RECEIPT_BY_ID, updatedReceipt.getId()))
+                        .build().toMap()))
+                .build());
+    }
+
+    @Transactional
     public String update(String json) {
         ReceiptDto receiptDto = jsonApiValidator.readAndValidate(json, ReceiptDto.class);
         Receipt receipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();

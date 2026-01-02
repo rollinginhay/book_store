@@ -38,6 +38,14 @@ public class ReceiptDetailController {
     public ResponseEntity<Object> createReceiptDetail(@RequestBody String json) {
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(receiptDetailService.save(json));
     }
+    @Operation(
+            summary = "Create a new receiptDetail",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(name = "Create receiptDetail req", externalValue = "/jsonExample/receiptDetail/post_receiptDetail.json"))),
+            responses = @ApiResponse(responseCode = "201", description = "Success", content = @Content(examples = @ExampleObject(name = "Create receiptDetail resp", externalValue = "/jsonExample/receiptDetail/get_receiptDetail.json"))))
+    @PostMapping(Routes.POST_RECEIPT_DETAIL_CREATE_ONLINE)
+    public ResponseEntity<Object> createReceiptDetailOnline(@RequestBody String json) {
+        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(receiptDetailService.saveOnline(json));
+    }
 
     @Operation(
             summary = "Update a receiptDetail",
