@@ -53,6 +53,7 @@ public class ReceiptService {
     private final PaymentDetailMapper paymentDetailMapper;
     private final UserRepository userRepository;
     private final BookDetailRepository bookDetailRepository;
+    private final CartDetailRepository cartDetailRepository;
     private final ObjectMapper objectMapper;
     private final EmailService emailService;
 
@@ -195,6 +196,40 @@ public class ReceiptService {
             }
         }
 
+        //------------------------------------------
+        // PARSE RECEIPT DETAILS TỪ JSON RELATIONSHIPS (MỚI THÊM)
+        //------------------------------------------
+        List<ReceiptDetail> receiptDetailsFromJson = new java.util.ArrayList<>();
+        if (relationships.has("receiptDetails")) {
+            JsonNode receiptDetailsNode = relationships.path("receiptDetails").path("data");
+            if (receiptDetailsNode.isArray()) {
+                for (JsonNode detailNode : receiptDetailsNode) {
+                    try {
+                        JsonNode attributes = detailNode.path("attributes");
+                        JsonNode bookDetailRel = detailNode.path("relationships").path("bookDetail").path("data");
+                        
+                        if (!bookDetailRel.isMissingNode() && bookDetailRel.has("id")) {
+                            String bookDetailId = bookDetailRel.path("id").asText();
+                            BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailId))
+                                    .orElseThrow(() -> new RuntimeException("BookDetail not found: " + bookDetailId));
+                            
+                            Long pricePerUnit = attributes.path("pricePerUnit").asLong(0);
+                            Long quantity = attributes.path("quantity").asLong(1);
+                            
+                            ReceiptDetail receiptDetail = new ReceiptDetail();
+                            receiptDetail.setBookCopy(bookDetail);
+                            receiptDetail.setPricePerUnit(pricePerUnit);
+                            receiptDetail.setQuantity(quantity);
+                            receiptDetail.setId(null); // Để DB tự sinh ID
+                            
+                            receiptDetailsFromJson.add(receiptDetail);
+                        }
+                    } catch (Exception e) {
+                        log.error("Lỗi parse receiptDetail từ JSON: {}", e.getMessage(), e);
+                    }
+                }
+            }
+        }
 
         //------------------------------------------
         // SAVE RECEIPT
@@ -202,11 +237,24 @@ public class ReceiptService {
         Receipt savedReceipt = receiptRepository.save(receipt);
 
         //------------------------------------------
-        // SAVE RECEIPT DETAILS
+        // SAVE RECEIPT DETAILS (TỪ buildEntityWithRelationships HOẶC TỪ JSON)
         //------------------------------------------
+        List<ReceiptDetail> allReceiptDetails = new java.util.ArrayList<>();
+        
+        // Lấy từ buildEntityWithRelationships (nếu có)
         if (receipt.getReceiptDetails() != null && !receipt.getReceiptDetails().isEmpty()) {
-            receipt.getReceiptDetails().forEach(rd -> rd.setReceipt(savedReceipt));
-            receiptDetailRepository.saveAll(receipt.getReceiptDetails());
+            allReceiptDetails.addAll(receipt.getReceiptDetails());
+        }
+        
+        // Thêm từ JSON relationships (nếu có)
+        if (!receiptDetailsFromJson.isEmpty()) {
+            allReceiptDetails.addAll(receiptDetailsFromJson);
+        }
+        
+        // Lưu tất cả receiptDetails
+        if (!allReceiptDetails.isEmpty()) {
+            allReceiptDetails.forEach(rd -> rd.setReceipt(savedReceipt));
+            receiptDetailRepository.saveAll(allReceiptDetails);
         }
 
         //------------------------------------------
@@ -215,6 +263,39 @@ public class ReceiptService {
         if (receipt.getPaymentDetail() != null) {
             receipt.getPaymentDetail().setReceipt(savedReceipt);
             paymentDetailRepository.save(receipt.getPaymentDetail());
+        }
+
+        //------------------------------------------
+        // XÓA CÁC SẢN PHẨM TRONG GIỎ HÀNG SAU KHI ĐẶT HÀNG THÀNH CÔNG
+        //------------------------------------------
+        if (receipt.getCustomer() != null && !allReceiptDetails.isEmpty()) {
+            try {
+                // Lấy danh sách bookDetailIds từ receiptDetails
+                List<Long> bookDetailIds = allReceiptDetails.stream()
+                        .map(rd -> rd.getBookCopy().getId())
+                        .distinct()
+                        .toList();
+
+                // Xóa các cart items của user có bookDetailId trùng với các sản phẩm đã đặt hàng
+                for (Long bookDetailId : bookDetailIds) {
+                    BookDetail bookDetail = bookDetailRepository.findById(bookDetailId).orElse(null);
+                    if (bookDetail != null) {
+                        cartDetailRepository.findByUserAndBookDetail(receipt.getCustomer(), bookDetail)
+                                .ifPresent(cartDetail -> {
+                                    cartDetail.setEnabled(false);
+                                    cartDetailRepository.save(cartDetail);
+                                    log.info("✅ Đã xóa cart item: cartDetailId={}, bookDetailId={}, userId={}",
+                                            cartDetail.getId(), bookDetailId, receipt.getCustomer().getId());
+                                });
+                    }
+                }
+                log.info("✅ Đã xóa giỏ hàng sau khi đặt hàng thành công - receiptId={}, userId={}",
+                        savedReceipt.getId(), receipt.getCustomer().getId());
+            } catch (Exception e) {
+                log.error("❌ Lỗi khi xóa giỏ hàng sau khi đặt hàng - receiptId={}, userId={}",
+                        savedReceipt.getId(), receipt.getCustomer() != null ? receipt.getCustomer().getId() : null, e);
+                // Không throw exception để không ảnh hưởng đến việc tạo đơn hàng
+            }
         }
 
         //------------------------------------------
