@@ -14,9 +14,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sd_009.bookstore.config.spec.Routes;
+import sd_009.bookstore.dto.jsonApiResource.receipt.UpdateReceiptStatusRequest;
+import sd_009.bookstore.entity.receipt.OrderStatus;
 import sd_009.bookstore.service.receipt.ReceiptService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -54,6 +57,53 @@ public class ReceiptController {
 
         }
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(receiptService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
+    }
+    @Operation(
+            summary = "Get receipts for list view (FE)",
+            responses = @ApiResponse(
+                    responseCode = "200",
+                    description = "Success",
+                    content = @Content(
+                            examples = @ExampleObject(
+                                    name = "Get receipts resp",
+                                    externalValue = "/jsonExample/receipt/get_receipts.json"
+                            )
+                    )
+            )
+    )
+
+    // Load trang receipt admin
+    @GetMapping(Routes.GET_RECEIPTS_LIST)
+    public ResponseEntity<Object> getReceiptsForList(
+            @RequestParam(name = "e", required = false) Boolean enabled,
+            @RequestParam int page,
+            @RequestParam int limit,
+            @RequestParam(required = false) List<String> sort
+    ) {
+
+        Sort sortInstance = Sort.unsorted();
+        if (sort != null) {
+            for (String query : sort) {
+                String[] queries = query.split(";");
+                if (queries.length < 2) continue;
+
+                String field = queries[0];
+                String order = queries[1];
+
+                sortInstance = "asc".equalsIgnoreCase(order)
+                        ? sortInstance.and(Sort.by(field))
+                        : sortInstance.and(Sort.by(field).descending());
+            }
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(contentType))
+                .body(
+                        receiptService.findForList(
+                                enabled == null ? true : enabled,
+                                PageRequest.of(page, limit).withSort(sortInstance)
+                        )
+                );
     }
 
     @Operation(
@@ -157,6 +207,24 @@ public class ReceiptController {
     @DeleteMapping(Routes.MULTI_RECEIPT_RELATIONSHIP_GENERIC)
     public ResponseEntity<Object> detachRelationship(@PathVariable(name = "id") Long id, @PathVariable(name = "dependent") String dependent, @RequestBody String json) {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(receiptService.detachRelationShip(id, json, dependent));
+    }
+
+
+    @Operation(summary = "Update order status (Admin)")
+    @PatchMapping("/v1/receipt/{id}/status")
+    public ResponseEntity<Object> updateOrderStatus(
+            @PathVariable Long id,
+            @RequestBody UpdateReceiptStatusRequest req
+    ) {
+        receiptService.updateOrderStatus(id, req.orderStatus());
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of(
+                        "success", true,
+                        "message", "Cập nhật trạng thái thành công"
+                ));
+
     }
 
 }

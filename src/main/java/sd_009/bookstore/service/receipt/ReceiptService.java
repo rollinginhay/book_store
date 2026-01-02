@@ -18,17 +18,22 @@ import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.receipt.PaymentDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDetailDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
+import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptResponseDto;
 import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.entity.receipt.*;
 import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.*;
+import sd_009.bookstore.service.mail.EmailBuilder;
+import sd_009.bookstore.service.mail.EmailService;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.mapper.receipt.PaymentDetailMapper;
 import sd_009.bookstore.util.mapper.receipt.ReceiptDetailMapper;
 import sd_009.bookstore.util.mapper.receipt.ReceiptMapper;
+import sd_009.bookstore.util.mapper.receipt.ReceiptResponseMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +45,7 @@ public class ReceiptService {
     private final JsonApiAdapterProvider adapterProvider;
     private final JsonApiValidator validator;
     private final ReceiptMapper receiptMapper;
+    private final ReceiptResponseMapper receiptResponseMapper;
     private final ReceiptDetailMapper receiptDetailMapper;
     private final ReceiptRepository receiptRepository;
     private final ReceiptDetailRepository receiptDetailRepository;
@@ -48,6 +54,7 @@ public class ReceiptService {
     private final UserRepository userRepository;
     private final BookDetailRepository bookDetailRepository;
     private final ObjectMapper objectMapper;
+    private final EmailService emailService;
 
     @Transactional
     public String find(Boolean enabled, String titleQuery, Pageable pageable) {
@@ -80,6 +87,43 @@ public class ReceiptService {
         return getListAdapter().toJson(doc);
     }
 
+    //Hiển thị receipt ở admin
+    @Transactional(readOnly = true)
+    public String findForList(Boolean enabled, Pageable pageable) {
+
+        Page<Receipt> page = receiptRepository.findByEnabled(enabled, pageable);
+
+        List<ReceiptResponseDto> dtos = page.getContent()
+                .stream()
+                .map(receiptResponseMapper::toDto) // mapper CŨ, KHÔNG SỬA
+                .toList();
+
+        LinkParamMapper<?> paramMapper = LinkParamMapper.<Receipt>builder()
+                .enabled(enabled)
+                .page(page)
+                .build();
+
+        Document<List<ReceiptResponseDto>> doc = Document
+                .with(dtos)
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLinkWithQuery(
+                                Routes.GET_RECEIPTS,
+                                paramMapper.getSelfParams()
+                        ))
+                        .first(LinkMapper.toLinkWithQuery(Routes.GET_RECEIPTS, paramMapper.getFirstParams()))
+                        .last(LinkMapper.toLinkWithQuery(Routes.GET_RECEIPTS, paramMapper.getLastParams()))
+                        .next(paramMapper.getNextParams() == null ? null :
+                                LinkMapper.toLinkWithQuery(Routes.GET_RECEIPTS, paramMapper.getNextParams()))
+                        .prev(paramMapper.getPrevParams() == null ? null :
+                                LinkMapper.toLinkWithQuery(Routes.GET_RECEIPTS, paramMapper.getPrevParams()))
+                        .build().toMap()))
+                .build();
+
+        return adapterProvider
+                .listResourceAdapter(ReceiptResponseDto.class)
+                .toJson(doc);
+    }
+
     public String findById(Long id) {
         Receipt found = receiptRepository.findById(id).orElseThrow();
 
@@ -100,6 +144,7 @@ public class ReceiptService {
         Receipt receipt = buildEntityWithRelationships(json);
         receiptDetailRepository.saveAll(receipt.getReceiptDetails());
         paymentDetailRepository.save(receipt.getPaymentDetail());
+        receipt.setPaymentDate(LocalDateTime.now());
         Receipt saved = receiptRepository.save(receipt);
         return getSingleAdapter().toJson(Document
                 .with(receiptMapper.toDto(saved))
@@ -175,8 +220,48 @@ public class ReceiptService {
         //------------------------------------------
         // TRẢ VỀ DTO JSON:API
         //------------------------------------------
-        Receipt finalReceipt = receiptRepository.findById(savedReceipt.getId())
-                .orElseThrow();
+        Receipt finalReceipt =
+                receiptRepository.findWithDetailsById(savedReceipt.getId()).orElseThrow();
+
+//------------------------------------------
+// 📧 GỬI MAIL XÁC NHẬN ĐƠN HÀNG (LẦN 1)
+//------------------------------------------
+        boolean shouldSendMail =
+                finalReceipt.getCustomer() != null
+                        && finalReceipt.getCustomer().getEmail() != null
+                        && (
+                        finalReceipt.getOrderType() == OrderType.ONLINE
+                                || (
+                                finalReceipt.getOrderType() == OrderType.DIRECT
+                                        && Boolean.TRUE.equals(finalReceipt.getHasShipping())
+                        )
+                );
+
+        if (shouldSendMail) {
+            try {
+                emailService.sendOrderEmail(
+                        finalReceipt.getCustomer().getEmail(),
+                        "Xác nhận đơn hàng #" + finalReceipt.getId(),
+                        EmailBuilder.buildOrderEmail(
+                                finalReceipt,
+                                finalReceipt.getPaymentDetail()
+                        )
+                );
+            } catch (Exception e) {
+                log.error(
+                        "❌ Gửi mail xác nhận đơn hàng thất bại - receiptId={}",
+                        finalReceipt.getId(),
+                        e
+                );
+                throw new RuntimeException("Không gửi được email xác nhận đơn hàng");
+            }
+//            catch (Exception e) {
+//                log.error("Mail lỗi nhưng vẫn cho tạo đơn", e);
+//            }
+
+        }
+
+
 
         return getSingleAdapter().toJson(
                 Document.with(receiptMapper.toDto(finalReceipt))
@@ -281,6 +366,7 @@ public class ReceiptService {
             receiptRepository.save(e);
         });
     }
+
     @Transactional
     public String attachOrReplaceRelationship(Long receiptId, String json, String relationship) {
         Receipt receipt = receiptRepository.findById(receiptId).orElseThrow();
@@ -473,6 +559,36 @@ public class ReceiptService {
             default ->
                     throw new BadRequestException("Unsupported relationship type");
         }
+    }
+    @Transactional
+    public Receipt updateOrderStatus(
+            Long receiptId,
+            OrderStatus newStatus
+    ) {
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new RuntimeException("Receipt not found"));
+
+        // ✅ lấy tên HIỂN THỊ trạng thái cũ
+        OrderStatus oldStatusEnum = receipt.getOrderStatus();
+        String oldStatus = oldStatusEnum != null
+                ? oldStatusEnum.getDisplayName()
+                : "-";
+
+        // set trạng thái mới
+        receipt.setOrderStatus(newStatus);
+        Receipt saved = receiptRepository.save(receipt);
+
+        // 👉 GỬI MAIL SAU KHI SAVE
+        if (saved.getCustomer() != null && saved.getCustomer().getEmail() != null) {
+            emailService.sendOrderStatusEmail(
+                    saved.getCustomer().getEmail(),      // mail khách
+                    saved,
+                    oldStatus,                           // 👈 tiếng Việt
+                    newStatus.getDisplayName()           // 👈 tiếng Việt
+            );
+        }
+
+        return saved;
     }
 
     private JsonAdapter<Document<ReceiptDto>> getSingleAdapter() {

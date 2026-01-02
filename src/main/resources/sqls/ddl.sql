@@ -138,7 +138,7 @@ CREATE TABLE `campaign` (
   `enabled` bit(1) DEFAULT NULL,
   `note` varchar(255) DEFAULT NULL,
   `updated_at` datetime(6) DEFAULT NULL,
-  `campaign_type` enum('FLAT_DISCOUNT','PERCENTAGE_DISCOUNT') DEFAULT NULL,
+  `campaign_type` enum('FLAT_DISCOUNT','PERCENTAGE_DISCOUNT', 'PERCENTAGE_RECEIPT', 'PERCENTAGE_PRODUCT') DEFAULT NULL,
   `end_date` datetime(6) DEFAULT NULL,
   `max_discount` double DEFAULT NULL,
   `min_total` double DEFAULT NULL,

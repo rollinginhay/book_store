@@ -6,6 +6,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import sd_009.bookstore.entity.receipt.Receipt;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,11 @@ public class EmailService {
             helper.setSubject(subject);
 
             // FROM — tên hiển thị m muốn
-            helper.setFrom("no-reply@demomailtrap.co", "Dino Bookstore");
+            helper.setFrom(
+                    "auduongthientuyetx2@gmail.com",
+                    "Dino Bookstore"
+            );
+
 
             helper.setText(htmlContent, true);
 
@@ -33,4 +38,20 @@ public class EmailService {
         }
 
     }
+    public void sendOrderStatusEmail(
+            String to,
+            Receipt receipt,
+            String oldStatus,
+            String newStatus
+    ) {
+        String subject = "Đơn hàng #" + receipt.getId() + " đã được cập nhật";
+        String html = EmailBuilder.buildOrderStatusEmail(
+                receipt,
+                oldStatus,
+                newStatus
+        );
+
+        sendOrderEmail(to, subject, html);
+    }
+
 }

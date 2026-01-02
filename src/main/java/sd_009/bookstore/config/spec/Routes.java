@@ -88,6 +88,7 @@ public enum Routes {
     public static final String MULTI_RECEIPT_RELATIONSHIP_RECEIPT_DETAIL = "/v1/receipt/{id}/relationships/receiptDetail";
     public static final String MULTI_RECEIPT_RELATIONSHIP_PAYMENT_DETAIL = "/v1/receipt/{id}/relationships/paymentDetail";
     public static final String MULTI_RECEIPT_RELATIONSHIP_GENERIC = "/v1/receipt/{id}/relationships/{dependent}";
+    public static final String GET_RECEIPTS_LIST = "/v1/receipts/list"; // hiển thị receipt admin
 
 
     // CART DETAIL
@@ -111,6 +112,12 @@ public enum Routes {
     public static final String DELETE_CAMPAIGN_DETAIL_DELETE = "/v1/campaignDetail/{id}";
     public static final String MULTI_CAMPAIGN_RELATIONSHIP_CAMPAIGN_DETAIL = "/v1/campaign/{id}/relationships/campaignDetail";
 
+    // ===================== VOUCHER =====================
+    public static final String GET_VOUCHERS = "/v1/vouchers";
+    public static final String GET_VOUCHER_BY_ID = "/v1/voucher/{id}";
+    public static final String POST_VOUCHER_CREATE = "/v1/voucher/create";
+    public static final String PUT_VOUCHER_UPDATE = "/v1/voucher/update";
+    public static final String DELETE_VOUCHER_DELETE = "/v1/voucher/{id}";
 
     // ===================== USER =====================
     public static final String GET_USERS = "/v1/users";

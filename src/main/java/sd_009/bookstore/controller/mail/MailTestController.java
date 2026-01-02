@@ -15,10 +15,11 @@ public class MailTestController {
     @GetMapping
     public String sendTest() {
         emailService.sendOrderEmail(
-                "test@example.com",
-                "Test Email from Mailtrap",
-                "<h1>Mailtrap hoạt động rồi nhaaaa!</h1>"
+                "auduongthientuyetx2@gmail.com",
+                "TEST SENDGRID OK 🎉",
+                "<h2>Nếu m thấy mail này là DONE</h2>"
         );
+
         return "OK";
     }
 }

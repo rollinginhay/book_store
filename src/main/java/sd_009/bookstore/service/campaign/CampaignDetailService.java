@@ -7,12 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sd_009.bookstore.config.exceptionHanding.exception.BadRequestException;
-import sd_009.bookstore.config.exceptionHanding.exception.DuplicateElementException;
 import sd_009.bookstore.config.jsonapi.JsonApiAdapterProvider;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.internal.JsonApiLinksObject;
 import sd_009.bookstore.dto.jsonApiResource.campaign.CampaignDetailDto;
-import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.entity.campaign.Campaign;
 import sd_009.bookstore.entity.campaign.CampaignDetail;
 import sd_009.bookstore.repository.BookDetailRepository;
@@ -67,35 +65,34 @@ public class CampaignDetailService {
         return getSingleAdapter().toJson(doc);
     }
 
-    // 🔹 Tạo mới campaign detail
-    @Transactional
-    public String save(String json) {
-        CampaignDetailDto dto = validator.readAndValidate(json, CampaignDetailDto.class);
-
-        Campaign campaign = campaignRepository.findById(dto.getCampaign().getId())
-                .orElseThrow(() -> new BadRequestException("Invalid campaign ID"));
-        BookDetail bookDetail = bookDetailRepository.findById(dto.getBookDetail().getId())
-                .orElseThrow(() -> new BadRequestException("Invalid book detail ID"));
-
-        boolean exists = campaignDetailRepository.findAll().stream()
-                .anyMatch(cd -> cd.getCampaign().getId().equals(dto.getCampaign().getId())
-                        && cd.getBookDetail().getId().equals(dto.getBookDetail().getId()));
-        if (exists) throw new DuplicateElementException("CampaignDetail already exists");
-
-        CampaignDetail entity = campaignDetailMapper.toEntity(dto);
-        entity.setCampaign(campaign);
-        entity.setBookDetail(bookDetail);
-
-        CampaignDetail saved = campaignDetailRepository.save(entity);
-
-        Document<CampaignDetailDto> doc = Document.with(campaignDetailMapper.toDto(saved))
-                .links(Links.from(JsonApiLinksObject.builder()
-                        .self(LinkMapper.toLink(Routes.GET_CAMPAIGN_DETAIL_BY_ID, saved.getId()))
-                        .build().toMap()))
-                .build();
-
-        return getSingleAdapter().toJson(doc);
-    }
+//    @Transactional
+//    public String save(String json) {
+//        CampaignDetailDto dto = validator.readAndValidate(json, CampaignDetailDto.class);
+//
+//        Campaign campaign = campaignRepository.findById(dto.getCampaign().getId())
+//                .orElseThrow(() -> new BadRequestException("Invalid campaign ID"));
+//        BookDetail bookDetail = bookDetailRepository.findById(dto.getBookDetail().getId())
+//                .orElseThrow(() -> new BadRequestException("Invalid book detail ID"));
+//
+//        boolean exists = campaignDetailRepository.findAll().stream()
+//                .anyMatch(cd -> cd.getCampaign().getId().equals(dto.getCampaign().getId())
+//                        && cd.getBookDetail().getId().equals(dto.getBookDetail().getId()));
+//        if (exists) throw new DuplicateElementException("CampaignDetail already exists");
+//
+//        CampaignDetail entity = campaignDetailMapper.toEntity(dto);
+//        entity.setCampaign(campaign);
+//        entity.setBookDetail(bookDetail);
+//
+//        CampaignDetail saved = campaignDetailRepository.save(entity);
+//
+//        Document<CampaignDetailDto> doc = Document.with(campaignDetailMapper.toDto(saved))
+//                .links(Links.from(JsonApiLinksObject.builder()
+//                        .self(LinkMapper.toLink(Routes.GET_CAMPAIGN_DETAIL_BY_ID, saved.getId()))
+//                        .build().toMap()))
+//                .build();
+//
+//        return getSingleAdapter().toJson(doc);
+//    }
 
     // 🔹 Cập nhật campaign detail
     @Transactional

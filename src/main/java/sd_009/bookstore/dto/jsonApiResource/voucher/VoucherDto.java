@@ -1,31 +1,27 @@
-package sd_009.bookstore.dto.jsonApiResource.campaign;
+package sd_009.bookstore.dto.jsonApiResource.voucher;
 
 import jsonapi.Id;
 import jsonapi.Resource;
-import jsonapi.ToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import sd_009.bookstore.entity.campaign.CampaignType;
+import sd_009.bookstore.entity.voucher.VoucherType;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * DTO for {@link .entity.Campaign}
+ * DTO for {@link sd_009.bookstore.entity.voucher.Voucher}
  */
 @Getter
 @AllArgsConstructor
-@Resource(type = "campaign")
-public class CampaignDto implements Serializable {
+@Resource(type = "voucher")
+public class VoucherDto implements Serializable {
     @Id
     private final String id;
     private final String name;
-    private final CampaignType campaignType;
+    private final VoucherType voucherType;
     private final LocalDateTime startDate;
     private final LocalDateTime endDate;
-    @ToMany(name = "campaignDetails")
-    private final List<CampaignDetailDto> campaignDetails;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
@@ -33,5 +29,7 @@ public class CampaignDto implements Serializable {
     private Double minTotal;
     private Double percentage;
     private Double maxDiscount;
+    private String code;
+    private Boolean used;
 }
 
