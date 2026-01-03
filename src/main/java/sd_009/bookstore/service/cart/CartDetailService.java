@@ -41,13 +41,14 @@ public class CartDetailService {
 
 
     // ===============================================================
-    // 🔹 Lấy toàn bộ giỏ hàng theo user ID
+    // 🔹 Lấy toàn bộ giỏ hàng theo user ID (chỉ lấy items enabled = true)
     // ===============================================================
     @Transactional
     public String findByUserId(Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
 
-        List<CartDetail> list = cartDetailRepository.findByUser(user);
+        // Chỉ lấy những cart items có enabled = true (chưa bị xóa)
+        List<CartDetail> list = cartDetailRepository.findByUserAndEnabled(user, true);
         List<CartDetailDto> dtos = list.stream()
                 .map(cartDetailMapper::toDto)
                 .toList();
@@ -62,11 +63,17 @@ public class CartDetailService {
     }
 
     // ===============================================================
-    // 🔹 Lấy chi tiết 1 cart detail theo ID
+    // 🔹 Lấy chi tiết 1 cart detail theo ID (chỉ lấy nếu enabled = true)
     // ===============================================================
     @Transactional
     public String findById(Long id) {
         CartDetail entity = cartDetailRepository.findById(id).orElseThrow();
+        
+        // Kiểm tra nếu item đã bị xóa (enabled = false) thì throw exception
+        if (Boolean.FALSE.equals(entity.getEnabled())) {
+            throw new BadRequestException("Cart detail not found or has been deleted");
+        }
+        
         CartDetailDto dto = cartDetailMapper.toDto(entity);
 
         Document<CartDetailDto> doc = Document.with(dto)
@@ -130,7 +137,7 @@ public class CartDetailService {
 
 
     // ===============================================================
-    // 🔹 Cập nhật giỏ hàng
+    // 🔹 Cập nhật giỏ hàng (chỉ update nếu enabled = true)
     // ===============================================================
     @Transactional
     public String update(String json) {
@@ -138,6 +145,12 @@ public class CartDetailService {
         if (dto.getId() == null) throw new BadRequestException("No identifier found");
 
         CartDetail existing = cartDetailRepository.findById(Long.valueOf(dto.getId())).orElseThrow();
+        
+        // Kiểm tra nếu item đã bị xóa (enabled = false) thì không cho update
+        if (Boolean.FALSE.equals(existing.getEnabled())) {
+            throw new BadRequestException("Cannot update cart detail that has been deleted");
+        }
+        
         CartDetail updated = cartDetailRepository.save(cartDetailMapper.partialUpdate(dto, existing));
 
         Document<CartDetailDto> doc = Document.with(cartDetailMapper.toDto(updated))
@@ -161,11 +174,16 @@ public class CartDetailService {
     }
 
     // ===============================================================
-    // 🔹 Lấy cart detail kèm quan hệ (user + bookDetail)
+    // 🔹 Lấy cart detail kèm quan hệ (user + bookDetail) (chỉ lấy nếu enabled = true)
     // ===============================================================
     @Transactional(readOnly = true)
     public String findOwningById(Long id) {
         CartDetail found = cartDetailRepository.findById(id).orElseThrow();
+        
+        // Kiểm tra nếu item đã bị xóa (enabled = false) thì throw exception
+        if (Boolean.FALSE.equals(found.getEnabled())) {
+            throw new BadRequestException("Cart detail not found or has been deleted");
+        }
 
         // mapper: entity → owning DTO
         CartDetailOwningDto dto = cartDetailOwningMapper.toDto(found);

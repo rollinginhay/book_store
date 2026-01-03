@@ -64,7 +64,10 @@ public class ErrorMapper {
                                     .toList()));
         }
         JsonAdapter<Document<Error>> adapter = adapterProvider.errorAdapter();
-        return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, "Internal error", "server"))));
+        String errorMessage = e.getMessage() != null && !e.getMessage().isEmpty() 
+            ? e.getMessage() 
+            : "Lỗi hệ thống. Vui lòng thử lại sau";
+        return adapter.toJson(Document.from(Collections.singletonList(new Error(null, String.valueOf(status.value()), null, errorMessage, "server"))));
     }
 
     public void writeFilterErrorDoc(HttpServletResponse resp, int status, String message, String detail) throws IOException {

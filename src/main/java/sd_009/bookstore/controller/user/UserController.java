@@ -125,4 +125,16 @@ public class UserController {
                 .contentType(MediaType.valueOf(contentType))
                 .body(null);
     }
+
+    // 🔹 Lấy toàn bộ roles
+    @Operation(
+            summary = "Get all roles",
+            description = "Lấy danh sách tất cả vai trò trong hệ thống."
+    )
+    @GetMapping(Routes.GET_ROLES)
+    public ResponseEntity<Object> getAllRoles() {
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(contentType))
+                .body(userService.findAllRoles());
+    }
 }

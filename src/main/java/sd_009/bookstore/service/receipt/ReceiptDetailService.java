@@ -74,6 +74,68 @@ public class ReceiptDetailService {
 
     @Transactional
     public String save(String json) {
+        // Try to parse as ReceiptDetailDto first (for simple creation)
+        try {
+            ReceiptDetailDto receiptDetailDto = jsonApiValidator.readAndValidate(json, ReceiptDetailDto.class);
+            
+            // If it's a simple ReceiptDetailDto without receiptId, create it standalone
+            ReceiptDetail receiptDetail = receiptDetailMapper.toEntity(receiptDetailDto);
+            if (receiptDetail.getId() == 0) receiptDetail.setId(null);
+            
+            // If bookDetail is provided, set it
+            if (receiptDetail.getBookCopy() != null && receiptDetail.getBookCopy().getId() != null) {
+                BookDetail bookDetail = bookDetailRepository.findById(receiptDetail.getBookCopy().getId()).orElseThrow();
+                receiptDetail.setBookCopy(bookDetail);
+                // If pricePerUnit is not set, use bookDetail's salePrice
+                if (receiptDetail.getPricePerUnit() == null || receiptDetail.getPricePerUnit() == 0) {
+                    receiptDetail.setPricePerUnit(Long.valueOf(bookDetail.getSalePrice()));
+                }
+            }
+            
+            // Don't set receipt here - it will be attached later via attachRelationship
+            ReceiptDetail saved = receiptDetailRepository.save(receiptDetail);
+            
+            return getSingleAdapter().toJson(Document
+                    .with(receiptDetailMapper.toDto(saved))
+                    .links(Links.from(JsonApiLinksObject.builder()
+                            .self(LinkMapper.toLink(Routes.GET_RECEIPT_DETAIL_BY_ID, saved.getId()))
+                            .build().toMap()))
+                    .build());
+        } catch (Exception e) {
+            // If parsing as ReceiptDetailDto fails, try as ReceiptDto (original behavior)
+            ReceiptDto receiptDto = jsonApiValidator.readAndValidate(json, ReceiptDto.class);
+            
+            if (receiptDto.getId() == null) {
+                throw new BadRequestException("Receipt ID is required when creating receiptDetails via ReceiptDto");
+            }
+            
+            Receipt receipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();
+
+            List<ReceiptDetailDto> receiptDetailDtos = receiptDto.getReceiptDetails();
+
+            List<ReceiptDetail> receiptDetails = receiptDetailDtos.stream().map(receiptDetailMapper::toEntity).toList();
+            receiptDetails.forEach(rd -> {
+                if (rd.getId() == 0) rd.setId(null);
+                BookDetail bookDetail = bookDetailRepository.findById(rd.getBookCopy().getId()).orElseThrow();
+                rd.setPricePerUnit(Long.valueOf(bookDetail.getSalePrice()));
+                rd.setBookCopy(bookDetail);
+                rd.setReceipt(receipt);
+                receiptDetailRepository.save(rd);
+            });
+
+            Receipt updatedReceipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();
+
+            return adapterProvider.singleResourceAdapter(ReceiptDto.class).toJson(Document
+                    .with(receiptMapper.toDto(updatedReceipt))
+                    .links(Links.from(JsonApiLinksObject.builder()
+                            .self(LinkMapper.toLink(Routes.GET_RECEIPT_BY_ID, updatedReceipt.getId()))
+                            .build().toMap()))
+                    .build());
+        }
+    }
+
+    @Transactional
+    public String saveOnline(String json) {
         ReceiptDto receiptDto = jsonApiValidator.readAndValidate(json, ReceiptDto.class);
         Receipt receipt = receiptRepository.findById(Long.valueOf(receiptDto.getId())).orElseThrow();
 

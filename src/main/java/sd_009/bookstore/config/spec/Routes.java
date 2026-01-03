@@ -69,6 +69,7 @@ public enum Routes {
      */
     public static final String GET_RECEIPT_DETAIL_BY_ID = "/v1/receiptDetail/{id}";
     public static final String POST_RECEIPT_DETAIL_CREATE = "/v1/receiptDetail/create";
+    public static final String POST_RECEIPT_DETAIL_CREATE_ONLINE = "/v1/receiptDetail/createOnline";
     public static final String PUT_RECEIPT_DETAIL_UPDATE = "/v1/receiptDetail/update";
     public static final String DELETE_RECEIPT_DETAIL_DELETE = "/v1/receiptDetail/{id}";
     public static final String MULTI_RECEIPT_DETAIL_RELATIONSHIP_GENERIC = "/v1/receiptDetail/{id}/relationships/{dependent}";
@@ -125,6 +126,7 @@ public enum Routes {
     public static final String POST_USER_CREATE = "/v1/user/create";
     public static final String PUT_USER_UPDATE = "/v1/user/update";
     public static final String DELETE_USER_DELETE = "/v1/user/{id}";
+    public static final String GET_ROLES = "/v1/roles";
 
     // GENRE CLOSURE (Cây thể loại)
     public static final String GET_GENRE_CLOSURES = "/v1/genreClosures";

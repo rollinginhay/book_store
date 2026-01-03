@@ -34,6 +34,7 @@ import sd_009.bookstore.util.mapper.receipt.ReceiptResponseMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -52,6 +53,7 @@ public class ReceiptService {
     private final PaymentDetailMapper paymentDetailMapper;
     private final UserRepository userRepository;
     private final BookDetailRepository bookDetailRepository;
+    private final CartDetailRepository cartDetailRepository;
     private final ObjectMapper objectMapper;
     private final EmailService emailService;
 
@@ -157,7 +159,7 @@ public class ReceiptService {
     public String saveOneline(String json) {
 
         // Build receipt from JSON (attributes + basic fields)
-        Receipt receipt = buildEntityWithRelationships(json);
+        Receipt receipt = buildEntityWithRelationships1(json);
 
         //------------------------------------------
         // LẤY CUSTOMER_ID & EMPLOYEE_ID TỪ JSON
@@ -194,6 +196,40 @@ public class ReceiptService {
             }
         }
 
+        //------------------------------------------
+        // PARSE RECEIPT DETAILS TỪ JSON RELATIONSHIPS (MỚI THÊM)
+        //------------------------------------------
+        List<ReceiptDetail> receiptDetailsFromJson = new java.util.ArrayList<>();
+        if (relationships.has("receiptDetails")) {
+            JsonNode receiptDetailsNode = relationships.path("receiptDetails").path("data");
+            if (receiptDetailsNode.isArray()) {
+                for (JsonNode detailNode : receiptDetailsNode) {
+                    try {
+                        JsonNode attributes = detailNode.path("attributes");
+                        JsonNode bookDetailRel = detailNode.path("relationships").path("bookDetail").path("data");
+                        
+                        if (!bookDetailRel.isMissingNode() && bookDetailRel.has("id")) {
+                            String bookDetailId = bookDetailRel.path("id").asText();
+                            BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailId))
+                                    .orElseThrow(() -> new RuntimeException("BookDetail not found: " + bookDetailId));
+                            
+                            Long pricePerUnit = attributes.path("pricePerUnit").asLong(0);
+                            Long quantity = attributes.path("quantity").asLong(1);
+                            
+                            ReceiptDetail receiptDetail = new ReceiptDetail();
+                            receiptDetail.setBookCopy(bookDetail);
+                            receiptDetail.setPricePerUnit(pricePerUnit);
+                            receiptDetail.setQuantity(quantity);
+                            receiptDetail.setId(null); // Để DB tự sinh ID
+                            
+                            receiptDetailsFromJson.add(receiptDetail);
+                        }
+                    } catch (Exception e) {
+                        log.error("Lỗi parse receiptDetail từ JSON: {}", e.getMessage(), e);
+                    }
+                }
+            }
+        }
 
         //------------------------------------------
         // SAVE RECEIPT
@@ -201,11 +237,24 @@ public class ReceiptService {
         Receipt savedReceipt = receiptRepository.save(receipt);
 
         //------------------------------------------
-        // SAVE RECEIPT DETAILS
+        // SAVE RECEIPT DETAILS (TỪ buildEntityWithRelationships HOẶC TỪ JSON)
         //------------------------------------------
+        List<ReceiptDetail> allReceiptDetails = new java.util.ArrayList<>();
+        
+        // Lấy từ buildEntityWithRelationships (nếu có)
         if (receipt.getReceiptDetails() != null && !receipt.getReceiptDetails().isEmpty()) {
-            receipt.getReceiptDetails().forEach(rd -> rd.setReceipt(savedReceipt));
-            receiptDetailRepository.saveAll(receipt.getReceiptDetails());
+            allReceiptDetails.addAll(receipt.getReceiptDetails());
+        }
+        
+        // Thêm từ JSON relationships (nếu có)
+        if (!receiptDetailsFromJson.isEmpty()) {
+            allReceiptDetails.addAll(receiptDetailsFromJson);
+        }
+        
+        // Lưu tất cả receiptDetails
+        if (!allReceiptDetails.isEmpty()) {
+            allReceiptDetails.forEach(rd -> rd.setReceipt(savedReceipt));
+            receiptDetailRepository.saveAll(allReceiptDetails);
         }
 
         //------------------------------------------
@@ -214,6 +263,39 @@ public class ReceiptService {
         if (receipt.getPaymentDetail() != null) {
             receipt.getPaymentDetail().setReceipt(savedReceipt);
             paymentDetailRepository.save(receipt.getPaymentDetail());
+        }
+
+        //------------------------------------------
+        // XÓA CÁC SẢN PHẨM TRONG GIỎ HÀNG SAU KHI ĐẶT HÀNG THÀNH CÔNG
+        //------------------------------------------
+        if (receipt.getCustomer() != null && !allReceiptDetails.isEmpty()) {
+            try {
+                // Lấy danh sách bookDetailIds từ receiptDetails
+                List<Long> bookDetailIds = allReceiptDetails.stream()
+                        .map(rd -> rd.getBookCopy().getId())
+                        .distinct()
+                        .toList();
+
+                // Xóa các cart items của user có bookDetailId trùng với các sản phẩm đã đặt hàng
+                for (Long bookDetailId : bookDetailIds) {
+                    BookDetail bookDetail = bookDetailRepository.findById(bookDetailId).orElse(null);
+                    if (bookDetail != null) {
+                        cartDetailRepository.findByUserAndBookDetail(receipt.getCustomer(), bookDetail)
+                                .ifPresent(cartDetail -> {
+                                    cartDetail.setEnabled(false);
+                                    cartDetailRepository.save(cartDetail);
+                                    log.info("✅ Đã xóa cart item: cartDetailId={}, bookDetailId={}, userId={}",
+                                            cartDetail.getId(), bookDetailId, receipt.getCustomer().getId());
+                                });
+                    }
+                }
+                log.info("✅ Đã xóa giỏ hàng sau khi đặt hàng thành công - receiptId={}, userId={}",
+                        savedReceipt.getId(), receipt.getCustomer().getId());
+            } catch (Exception e) {
+                log.error("❌ Lỗi khi xóa giỏ hàng sau khi đặt hàng - receiptId={}, userId={}",
+                        savedReceipt.getId(), receipt.getCustomer() != null ? receipt.getCustomer().getId() : null, e);
+                // Không throw exception để không ảnh hưởng đến việc tạo đơn hàng
+            }
         }
 
         //------------------------------------------
@@ -355,72 +437,6 @@ public class ReceiptService {
     }
 
     @Transactional
-    public Receipt buildAndSaveReceipt(String json) {
-        ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
-
-        List<ReceiptDetail> receiptDetails = dto.getReceiptDetails() == null ? List.of() :
-                dto.getReceiptDetails().stream()
-                        .map(e -> receiptDetailMapper.toEntity(e))
-                        .toList();
-        receiptDetails.forEach(e -> e.setId(null));
-        receiptDetails.forEach(e -> e.setBookCopy(bookDetailRepository.findById(e.getBookCopy().getId()).orElse(null)));
-
-        User employee = dto.getEmployee() == null ? null : userRepository.findById(Long.valueOf(dto.getEmployee().getId())).orElse(null);
-        User customer = dto.getCustomer() == null ? null : userRepository.findById(Long.valueOf(dto.getCustomer().getId())).orElse(null);
-
-        Receipt receipt = receiptMapper.toEntity(dto);
-        if (receipt.getId() == 0)
-            receipt.setId(null); // đảm bảo null để DB sinh tự động
-        receipt.setCustomer(customer);
-        receipt.setEmployee(employee);
-
-        // save receipt trước
-        receipt = receiptRepository.save(receipt); // ✅ ID được sinh
-
-        // calculate totals
-        if (receipt.getReceiptDetails() != null && !receipt.getReceiptDetails().isEmpty()) {
-            Double subtotal = receiptDetails.stream().map(e -> Double.valueOf(e.getPricePerUnit()) * Double.valueOf(e.getQuantity())).reduce(0D, Double::sum);
-            Double taxRate = 8D;
-            Double serviceCost = 0D;
-            if (receipt.getHasShipping()) serviceCost += 30000;
-            Double grandTotal = (subtotal - dto.getDiscount()) * (100 + taxRate) / 100 + serviceCost;
-            receipt.setTax(taxRate);
-            receipt.setSubTotal(subtotal);
-            receipt.setDiscount(dto.getDiscount());
-            receipt.setServiceCost(serviceCost);
-            receipt.setGrandTotal(grandTotal);
-        }
-
-        // tạo paymentDetail sau khi receipt đã có ID
-        PaymentDetail paymentDetail = null;
-        if (dto.getPaymentDetail() != null) {
-            paymentDetail = PaymentDetail.builder()
-                    .amount(receipt.getGrandTotal())
-                    .paymentType(dto.getPaymentDetail().getPaymentType())
-                    .receipt(receipt)
-                    .build();
-            receipt.setPaymentDetail(paymentDetail);
-
-            if (dto.getOrderType() == OrderType.DIRECT && !dto.getHasShipping())
-                receipt.setOrderStatus(OrderStatus.PAID);
-            if (dto.getOrderType() == OrderType.DIRECT && dto.getHasShipping())
-                receipt.setOrderStatus(OrderStatus.IN_TRANSIT);
-        }
-
-        // gắn receiptDetails
-        Receipt tempReceipt = receiptMapper.toEntity(dto);
-        tempReceipt = receiptRepository.save(tempReceipt);
-
-        final Receipt receiptFinal = tempReceipt;  // Biến final dùng trong lambda
-
-        receiptDetails.forEach(e -> e.setReceipt(receiptFinal));
-
-
-        // save lại Receipt để cascade PaymentDetail & ReceiptDetail
-        return receiptRepository.save(receipt);
-    }
-
-    @Transactional
     public void delete(Long id) {
         receiptRepository.findById(id).ifPresent(e -> {
             List<ReceiptDetail> associated = receiptDetailRepository.findByReceipt(e);
@@ -472,6 +488,104 @@ public class ReceiptService {
                         .self(LinkMapper.toLink(Routes.GET_RECEIPT_BY_ID, saved.getId()))
                         .build().toMap()))
                 .build());
+    }
+
+    @Transactional
+    public Receipt buildEntityWithRelationships1(String json) {
+        System.out.println("===== START buildEntityWithRelationships1 =====");
+
+        // 1. Parse JSON -> DTO
+        ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
+
+        System.out.println("DTO receiptDetails size: " + (dto.getReceiptDetails() == null ? 0 : dto.getReceiptDetails().size()));
+
+        // 2. Tạo Receipt entity từ DTO
+        Receipt receipt = receiptMapper.toEntity(dto);
+        if (receipt.getId() != null && receipt.getId() == 0) receipt.setId(null);
+
+        // 3. Xử lý customer & employee
+        User customer = null;
+        if (dto.getCustomer() != null && dto.getCustomer().getId() != null) {
+            customer = userRepository.findById(Long.valueOf(dto.getCustomer().getId()))
+                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+            receipt.setCustomer(customer);
+        }
+
+        User employee = null;
+        if (dto.getEmployee() != null && dto.getEmployee().getId() != null) {
+            employee = userRepository.findById(Long.valueOf(dto.getEmployee().getId()))
+                    .orElseThrow(() -> new RuntimeException("Employee not found"));
+            receipt.setEmployee(employee);
+        }
+
+        // 4. Xử lý ReceiptDetails + BookCopy
+        List<ReceiptDetail> receiptDetails = new ArrayList<>();
+        if (dto.getReceiptDetails() != null) {
+            for (ReceiptDetailDto rdDto : dto.getReceiptDetails()) {
+                ReceiptDetail rd = receiptDetailMapper.toEntity(rdDto);
+
+                // Kiểm tra bookCopy từ entity (đã được map từ bookDetailId) hoặc từ DTO
+                if (rd.getBookCopy() != null && rd.getBookCopy().getId() != null) {
+                    // Entity đã có bookCopy từ mapper, chỉ cần query lại để có đầy đủ thông tin
+                    BookDetail bookDetail = bookDetailRepository.findById(rd.getBookCopy().getId())
+                            .orElseThrow(() -> new RuntimeException("BookDetail not found id: " + rd.getBookCopy().getId()));
+                    rd.setBookCopy(bookDetail);
+                } else if (rdDto.getBookCopy() != null && rdDto.getBookCopy().getId() != null) {
+                    // Fallback: nếu entity chưa có, lấy từ DTO relationships
+                    BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(rdDto.getBookCopy().getId()))
+                            .orElseThrow(() -> new RuntimeException("BookDetail not found id: " + rdDto.getBookCopy().getId()));
+                    rd.setBookCopy(bookDetail);
+                } else if (rdDto.getBookDetailId() != null) {
+                    // Fallback: lấy từ bookDetailId trong attributes
+                    BookDetail bookDetail = bookDetailRepository.findById(rdDto.getBookDetailId())
+                            .orElseThrow(() -> new RuntimeException("BookDetail not found id: " + rdDto.getBookDetailId()));
+                    rd.setBookCopy(bookDetail);
+                }
+
+                rd.setId(null); // để JPA tạo mới
+                rd.setReceipt(receipt);
+                receiptDetails.add(rd);
+            }
+        }
+        receipt.setReceiptDetails(receiptDetails);
+
+        System.out.println("Mapped receiptDetails size: " + receiptDetails.size());
+
+        // 5. Tính toán subtotal, grandTotal
+        double subtotal = receiptDetails.stream()
+                .mapToDouble(e -> e.getPricePerUnit() * e.getQuantity())
+                .sum();
+        double taxRate = 8D;
+        double serviceCost = receipt.getHasShipping() ? 30000 : 0;
+        double grandTotal = (subtotal - dto.getDiscount()) * (100 + taxRate) / 100 + serviceCost;
+
+        receipt.setSubTotal(subtotal);
+        receipt.setTax(taxRate);
+        receipt.setServiceCost(serviceCost);
+        receipt.setDiscount(dto.getDiscount());
+        receipt.setGrandTotal(grandTotal);
+
+        System.out.println("Subtotal: " + subtotal + ", GrandTotal: " + grandTotal);
+
+        // 6. Xử lý PaymentDetail
+        PaymentDetail paymentDetail = PaymentDetail.builder()
+                .amount(grandTotal)
+                .paymentType(dto.getPaymentDetail() != null
+                        ? dto.getPaymentDetail().getPaymentType()
+                        : PaymentType.CASH) // mặc định COD nếu null
+                .receipt(receipt)
+                .build();
+        receipt.setPaymentDetail(paymentDetail);
+
+        // 7. Log cuối
+        System.out.println("Final receipt entity created. Receipt id: " + receipt.getId());
+        receiptDetails.forEach(rd -> {
+            System.out.println("ReceiptDetail bookCopyId: " + (rd.getBookCopy() == null ? "null" : rd.getBookCopy().getId()));
+            System.out.println("Quantity: " + rd.getQuantity() + ", Price: " + rd.getPricePerUnit());
+        });
+
+        System.out.println("===== END buildEntityWithRelationships1 =====");
+        return receipt;
     }
 
     @Transactional

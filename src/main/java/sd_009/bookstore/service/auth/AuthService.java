@@ -30,7 +30,7 @@ public class AuthService {
     public AuthObject login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.email()).orElseThrow(() -> new UnauthorizedException("Invalid Email or Password"));
 
-        String token = jwtService.generateToken(user.getEmail(), Map.of("roles", user.getRoles().stream().map(Role::getName)));
+        String token = jwtService.generateToken(user.getEmail(), Map.of("roles", user.getRoles().stream().map(Role::getName).toList()));
 
         return UserMapperManual.mapToAuthResponse(user, token);
     }
@@ -70,7 +70,7 @@ public class AuthService {
 
         User savedUser = userRepository.save(newUser);
 
-        String jwtToken = jwtService.generateToken(savedUser.getEmail(), Map.of("roles", savedUser.getRoles().stream().map(Role::getName)));
+        String jwtToken = jwtService.generateToken(savedUser.getEmail(), Map.of("roles", savedUser.getRoles().stream().map(Role::getName).toList()));
 
         return UserMapperManual.mapToAuthResponse(savedUser, jwtToken);
     }

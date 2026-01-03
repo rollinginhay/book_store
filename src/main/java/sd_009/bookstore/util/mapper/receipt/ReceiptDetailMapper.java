@@ -31,6 +31,11 @@ public interface ReceiptDetailMapper {
     // helper: từ id → BookDetail entity (chỉ set id, không query DB)
     default BookDetail mapBookCopy(Long id) {
         if (id == null) return null;
+        // Validate that id is a valid Long (not a string like "combo-...")
+        // This should not happen if frontend sends correct data, but add defensive check
+        if (id <= 0) {
+            throw new IllegalArgumentException("Invalid bookDetailId: " + id + ". Expected a positive Long value.");
+        }
         BookDetail bd = new BookDetail();
         bd.setId(id);
         return bd;
