@@ -524,9 +524,21 @@ public class ReceiptService {
             for (ReceiptDetailDto rdDto : dto.getReceiptDetails()) {
                 ReceiptDetail rd = receiptDetailMapper.toEntity(rdDto);
 
-                if (rdDto.getBookCopy() != null && rdDto.getBookCopy().getId() != null) {
+                // Kiểm tra bookCopy từ entity (đã được map từ bookDetailId) hoặc từ DTO
+                if (rd.getBookCopy() != null && rd.getBookCopy().getId() != null) {
+                    // Entity đã có bookCopy từ mapper, chỉ cần query lại để có đầy đủ thông tin
+                    BookDetail bookDetail = bookDetailRepository.findById(rd.getBookCopy().getId())
+                            .orElseThrow(() -> new RuntimeException("BookDetail not found id: " + rd.getBookCopy().getId()));
+                    rd.setBookCopy(bookDetail);
+                } else if (rdDto.getBookCopy() != null && rdDto.getBookCopy().getId() != null) {
+                    // Fallback: nếu entity chưa có, lấy từ DTO relationships
                     BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(rdDto.getBookCopy().getId()))
                             .orElseThrow(() -> new RuntimeException("BookDetail not found id: " + rdDto.getBookCopy().getId()));
+                    rd.setBookCopy(bookDetail);
+                } else if (rdDto.getBookDetailId() != null) {
+                    // Fallback: lấy từ bookDetailId trong attributes
+                    BookDetail bookDetail = bookDetailRepository.findById(rdDto.getBookDetailId())
+                            .orElseThrow(() -> new RuntimeException("BookDetail not found id: " + rdDto.getBookDetailId()));
                     rd.setBookCopy(bookDetail);
                 }
 

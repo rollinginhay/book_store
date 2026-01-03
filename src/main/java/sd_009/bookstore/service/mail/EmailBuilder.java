@@ -94,7 +94,13 @@ public class EmailBuilder {
                     ? d.getBookCopy().getBook().getTitle()
                     : "Sản phẩm không xác định";
 
-            String productName = bookTitle + " — " + d.getBookCopy().getBookFormat();
+            // Lấy format sách, kiểm tra null để tránh NullPointerException
+            String bookFormat = (d.getBookCopy() != null
+                    && d.getBookCopy().getBookFormat() != null)
+                    ? d.getBookCopy().getBookFormat()
+                    : "N/A";
+
+            String productName = bookTitle + " — " + bookFormat;
 
             sb.append("<tr>"
                     + "<td style='padding:8px;border-bottom:1px solid #eee;text-align:center;'>" + index++ + "</td>"
