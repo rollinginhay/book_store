@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface RoleRepository extends JpaRepository<Role, Long>, JpaSpecificationExecutor<Role> {
 
     Optional<Role> findByName(String name);
+    
+    Optional<Role> findByNameAndEnabled(String name, Boolean enabled);
 }

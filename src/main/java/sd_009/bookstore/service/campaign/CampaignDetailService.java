@@ -24,7 +24,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CampaignDetailService {
+public class  CampaignDetailService {
 
     private final CampaignDetailRepository campaignDetailRepository;
     private final CampaignRepository campaignRepository;

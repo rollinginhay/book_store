@@ -19,6 +19,7 @@ import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.RoleRepository;
 import sd_009.bookstore.repository.UserRepository;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
+import sd_009.bookstore.util.mapper.user.RoleMapper;
 import sd_009.bookstore.util.mapper.user.UserMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
@@ -35,6 +36,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
+    private final RoleMapper roleMapper;
     private final PasswordEncoder passwordEncoder;
 
     // ===============================================================
@@ -129,9 +131,11 @@ public class UserService {
         List<Role> roles;
         if (roleDtos == null || roleDtos.isEmpty()) {
             // Không có roles trong request -> set default role
-            roles = List.of(roleRepository.findByName("ROLE_USER").orElseThrow(
-                    () -> new BadRequestException("Role ROLE_USER không tồn tại trong hệ thống")
-            ));
+            // Chỉ lấy role enabled để tránh lỗi khi có nhiều role cùng tên
+            roles = List.of(roleRepository.findByNameAndEnabled("ROLE_USER", true)
+                    .orElseThrow(
+                            () -> new BadRequestException("Role ROLE_USER không tồn tại trong hệ thống")
+                    ));
         } else {
             // Có roles trong request -> convert từ RoleDto sang Role entity
             // Validate: tất cả roles phải có id hợp lệ
@@ -309,6 +313,25 @@ public class UserService {
     }
 
     // ===============================================================
+    // 🔹 Lấy toàn bộ roles
+    // ===============================================================
+    @Transactional(readOnly = true)
+    public String findAllRoles() {
+        List<Role> roles = roleRepository.findAll();
+        List<RoleDto> dtos = roles.stream()
+                .map(roleMapper::toDto)
+                .toList();
+
+        Document<List<RoleDto>> doc = Document.with(dtos)
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_ROLES))
+                        .build().toMap()))
+                .build();
+
+        return getRoleListAdapter().toJson(doc);
+    }
+
+    // ===============================================================
     // 🔹 Adapter Moshi
     // ===============================================================
     private JsonAdapter<Document<UserDto>> getSingleAdapter() {
@@ -317,5 +340,9 @@ public class UserService {
 
     private JsonAdapter<Document<List<UserDto>>> getListAdapter() {
         return adapterProvider.listResourceAdapter(UserDto.class);
+    }
+
+    private JsonAdapter<Document<List<RoleDto>>> getRoleListAdapter() {
+        return adapterProvider.listResourceAdapter(RoleDto.class);
     }
 }

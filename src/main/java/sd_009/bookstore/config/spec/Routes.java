@@ -125,6 +125,7 @@ public enum Routes {
     public static final String POST_USER_CREATE = "/v1/user/create";
     public static final String PUT_USER_UPDATE = "/v1/user/update";
     public static final String DELETE_USER_DELETE = "/v1/user/{id}";
+    public static final String GET_ROLES = "/v1/roles";
 
     // GENRE CLOSURE (Cây thể loại)
     public static final String GET_GENRE_CLOSURES = "/v1/genreClosures";
