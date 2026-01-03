@@ -134,4 +134,10 @@ public class CampaignController {
                 .contentType(MediaType.valueOf(contentType))
                 .body(null);
     }
+
+    @GetMapping(Routes.GET_ACTIVE_CAMPAIGNS)
+    public ResponseEntity<Object> getActiveCampaigns() {
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(campaignService.findActive());
+    }
+
 }

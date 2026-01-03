@@ -100,6 +100,7 @@ public enum Routes {
 
     // ===================== CAMPAIGN =====================
     public static final String GET_CAMPAIGNS = "/v1/campaigns";
+    public static final String GET_ACTIVE_CAMPAIGNS = "/v1/activecampaigns";
     public static final String GET_CAMPAIGN_BY_ID = "/v1/campaign/{id}";
     public static final String POST_CAMPAIGN_CREATE = "/v1/campaign/create";
     public static final String PUT_CAMPAIGN_UPDATE = "/v1/campaign/update";

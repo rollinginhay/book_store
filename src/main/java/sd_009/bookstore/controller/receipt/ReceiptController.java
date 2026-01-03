@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.jsonApiResource.receipt.UpdateReceiptStatusRequest;
-import sd_009.bookstore.entity.receipt.OrderStatus;
 import sd_009.bookstore.service.receipt.ReceiptService;
 
 import java.util.List;
@@ -37,27 +36,30 @@ public class ReceiptController {
                                               @RequestParam(name = "e") Boolean enabled,
                                               @RequestParam int page,
                                               @RequestParam int limit,
-                                              @RequestParam(required = false) List<String> sort) {
+                                              @RequestParam(required = false, defaultValue = "") List<String> sort) {
         if (keyword == null) {
             keyword = "";
         }
 
         Sort sortInstance = Sort.unsorted();
 
-        for (String query : sort) {
-            String[] queries = query.split(";");
-            String field = queries[0];
-            String order = queries[1];
+        if (sort != null && !sort.isEmpty()) {
+            for (String query : sort) {
+                String[] queries = query.split(";");
+                String field = queries[0];
+                String order = queries.length > 1 ? queries[1] : "asc";
 
-            if (order.equals("asc")) {
-                sortInstance = sortInstance.and(Sort.by(field));
-            } else {
-                sortInstance = sortInstance.and(Sort.by(field).descending());
+                sortInstance = order.equalsIgnoreCase("asc")
+                        ? sortInstance.and(Sort.by(field))
+                        : sortInstance.and(Sort.by(field).descending());
             }
-
+        } else {
+            sortInstance = Sort.by("updatedAt").descending();
         }
+
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(receiptService.find(enabled, keyword, PageRequest.of(page, limit).withSort(sortInstance)));
     }
+
     @Operation(
             summary = "Get receipts for list view (FE)",
             responses = @ApiResponse(
@@ -122,6 +124,7 @@ public class ReceiptController {
     public ResponseEntity<Object> createReceipt(@RequestBody String json) {
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.valueOf(contentType)).body(receiptService.save(json));
     }
+
     @Operation(
             summary = "Create a new receipt",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(

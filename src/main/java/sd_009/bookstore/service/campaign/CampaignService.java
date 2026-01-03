@@ -47,8 +47,24 @@ public class CampaignService {
         return getListAdapter().toJson(doc);
     }
 
+    @Transactional
+    public String findActive() {
+        List<Campaign> list = campaignRepository.findAllByEnabled(true, Sort.by("updatedAt").descending());
+
+        List<Campaign> filterList = list.stream().filter(e -> e.getEndDate().isAfter(LocalDateTime.now())).toList();
+        List<CampaignDto> dtos = filterList.stream().map(campaignMapper::toDto).toList();
+
+        Document<List<CampaignDto>> doc = Document.with(dtos)
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_CAMPAIGNS))
+                        .build().toMap()))
+                .build();
+
+        return getListAdapter().toJson(doc);
+    }
+
     // 🔹 Lấy campaign theo ID
-    @Transactional(readOnly = true)
+    @Transactional
     public String findById(Long id) {
         Campaign found = campaignRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Campaign not found"));

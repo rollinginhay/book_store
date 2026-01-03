@@ -147,6 +147,11 @@
             <version>4.0.1</version> <!-- hoặc phiên bản mới hơn -->
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

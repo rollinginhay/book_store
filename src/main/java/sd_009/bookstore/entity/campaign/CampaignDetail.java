@@ -18,9 +18,14 @@ public class CampaignDetail extends AuditableEntity {
 
     @ManyToOne
     private Campaign campaign;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.EAGER)
     private BookDetail bookDetail;
 
     private Double value;
+
+    @Transient
+    public String getBookDetailId() {
+        return bookDetail != null ? String.valueOf(bookDetail.getId()) : null;
+    }
 }

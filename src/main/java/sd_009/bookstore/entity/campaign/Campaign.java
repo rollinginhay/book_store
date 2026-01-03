@@ -34,7 +34,7 @@ public class Campaign extends AuditableEntity {
 
     private Double maxDiscount;
 
-    @OneToMany(mappedBy = "campaign", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "campaign", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     private List<CampaignDetail> campaignDetails;
 
 }
