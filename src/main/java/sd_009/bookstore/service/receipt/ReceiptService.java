@@ -207,21 +207,21 @@ public class ReceiptService {
                     try {
                         JsonNode attributes = detailNode.path("attributes");
                         JsonNode bookDetailRel = detailNode.path("relationships").path("bookDetail").path("data");
-                        
+
                         if (!bookDetailRel.isMissingNode() && bookDetailRel.has("id")) {
                             String bookDetailId = bookDetailRel.path("id").asText();
                             BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailId))
                                     .orElseThrow(() -> new RuntimeException("BookDetail not found: " + bookDetailId));
-                            
+
                             Long pricePerUnit = attributes.path("pricePerUnit").asLong(0);
                             Long quantity = attributes.path("quantity").asLong(1);
-                            
+
                             ReceiptDetail receiptDetail = new ReceiptDetail();
                             receiptDetail.setBookCopy(bookDetail);
                             receiptDetail.setPricePerUnit(pricePerUnit);
                             receiptDetail.setQuantity(quantity);
                             receiptDetail.setId(null); // Để DB tự sinh ID
-                            
+
                             receiptDetailsFromJson.add(receiptDetail);
                         }
                     } catch (Exception e) {
@@ -240,17 +240,17 @@ public class ReceiptService {
         // SAVE RECEIPT DETAILS (TỪ buildEntityWithRelationships HOẶC TỪ JSON)
         //------------------------------------------
         List<ReceiptDetail> allReceiptDetails = new java.util.ArrayList<>();
-        
+
         // Lấy từ buildEntityWithRelationships (nếu có)
         if (receipt.getReceiptDetails() != null && !receipt.getReceiptDetails().isEmpty()) {
             allReceiptDetails.addAll(receipt.getReceiptDetails());
         }
-        
+
         // Thêm từ JSON relationships (nếu có)
         if (!receiptDetailsFromJson.isEmpty()) {
             allReceiptDetails.addAll(receiptDetailsFromJson);
         }
-        
+
         // Lưu tất cả receiptDetails
         if (!allReceiptDetails.isEmpty()) {
             allReceiptDetails.forEach(rd -> rd.setReceipt(savedReceipt));
@@ -343,7 +343,6 @@ public class ReceiptService {
         }
 
 
-
         return getSingleAdapter().toJson(
                 Document.with(receiptMapper.toDto(finalReceipt))
                         .links(Links.from(JsonApiLinksObject.builder()
@@ -380,7 +379,12 @@ public class ReceiptService {
         receiptDetails.forEach(e -> {
             ReceiptDetailDto receiptDetailDto = dto.getReceiptDetails().stream().filter(rdDto -> e.getId().toString().equals(rdDto.getId())).findFirst().get();
             BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(receiptDetailDto.getBookCopy().getId())).orElseThrow();
-            e.setBookCopy(bookDetail);
+            if (bookDetail.getStock() < e.getQuantity()) {
+                throw new BadRequestException("Đơn hàng đặt sách quá số lượng tồn");
+            }
+            bookDetail.setStock(bookDetail.getStock() - e.getQuantity());
+            BookDetail updatedBookDetail = bookDetailRepository.save(bookDetail);
+            e.setBookCopy(updatedBookDetail);
         });
         receiptDetails.forEach(e -> e.setId(null));
 
@@ -501,7 +505,8 @@ public class ReceiptService {
 
         // 2. Tạo Receipt entity từ DTO
         Receipt receipt = receiptMapper.toEntity(dto);
-        if (receipt.getId() != null && receipt.getId() == 0) receipt.setId(null);
+        if (receipt.getId() != null && receipt.getId() == 0)
+            receipt.setId(null);
 
         // 3. Xử lý customer & employee
         User customer = null;
@@ -653,6 +658,7 @@ public class ReceiptService {
                     throw new BadRequestException("Unsupported relationship type");
         }
     }
+
     @Transactional
     public Receipt updateOrderStatus(
             Long receiptId,
