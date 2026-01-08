@@ -124,6 +124,7 @@ public enum Routes {
     // ===================== USER =====================
     public static final String GET_USERS = "/v1/users";
     public static final String GET_USER_BY_ID = "/v1/user/{id}";
+    public static final String GET_USER_ME = "/v1/users/me";
     public static final String POST_USER_CREATE = "/v1/user/create";
     public static final String PUT_USER_UPDATE = "/v1/user/update";
     public static final String DELETE_USER_DELETE = "/v1/user/{id}";

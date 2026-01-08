@@ -60,11 +60,17 @@ public class AuthService {
             throw new BadRequestException("Email already exists");
         }
 
+        // Xử lý phoneNumber: nếu null hoặc empty thì set null
+        String phoneNumber = registerRequest.phoneNumber();
+        if (phoneNumber != null && phoneNumber.trim().isEmpty()) {
+            phoneNumber = null;
+        }
+
         User newUser = User.builder()
                 .email(registerRequest.email())
                 .username(registerRequest.email().split("@")[0])
                 .password(passwordEncoder.encode(registerRequest.password()))
-                .phoneNumber(registerRequest.phoneNumber())
+                .phoneNumber(phoneNumber)
                 .roles(List.of(roleRepository.findByName(RoleType.ROLE_USER.name()).get()))
                 .build();
 

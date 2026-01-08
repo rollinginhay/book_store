@@ -21,6 +21,7 @@ import sd_009.bookstore.repository.UserRepository;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.user.RoleMapper;
 import sd_009.bookstore.util.mapper.user.UserMapper;
+import sd_009.bookstore.util.security.SecurityUtils;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.time.Instant;
@@ -69,6 +70,23 @@ public class UserService {
         Document<UserDto> doc = Document.with(dto)
                 .links(Links.from(JsonApiLinksObject.builder()
                         .self(LinkMapper.toLink(Routes.GET_USER_BY_ID, id))
+                        .build().toMap()))
+                .build();
+
+        return getSingleAdapter().toJson(doc);
+    }
+
+    // ===============================================================
+    // 🔹 Lấy user hiện tại từ token
+    // ===============================================================
+    @Transactional(readOnly = true)
+    public String findCurrentUser(sd_009.bookstore.util.security.SecurityUtils securityUtils) {
+        User user = securityUtils.getCurrentUser();
+        UserDto dto = userMapper.toDto(user);
+
+        Document<UserDto> doc = Document.with(dto)
+                .links(Links.from(JsonApiLinksObject.builder()
+                        .self(LinkMapper.toLink(Routes.GET_USER_ME))
                         .build().toMap()))
                 .build();
 
@@ -197,7 +215,7 @@ public class UserService {
     // 🔹 Cập nhật user
     // ===============================================================
     @Transactional
-    public String update(String json) {
+    public String update(String json, SecurityUtils securityUtils) {
         UserDto dto;
         try {
             dto = jsonApiValidator.readAndValidate(json, UserDto.class);
@@ -210,12 +228,13 @@ public class UserService {
             throw new BadRequestException("Lỗi parse JSON: " + e.getMessage());
         }
         
-        // Validate ID
-        if (dto.getId() == null || dto.getId().equals("0")) {
-            throw new BadRequestException("ID user không hợp lệ");
+        // Lấy userId từ token thay vì từ DTO
+        Long userId = securityUtils.getCurrentUserId();
+        
+        // Validate: nếu DTO có ID, phải khớp với userId từ token
+        if (dto.getId() != null && !dto.getId().equals("0") && !dto.getId().equals(String.valueOf(userId))) {
+            throw new BadRequestException("Không được cập nhật thông tin của user khác");
         }
-
-        Long userId = Long.valueOf(dto.getId());
         User existing = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User không tồn tại"));
 

@@ -39,8 +39,10 @@ public class ReceiptResponseDto {
 
     private String customerName;
     private String customerPhone;
+    private String note;
 
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @ToOne(name = "paymentDetail")
     private PaymentDetailDto paymentDetail;

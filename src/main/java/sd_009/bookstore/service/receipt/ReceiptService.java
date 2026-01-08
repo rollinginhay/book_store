@@ -31,6 +31,7 @@ import sd_009.bookstore.util.mapper.receipt.PaymentDetailMapper;
 import sd_009.bookstore.util.mapper.receipt.ReceiptDetailMapper;
 import sd_009.bookstore.util.mapper.receipt.ReceiptMapper;
 import sd_009.bookstore.util.mapper.receipt.ReceiptResponseMapper;
+import sd_009.bookstore.util.security.SecurityUtils;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.time.LocalDateTime;
@@ -56,6 +57,7 @@ public class ReceiptService {
     private final CartDetailRepository cartDetailRepository;
     private final ObjectMapper objectMapper;
     private final EmailService emailService;
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public String find(Boolean enabled, String titleQuery, Pageable pageable) {
@@ -162,7 +164,16 @@ public class ReceiptService {
         Receipt receipt = buildEntityWithRelationships1(json);
 
         //------------------------------------------
-        // LẤY CUSTOMER_ID & EMPLOYEE_ID TỪ JSON
+        // LẤY CUSTOMER_ID TỪ TOKEN (KHÔNG TỪ JSON)
+        //------------------------------------------
+        // Lấy userId từ token thay vì từ JSON để đảm bảo security
+        Long userId = securityUtils.getCurrentUserId();
+        User customer = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        receipt.setCustomer(customer);
+
+        //------------------------------------------
+        // LẤY EMPLOYEE_ID TỪ JSON (nếu có)
         //------------------------------------------
         JsonNode root;
         try {
@@ -172,16 +183,6 @@ public class ReceiptService {
         }
 
         JsonNode relationships = root.path("data").path("relationships");
-
-        // CUSTOMER
-        if (relationships.has("customer")) {
-            String customerId = relationships
-                    .path("customer").path("data").path("id").asText();
-
-            User customer = userRepository.findById(Long.valueOf(customerId))
-                    .orElseThrow(() -> new RuntimeException("Customer not found"));
-            receipt.setCustomer(customer);
-        }
 
         // EMPLOYEE
         if (relationships.has("employee") && !relationships.path("employee").path("data").isMissingNode()) {
@@ -376,8 +377,26 @@ public class ReceiptService {
 
     @Transactional
     public String update(String json) {
-        Receipt receipt = buildEntityWithRelationships(json);
-
+        ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
+        Receipt receipt;
+        
+        // Nếu có id, load receipt hiện tại từ DB và chỉ update field note (partial update)
+        if (dto.getId() != null && !dto.getId().isEmpty()) {
+            Long receiptId = Long.valueOf(dto.getId());
+            Receipt existingReceipt = receiptRepository.findWithDetailsById(receiptId)
+                    .orElseThrow(() -> new BadRequestException("Receipt not found: " + receiptId));
+            
+            // Chỉ update field note nếu có trong DTO (giữ nguyên tất cả các field khác)
+            if (dto.getNote() != null) {
+                existingReceipt.setNote(dto.getNote());
+            }
+            
+            receipt = existingReceipt;
+        } else {
+            // Nếu không có id, tạo mới (giữ nguyên logic cũ)
+            receipt = buildEntityWithRelationships(json);
+        }
+        
         Receipt saved = receiptRepository.save(receipt);
         return getSingleAdapter().toJson(Document
                 .with(receiptMapper.toDto(saved))
