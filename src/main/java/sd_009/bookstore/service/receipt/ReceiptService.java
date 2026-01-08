@@ -440,12 +440,14 @@ public class ReceiptService {
                     .mapToDouble(e -> e.getPricePerUnit() * e.getQuantity())
                     .sum();
 
-            Double taxRate = 8D;
+            // Bỏ VAT - không dùng nữa
+            Double taxRate = 0D;
             Double serviceCost = 0D;
 
             if (receipt.getHasShipping()) serviceCost += 30000;
 
-            Double grandTotal = (subtotal - dto.getDiscount()) * (100 + taxRate) / 100 + serviceCost;
+            // Công thức mới: grandTotal = subtotal - discount + serviceCost (không có VAT)
+            Double grandTotal = subtotal - dto.getDiscount() + serviceCost;
 
             receipt.setTax(taxRate);
             receipt.setSubTotal(subtotal);
@@ -600,9 +602,11 @@ public class ReceiptService {
         double subtotal = receiptDetails.stream()
                 .mapToDouble(e -> e.getPricePerUnit() * e.getQuantity())
                 .sum();
-        double taxRate = 8D;
+        // Bỏ VAT - không dùng nữa
+        double taxRate = 0D;
         double serviceCost = receipt.getHasShipping() ? 30000 : 0;
-        double grandTotal = (subtotal - dto.getDiscount()) * (100 + taxRate) / 100 + serviceCost;
+        // Công thức mới: grandTotal = subtotal - discount + serviceCost (không có VAT)
+        double grandTotal = subtotal - dto.getDiscount() + serviceCost;
 
         receipt.setSubTotal(subtotal);
         receipt.setTax(taxRate);
