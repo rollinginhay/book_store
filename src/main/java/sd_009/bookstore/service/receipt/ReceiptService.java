@@ -255,6 +255,27 @@ public class ReceiptService {
         if (!allReceiptDetails.isEmpty()) {
             allReceiptDetails.forEach(rd -> rd.setReceipt(savedReceipt));
             receiptDetailRepository.saveAll(allReceiptDetails);
+            
+            //------------------------------------------
+            // ✅ TRỪ STOCK SAU KHI ĐẶT HÀNG THÀNH CÔNG
+            //------------------------------------------
+            for (ReceiptDetail rd : allReceiptDetails) {
+                if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                    BookDetail bookDetail = rd.getBookCopy();
+                    Long currentStock = bookDetail.getStock();
+                    if (currentStock != null && currentStock >= rd.getQuantity()) {
+                        // Trừ stock
+                        bookDetail.setStock(currentStock - rd.getQuantity());
+                        bookDetailRepository.save(bookDetail);
+                        System.out.println("✅ [ReceiptService] Đã trừ stock: BookDetail " + bookDetail.getId() + 
+                            " - Stock cũ: " + currentStock + ", Số lượng mua: " + rd.getQuantity() + 
+                            ", Stock mới: " + bookDetail.getStock());
+                    } else {
+                        System.out.println("⚠️ [ReceiptService] Không đủ stock: BookDetail " + bookDetail.getId() + 
+                            " - Stock hiện tại: " + currentStock + ", Số lượng mua: " + rd.getQuantity());
+                    }
+                }
+            }
         }
 
         //------------------------------------------

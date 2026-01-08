@@ -112,6 +112,7 @@ public enum Routes {
     public static final String PUT_CAMPAIGN_DETAIL_UPDATE = "/v1/campaignDetail/update";
     public static final String DELETE_CAMPAIGN_DETAIL_DELETE = "/v1/campaignDetail/{id}";
     public static final String MULTI_CAMPAIGN_RELATIONSHIP_CAMPAIGN_DETAIL = "/v1/campaign/{id}/relationships/campaignDetail";
+    public static final String GET_COMBO_BY_BOOK_DETAIL_ID = "/v1/campaigns/combo";
 
     // ===================== VOUCHER =====================
     public static final String GET_VOUCHERS = "/v1/vouchers";

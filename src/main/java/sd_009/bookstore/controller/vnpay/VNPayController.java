@@ -1,10 +1,13 @@
 package sd_009.bookstore.controller.vnpay;
 
+import jakarta.transaction.Transactional;
 import org.springframework.web.bind.annotation.*;
+import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.entity.receipt.OrderStatus;
 import sd_009.bookstore.entity.receipt.PaymentDetail;
 import sd_009.bookstore.entity.receipt.PaymentType;
 import sd_009.bookstore.entity.receipt.Receipt;
+import sd_009.bookstore.repository.BookDetailRepository;
 import sd_009.bookstore.repository.PaymentDetailRepository;
 import sd_009.bookstore.repository.ReceiptRepository;
 
@@ -19,13 +22,16 @@ public class VNPayController {
     private final VNPayService vnPayService;
     private final ReceiptRepository receiptRepository;
     private final PaymentDetailRepository paymentDetailRepository;
+    private final BookDetailRepository bookDetailRepository;
 
     public VNPayController(VNPayService vnPayService,
                            ReceiptRepository receiptRepository,
-                           PaymentDetailRepository paymentDetailRepository) {
+                           PaymentDetailRepository paymentDetailRepository,
+                           BookDetailRepository bookDetailRepository) {
         this.vnPayService = vnPayService;
         this.receiptRepository = receiptRepository;
         this.paymentDetailRepository = paymentDetailRepository;
+        this.bookDetailRepository = bookDetailRepository;
     }
 
     @PostMapping("/pay-receipt/{id}")
@@ -36,62 +42,78 @@ public class VNPayController {
 
         return Map.of("status", "success", "paymentUrl", paymentUrl);
     }
-@GetMapping("/return")
-public String paymentReturn(
-        @RequestParam Map<String, String> params,
-        @RequestParam("receiptId") Long receiptId,
-        @RequestParam("txnRef") String txnRef
-) {
+    @GetMapping("/return")
+    @Transactional
+    public String paymentReturn(
+            @RequestParam Map<String, String> params,
+            @RequestParam("receiptId") Long receiptId,
+            @RequestParam("txnRef") String txnRef
+    ) {
 
-    System.out.println("==== CALLBACK VNPay ====");
-    System.out.println("Params: " + params);
-    System.out.println("ReceiptId: " + receiptId + ", TxnRef: " + txnRef);
+        Map<String, String> vnpParams = new HashMap<>();
+        params.forEach((k, v) -> {
+            if (k.startsWith("vnp_")) vnpParams.put(k, v);
+        });
 
-    Map<String, String> vnpParams = new HashMap<>();
-    for (Map.Entry<String, String> entry : params.entrySet()) {
-        if (entry.getKey().startsWith("vnp_")) {
-            vnpParams.put(entry.getKey(), entry.getValue());
+        int verify = vnPayService.verifyReturn(vnpParams);
+
+        if (verify == -1) {
+            return "Sai chữ ký!";
         }
-    }
 
-    int verify = vnPayService.verifyReturn(vnpParams);
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
-    System.out.println("Verify result = " + verify);
-    // 1️⃣ Verify chữ ký
-    if (verify == -1) {
-        return "Sai chữ ký âcccccc!";
-    }
+        PaymentDetail payment =
+                paymentDetailRepository.findByProviderId(txnRef);
 
+        if (payment == null) {
+            payment = new PaymentDetail();
+            payment.setProviderId(txnRef);
+            payment.setProvider("VNPAY");
+            payment.setReceipt(receipt);
+            payment.setId(receipt.getPaymentDetail().getId());
+            payment.setPaymentType(PaymentType.TRANSFER);
+        }
 
-    // 2️⃣ Lấy receipt
-    Receipt receipt = receiptRepository.findById(receiptId).orElse(null);
-    if (receipt == null) return "Không tìm thấy hóa đơn";
+        // ❌ Thanh toán thất bại
+        if (verify != 1) {
+            receipt.setOrderStatus(OrderStatus.FAILED);
+            receiptRepository.save(receipt);
+            return "Thanh toán thất bại!";
+        }
 
-    // 3️⃣ Lấy hoặc tạo PaymentDetail
-    PaymentDetail payment = paymentDetailRepository.findByProviderId(txnRef);
-    if (payment == null) {
-        payment = new PaymentDetail();
-        payment.setProviderId(txnRef);
-        payment.setProvider("VNPAY");
-        payment.setReceipt(receipt);
-        payment.setId(receipt.getPaymentDetail().getId());
-        payment.setPaymentType(PaymentType.TRANSFER);
-    }
+        // 🛑 Chống callback trùng
+        if (receipt.getOrderStatus() == OrderStatus.PAID) {
+            return "Đơn hàng đã được xử lý";
+        }
 
-    // 4️⃣ Xử lý trạng thái
-    if (verify == 1) {
+        // 🔥 TRỪ KHO book_detail.stock
+        receipt.getReceiptDetails().forEach(rd -> {
+            BookDetail bookDetail = rd.getBookCopy();
+
+            if (bookDetail.getStock() < rd.getQuantity()) {
+                throw new RuntimeException(
+                        "Không đủ tồn kho cho BookDetail ID = " + bookDetail.getId()
+                );
+            }
+
+            bookDetail.setStock(
+                    bookDetail.getStock() - rd.getQuantity()
+            );
+
+            bookDetailRepository.save(bookDetail);
+        });
+
+        // ✅ Update trạng thái đơn
         receipt.setOrderStatus(OrderStatus.PAID);
         receipt.setPaymentDate(LocalDateTime.now());
-        payment.setAmount(receipt.getGrandTotal());
 
+        payment.setAmount(receipt.getGrandTotal());
         paymentDetailRepository.save(payment);
+
         receiptRepository.save(receipt);
 
         return "Thanh toán thành công!";
-    } else {
-        receipt.setOrderStatus(OrderStatus.FAILED);
-        receiptRepository.save(receipt);
-        return "Thanh toán thất bại!";
     }
-}
 }

@@ -140,4 +140,16 @@ public class CampaignController {
         return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(campaignService.findActive());
     }
 
+    // 🔹 Lấy combo campaigns theo bookDetailId (hiển thị trên web)
+    @Operation(
+            summary = "Get combo campaigns by bookDetailId",
+            description = "Lấy danh sách các combo campaigns chứa sách có bookDetailId này."
+    )
+    @GetMapping(Routes.GET_COMBO_BY_BOOK_DETAIL_ID)
+    public ResponseEntity<Object> getCombosByBookDetailId(@RequestParam Long bookDetailId) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(contentType))
+                .body(campaignService.findCombosByBookDetailId(bookDetailId));
+    }
+
 }
