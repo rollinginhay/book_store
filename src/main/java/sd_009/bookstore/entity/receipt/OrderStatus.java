@@ -6,7 +6,7 @@ public enum OrderStatus {
     AUTHORIZED("Đã xác nhận"),
     IN_TRANSIT("Đang vận chuyển"),
     PAID("Đã hoàn thành"),
-    FAILED("Thanh toán thất bại"),
+    FAILED("Giao thất bại"),
     REFUNDED("Đã hoàn tiền"),
     CANCELLED("Đã hủy");
 
