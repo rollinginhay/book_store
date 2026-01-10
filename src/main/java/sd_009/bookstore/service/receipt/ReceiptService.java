@@ -401,6 +401,10 @@ public class ReceiptService {
                     .sum();
 
             Double taxRate = 8D;
+            //forgoes tax on direct orders
+            if (dto.getOrderType() == OrderType.DIRECT) {
+                taxRate = 0D;
+            }
             Double serviceCost = 0D;
 
             if (receipt.getHasShipping()) serviceCost += 30000;
