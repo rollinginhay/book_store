@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +19,9 @@ import sd_009.bookstore.service.auth.JwtService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
@@ -37,18 +40,32 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
         if (jwtService.validateToken(token)) {
-            String email = jwtService.extractSubject(token);
+            try {
+                String email = jwtService.extractSubject(token);
+                log.debug("Extracted email from token: {}", email);
 
-            User user = userRepository.findByEmail(email).orElseThrow();
+                Optional<User> userOpt = userRepository.findByEmail(email);
+                if (userOpt.isEmpty()) {
+                    log.error("User not found with email from token: {}", email);
+                    // Không set authentication nếu user không tồn tại
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
-            List<String> roles = user.getRoles().stream().map(Role::getName).toList();
+                User user = userOpt.get();
+                List<String> roles = user.getRoles().stream().map(Role::getName).toList();
 
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, null, roles.stream().map(SimpleGrantedAuthority::new).toList());
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, null, roles.stream().map(SimpleGrantedAuthority::new).toList());
 
-            authToken.setDetails(new WebAuthenticationDetails(request));
+                authToken.setDetails(new WebAuthenticationDetails(request));
 
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            filterChain.doFilter(request, response);
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+                log.debug("Authentication set for user: {}", email);
+            } catch (Exception e) {
+                log.error("Error processing JWT token: {}", e.getMessage(), e);
+                // Không set authentication nếu có lỗi
+            }
         }
+        filterChain.doFilter(request, response);
     }
 }

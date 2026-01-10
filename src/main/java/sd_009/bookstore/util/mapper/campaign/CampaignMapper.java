@@ -6,7 +6,8 @@ import sd_009.bookstore.entity.campaign.Campaign;
 
 @Mapper(
     unmappedTargetPolicy = ReportingPolicy.IGNORE,
-    componentModel = MappingConstants.ComponentModel.SPRING
+    componentModel = MappingConstants.ComponentModel.SPRING,
+    uses = {CampaignDetailMapper.class}
 )
 public interface CampaignMapper {
 

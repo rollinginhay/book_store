@@ -14,7 +14,6 @@ public record RegisterRequest(
         @ValidPassword(message = "Password must contain at least 8 characters, an uppercase character, a number, and a special character")
         String password,
 
-        @NotBlank(message = "Phone number is required")
         @ValidPhone(message = "Invalid phone number")
         String phoneNumber
 ) {

@@ -65,4 +65,7 @@ public class Receipt extends AuditableEntity {
     @OneToMany(mappedBy = "receipt", cascade = CascadeType.PERSIST)
     private List<ReceiptDetail> receiptDetails;
 
+    @OneToMany(mappedBy = "receipt", cascade = CascadeType.PERSIST)
+    private List<ReceiptHistory> receiptHistories;
+
 }

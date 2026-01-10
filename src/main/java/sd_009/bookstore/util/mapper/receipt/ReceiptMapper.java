@@ -20,7 +20,9 @@ public interface ReceiptMapper {
 
     @AfterMapping
     default void linkReceiptDetails(@MappingTarget Receipt receipt) {
-        receipt.getReceiptDetails().forEach(receiptDetail -> receiptDetail.setReceipt(receipt));
+        if (receipt.getReceiptDetails() != null) {
+            receipt.getReceiptDetails().forEach(receiptDetail -> receiptDetail.setReceipt(receipt));
+        }
     }
 
     ReceiptDto toDto(Receipt receipt);

@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.service.user.UserService;
+import sd_009.bookstore.util.security.SecurityUtils;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ public class UserController {
     private String contentType;
 
     private final UserService userService;
+    private final SecurityUtils securityUtils;
 
     // 🔹 Lấy toàn bộ user
     @Operation(
@@ -62,6 +64,26 @@ public class UserController {
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf(contentType))
                 .body(userService.findById(id));
+    }
+
+    // 🔹 Lấy user hiện tại từ token
+    @Operation(
+            summary = "Get current user",
+            description = "Lấy thông tin user hiện tại từ token.",
+            responses = @ApiResponse(
+                    responseCode = "200",
+                    description = "Success",
+                    content = @Content(examples = @ExampleObject(
+                            name = "Get current user resp",
+                            externalValue = "/jsonExample/user/get_user.json"
+                    ))
+            )
+    )
+    @GetMapping(Routes.GET_USER_ME)
+    public ResponseEntity<Object> getCurrentUser() {
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(contentType))
+                .body(userService.findCurrentUser(securityUtils));
     }
 
     // 🔹 Tạo user mới
@@ -109,7 +131,7 @@ public class UserController {
     public ResponseEntity<Object> updateUser(@RequestBody String json) {
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf(contentType))
-                .body(userService.update(json));
+                .body(userService.update(json, securityUtils));
     }
 
     // 🔹 Xoá mềm user

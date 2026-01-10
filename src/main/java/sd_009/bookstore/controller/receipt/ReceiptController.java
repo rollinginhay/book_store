@@ -230,4 +230,14 @@ public class ReceiptController {
 
     }
 
+    @Operation(summary = "Get receipt history (timeline)")
+    @GetMapping("/v1/receipt/{id}/history")
+    public ResponseEntity<Object> getReceiptHistory(@PathVariable Long id) {
+        List<sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptHistoryDto> history = receiptService.getReceiptHistoryDto(id);
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(history);
+    }
+
 }

@@ -119,6 +119,28 @@ public class CartDetailService {
         BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(dto.getBookDetailId()))
                 .orElseThrow();
 
+        // ===============================================================
+        // 🔐 KIỂM TRA TỒN KHO THEO GIỎ HÀNG CỦA USER
+        // - Mỗi user không được có số dòng cartDetail cho cùng 1 BookDetail
+        //   vượt quá stock hiện tại (đáp ứng rule: giỏ không vượt tồn kho)
+        // - FE đang tạo từng dòng cartDetail với quantity = 1,
+        //   nên có thể xem mỗi dòng = 1 đơn vị sách.
+        // ===============================================================
+        Long currentStock = bookDetail.getStock() == null ? 0L : bookDetail.getStock();
+        if (currentStock <= 0) {
+            throw new BadRequestException("Sản phẩm đã hết hàng, không thể thêm vào giỏ.");
+        }
+
+        // Lấy tất cả cartDetail đang enabled của user cho cùng BookDetail
+        List<CartDetail> existingDetails =
+                cartDetailRepository.findByUserAndBookDetailAndEnabled(user, bookDetail, true);
+
+        long currentInCart = existingDetails.size();
+        if (currentInCart >= currentStock) {
+            // Giỏ của user đã "đụng trần" tồn kho cho cuốn này
+            throw new BadRequestException("Số lượng sách trong giỏ đã bằng tồn kho, không thể thêm nữa.");
+        }
+
         CartDetail entity = cartDetailMapper.toEntity(dto);
         entity.setUser(user);
         entity.setBookDetail(bookDetail);

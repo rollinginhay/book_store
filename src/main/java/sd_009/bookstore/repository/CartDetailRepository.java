@@ -22,5 +22,8 @@ public interface CartDetailRepository extends JpaRepository<CartDetail, Long>, J
     // Lấy giỏ hàng đang hoạt động (enabled = true)
     List<CartDetail> findByUserAndEnabled(User user, Boolean enabled);
 
+    // Lấy toàn bộ cartDetail theo user + bookDetail + enabled (để check tồn kho theo giỏ)
+    List<CartDetail> findByUserAndBookDetailAndEnabled(User user, BookDetail bookDetail, Boolean enabled);
+
 
 }

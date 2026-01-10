@@ -21,6 +21,7 @@ import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptDto;
 import sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptResponseDto;
 import sd_009.bookstore.entity.book.BookDetail;
 import sd_009.bookstore.entity.receipt.*;
+import sd_009.bookstore.entity.receipt.ReceiptHistory;
 import sd_009.bookstore.entity.user.User;
 import sd_009.bookstore.repository.*;
 import sd_009.bookstore.service.mail.EmailBuilder;
@@ -31,6 +32,7 @@ import sd_009.bookstore.util.mapper.receipt.PaymentDetailMapper;
 import sd_009.bookstore.util.mapper.receipt.ReceiptDetailMapper;
 import sd_009.bookstore.util.mapper.receipt.ReceiptMapper;
 import sd_009.bookstore.util.mapper.receipt.ReceiptResponseMapper;
+import sd_009.bookstore.util.security.SecurityUtils;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
 
 import java.time.LocalDateTime;
@@ -54,8 +56,10 @@ public class ReceiptService {
     private final UserRepository userRepository;
     private final BookDetailRepository bookDetailRepository;
     private final CartDetailRepository cartDetailRepository;
+    private final ReceiptHistoryRepository receiptHistoryRepository;
     private final ObjectMapper objectMapper;
     private final EmailService emailService;
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public String find(Boolean enabled, String titleQuery, Pageable pageable) {
@@ -147,6 +151,12 @@ public class ReceiptService {
         paymentDetailRepository.save(receipt.getPaymentDetail());
         receipt.setPaymentDate(LocalDateTime.now());
         Receipt saved = receiptRepository.save(receipt);
+        
+        // ✅ GHI LỊCH SỬ: Tạo đơn POS → PAID (từ null → PAID)
+        if (saved.getOrderStatus() != null) {
+            changeStatus(saved, saved.getOrderStatus(), null, "System");
+        }
+        
         return getSingleAdapter().toJson(Document
                 .with(receiptMapper.toDto(saved))
                 .links(Links.from(JsonApiLinksObject.builder()
@@ -162,7 +172,16 @@ public class ReceiptService {
         Receipt receipt = buildEntityWithRelationships1(json);
 
         //------------------------------------------
-        // LẤY CUSTOMER_ID & EMPLOYEE_ID TỪ JSON
+        // LẤY CUSTOMER_ID TỪ TOKEN (KHÔNG TỪ JSON)
+        //------------------------------------------
+        // Lấy userId từ token thay vì từ JSON để đảm bảo security
+        Long userId = securityUtils.getCurrentUserId();
+        User customer = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        receipt.setCustomer(customer);
+
+        //------------------------------------------
+        // LẤY EMPLOYEE_ID TỪ JSON (nếu có)
         //------------------------------------------
         JsonNode root;
         try {
@@ -172,16 +191,6 @@ public class ReceiptService {
         }
 
         JsonNode relationships = root.path("data").path("relationships");
-
-        // CUSTOMER
-        if (relationships.has("customer")) {
-            String customerId = relationships
-                    .path("customer").path("data").path("id").asText();
-
-            User customer = userRepository.findById(Long.valueOf(customerId))
-                    .orElseThrow(() -> new RuntimeException("Customer not found"));
-            receipt.setCustomer(customer);
-        }
 
         // EMPLOYEE
         if (relationships.has("employee") && !relationships.path("employee").path("data").isMissingNode()) {
@@ -253,8 +262,55 @@ public class ReceiptService {
 
         // Lưu tất cả receiptDetails
         if (!allReceiptDetails.isEmpty()) {
+
+            //------------------------------------------
+            // ✅ CHECK TỒN KHO TRƯỚC KHI TRỪ STOCK
+            // - Đảm bảo case: 2 người cùng mua, người thanh toán sau sẽ bị báo hết hàng
+            //------------------------------------------
+            for (ReceiptDetail rd : allReceiptDetails) {
+                if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                    // Luôn đọc stock mới nhất từ DB
+                    BookDetail freshBookDetail = bookDetailRepository
+                            .findById(rd.getBookCopy().getId())
+                            .orElseThrow(() -> new BadRequestException("BookDetail not found: " + rd.getBookCopy().getId()));
+                    Long currentStock = freshBookDetail.getStock();
+                    if (currentStock == null || currentStock < rd.getQuantity()) {
+                        throw new BadRequestException("Sản phẩm đã hết hàng do có người khác vừa mua trước bạn.");
+                    }
+                }
+            }
+
+            // Nếu qua được vòng check trên thì mới set receipt & lưu chi tiết
             allReceiptDetails.forEach(rd -> rd.setReceipt(savedReceipt));
             receiptDetailRepository.saveAll(allReceiptDetails);
+            
+            //------------------------------------------
+            // ✅ TRỪ STOCK NGAY NẾU ĐƠN ONLINE CHUYỂN KHOẢN (AUTHORIZED)
+            // - ONLINE COD (PENDING): KHÔNG trừ stock, chờ xác nhận
+            // - ONLINE Chuyển khoản (AUTHORIZED): TRỪ stock ngay
+            //------------------------------------------
+            if (receipt.getOrderStatus() == OrderStatus.AUTHORIZED) {
+                // Đơn chuyển khoản: trừ stock ngay khi tạo
+                for (ReceiptDetail rd : allReceiptDetails) {
+                    if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                        // Luôn đọc stock mới nhất từ DB
+                        BookDetail freshBookDetail = bookDetailRepository
+                                .findById(rd.getBookCopy().getId())
+                                .orElseThrow(() -> new BadRequestException("BookDetail not found: " + rd.getBookCopy().getId()));
+                        Long currentStock = freshBookDetail.getStock();
+                        if (currentStock == null || currentStock < rd.getQuantity()) {
+                            throw new BadRequestException("Sản phẩm đã hết hàng do có người khác vừa mua trước bạn.");
+                        }
+                        // Trừ stock
+                        freshBookDetail.setStock(currentStock - rd.getQuantity());
+                        bookDetailRepository.save(freshBookDetail);
+                        System.out.println("✅ [ReceiptService] Đã trừ stock khi tạo đơn chuyển khoản (AUTHORIZED): BookDetail " + freshBookDetail.getId() + 
+                            " - Stock cũ: " + currentStock + ", Số lượng trừ: " + rd.getQuantity() + 
+                            ", Stock mới: " + freshBookDetail.getStock());
+                    }
+                }
+            }
+            // ONLINE COD (PENDING): KHÔNG trừ stock ở đây, sẽ trừ khi chuyển sang AUTHORIZED
         }
 
         //------------------------------------------
@@ -263,6 +319,11 @@ public class ReceiptService {
         if (receipt.getPaymentDetail() != null) {
             receipt.getPaymentDetail().setReceipt(savedReceipt);
             paymentDetailRepository.save(receipt.getPaymentDetail());
+        }
+
+        // ✅ GHI LỊCH SỬ: Tạo đơn ONLINE → PENDING hoặc AUTHORIZED (từ null → status)
+        if (savedReceipt.getOrderStatus() != null) {
+            changeStatus(savedReceipt, savedReceipt.getOrderStatus(), null, "System");
         }
 
         //------------------------------------------
@@ -355,8 +416,26 @@ public class ReceiptService {
 
     @Transactional
     public String update(String json) {
-        Receipt receipt = buildEntityWithRelationships(json);
-
+        ReceiptDto dto = validator.readAndValidate(json, ReceiptDto.class);
+        Receipt receipt;
+        
+        // Nếu có id, load receipt hiện tại từ DB và chỉ update field note (partial update)
+        if (dto.getId() != null && !dto.getId().isEmpty()) {
+            Long receiptId = Long.valueOf(dto.getId());
+            Receipt existingReceipt = receiptRepository.findWithDetailsById(receiptId)
+                    .orElseThrow(() -> new BadRequestException("Receipt not found: " + receiptId));
+            
+            // Chỉ update field note nếu có trong DTO (giữ nguyên tất cả các field khác)
+            if (dto.getNote() != null) {
+                existingReceipt.setNote(dto.getNote());
+            }
+            
+            receipt = existingReceipt;
+        } else {
+            // Nếu không có id, tạo mới (giữ nguyên logic cũ)
+            receipt = buildEntityWithRelationships(json);
+        }
+        
         Receipt saved = receiptRepository.save(receipt);
         return getSingleAdapter().toJson(Document
                 .with(receiptMapper.toDto(saved))
@@ -376,15 +455,18 @@ public class ReceiptService {
                         .map(e -> receiptDetailMapper.toEntity(e))
                         .toList();
 
+        // ✅ Check tồn kho nhưng CHƯA trừ stock ở đây
+        // Stock sẽ được trừ sau khi set status:
+        // - POS: Trừ ngay khi tạo (vì status = PAID)
+        // - ONLINE: Không trừ ở đây, sẽ trừ sau
         receiptDetails.forEach(e -> {
             ReceiptDetailDto receiptDetailDto = dto.getReceiptDetails().stream().filter(rdDto -> e.getId().toString().equals(rdDto.getId())).findFirst().get();
             BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(receiptDetailDto.getBookCopy().getId())).orElseThrow();
             if (bookDetail.getStock() < e.getQuantity()) {
                 throw new BadRequestException("Đơn hàng đặt sách quá số lượng tồn");
             }
-            bookDetail.setStock(bookDetail.getStock() - e.getQuantity());
-            BookDetail updatedBookDetail = bookDetailRepository.save(bookDetail);
-            e.setBookCopy(updatedBookDetail);
+            // Chỉ set bookCopy, chưa trừ stock
+            e.setBookCopy(bookDetail);
         });
         receiptDetails.forEach(e -> e.setId(null));
 
@@ -400,16 +482,14 @@ public class ReceiptService {
                     .mapToDouble(e -> e.getPricePerUnit() * e.getQuantity())
                     .sum();
 
-            Double taxRate = 8D;
-            //forgoes tax on direct orders
-            if (dto.getOrderType() == OrderType.DIRECT) {
-                taxRate = 0D;
-            }
+            // Bỏ VAT - không dùng nữa
+            Double taxRate = 0D;
             Double serviceCost = 0D;
 
             if (receipt.getHasShipping()) serviceCost += 30000;
 
-            Double grandTotal = (subtotal - dto.getDiscount()) * (100 + taxRate) / 100 + serviceCost;
+            // Công thức mới: grandTotal = subtotal - discount + serviceCost (không có VAT)
+            Double grandTotal = subtotal - dto.getDiscount() + serviceCost;
 
             receipt.setTax(taxRate);
             receipt.setSubTotal(subtotal);
@@ -419,23 +499,43 @@ public class ReceiptService {
 
         }
         PaymentDetail paymentDetail = null;
-        if (dto.getOrderType() == OrderType.DIRECT && !dto.getHasShipping()) {
+        // ✅ Set status cho POS: Chỉ còn bán tại quầy (không ship), luôn PAID
+        if (dto.getOrderType() == OrderType.DIRECT) {
+            // POS: Luôn không ship, mua xong hoàn thành ngay
             paymentDetail = PaymentDetail.builder()
                     .amount(receipt.getGrandTotal())
-                    .paymentType(dto.getPaymentDetail().getPaymentType())
+                    .paymentType(dto.getPaymentDetail() != null 
+                        ? dto.getPaymentDetail().getPaymentType() 
+                        : PaymentType.CASH)
                     .receipt(receipt)
                     .build();
+            // ✅ POS: Luôn PAID (mua xong hoàn thành ngay, không qua trạng thái khác)
             receipt.setOrderStatus(OrderStatus.PAID);
-        }
-
-        if (dto.getOrderType() == OrderType.DIRECT && dto.getHasShipping()) {
+            // ✅ POS: Trừ số lượng ngay khi tạo (vì đã hoàn thành)
+            if (receiptDetails != null && !receiptDetails.isEmpty()) {
+                for (ReceiptDetail rd : receiptDetails) {
+                    if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                        BookDetail bookDetail = rd.getBookCopy();
+                        Long currentStock = bookDetail.getStock();
+                        if (currentStock == null || currentStock < rd.getQuantity()) {
+                            throw new BadRequestException("Sản phẩm đã hết hàng.");
+                        }
+                        bookDetail.setStock(currentStock - rd.getQuantity());
+                        bookDetailRepository.save(bookDetail);
+                    }
+                }
+            }
+        } else {
+            // ONLINE: Tạo paymentDetail nhưng không set status ở đây (sẽ set trong buildEntityWithRelationships1)
             paymentDetail = PaymentDetail.builder()
                     .amount(receipt.getGrandTotal())
-                    .paymentType(dto.getPaymentDetail().getPaymentType())
+                    .paymentType(dto.getPaymentDetail() != null 
+                        ? dto.getPaymentDetail().getPaymentType() 
+                        : PaymentType.CASH)
                     .receipt(receipt)
                     .build();
-            receipt.setOrderStatus(OrderStatus.IN_TRANSIT);
         }
+        
         receipt.setPaymentDetail(paymentDetail);
         receipt.setReceiptDetails(receiptDetails);
         receiptDetails.forEach(e -> e.setReceipt(receipt));
@@ -564,9 +664,11 @@ public class ReceiptService {
         double subtotal = receiptDetails.stream()
                 .mapToDouble(e -> e.getPricePerUnit() * e.getQuantity())
                 .sum();
-        double taxRate = 8D;
+        // Bỏ VAT - không dùng nữa
+        double taxRate = 0D;
         double serviceCost = receipt.getHasShipping() ? 30000 : 0;
-        double grandTotal = (subtotal - dto.getDiscount()) * (100 + taxRate) / 100 + serviceCost;
+        // Công thức mới: grandTotal = subtotal - discount + serviceCost (không có VAT)
+        double grandTotal = subtotal - dto.getDiscount() + serviceCost;
 
         receipt.setSubTotal(subtotal);
         receipt.setTax(taxRate);
@@ -586,7 +688,35 @@ public class ReceiptService {
                 .build();
         receipt.setPaymentDetail(paymentDetail);
 
-        // 7. Log cuối
+        // ✅ 7. Set status theo luồng mới:
+        // - POS (DIRECT, không ship): PAID luôn (mua xong hoàn thành ngay)
+        // - ONLINE COD (CASH): PENDING (chưa trừ số lượng, chờ xác nhận)
+        // - ONLINE Chuyển khoản (TRANSFER): AUTHORIZED (trừ số lượng luôn)
+        if (dto.getOrderType() == OrderType.DIRECT && !dto.getHasShipping()) {
+            // POS: Hoàn thành luôn
+            receipt.setOrderStatus(OrderStatus.PAID);
+        } else if (dto.getOrderType() == OrderType.ONLINE) {
+            // ONLINE: Phân biệt COD và Chuyển khoản
+            PaymentType paymentType = dto.getPaymentDetail() != null 
+                ? dto.getPaymentDetail().getPaymentType() 
+                : PaymentType.CASH;
+            
+            if (paymentType == PaymentType.CASH) {
+                // COD: PENDING (chưa trừ số lượng)
+                receipt.setOrderStatus(OrderStatus.PENDING);
+            } else if (paymentType == PaymentType.TRANSFER) {
+                // Chuyển khoản: AUTHORIZED (trừ số lượng luôn)
+                receipt.setOrderStatus(OrderStatus.AUTHORIZED);
+            } else {
+                // Fallback: PENDING
+                receipt.setOrderStatus(OrderStatus.PENDING);
+            }
+        } else {
+            // Fallback: PENDING
+            receipt.setOrderStatus(OrderStatus.PENDING);
+        }
+
+        // 8. Log cuối
         System.out.println("Final receipt entity created. Receipt id: " + receipt.getId());
         receiptDetails.forEach(rd -> {
             System.out.println("ReceiptDetail bookCopyId: " + (rd.getBookCopy() == null ? "null" : rd.getBookCopy().getId()));
@@ -677,9 +807,111 @@ public class ReceiptService {
                 ? oldStatusEnum.getDisplayName()
                 : "-";
 
+        // ✅ CẬP NHẬT TỒN KHO KHI THAY ĐỔI TRẠNG THÁI
+        List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceipt(receipt);
+        
+        //------------------------------------------
+        // ✅ TRỪ STOCK KHI CHUYỂN SANG AUTHORIZED (ĐÃ XÁC NHẬN)
+        //------------------------------------------
+        if (newStatus == OrderStatus.AUTHORIZED && oldStatusEnum == OrderStatus.PENDING) {
+            // Chỉ trừ stock khi chuyển từ PENDING sang AUTHORIZED
+            for (ReceiptDetail rd : receiptDetails) {
+                if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                    // Luôn đọc stock mới nhất từ DB
+                    BookDetail freshBookDetail = bookDetailRepository
+                            .findById(rd.getBookCopy().getId())
+                            .orElseThrow(() -> new BadRequestException("BookDetail not found: " + rd.getBookCopy().getId()));
+                    Long currentStock = freshBookDetail.getStock();
+                    if (currentStock == null || currentStock < rd.getQuantity()) {
+                        throw new BadRequestException("Sản phẩm đã hết hàng. Không thể xác nhận đơn hàng.");
+                    }
+                    freshBookDetail.setStock(currentStock - rd.getQuantity());
+                    bookDetailRepository.save(freshBookDetail);
+                    System.out.println("✅ [ReceiptService] Đã trừ stock khi xác nhận đơn (AUTHORIZED): BookDetail " + freshBookDetail.getId() + 
+                        " - Stock cũ: " + currentStock + ", Số lượng trừ: " + rd.getQuantity() + 
+                        ", Stock mới: " + freshBookDetail.getStock());
+                }
+            }
+        }
+        
+        // ✅ Nếu chuyển sang CANCELLED: restore tồn kho (cộng lại số lượng đã trừ)
+        // Restore nếu đã từng trừ stock:
+        // - POS: Đã trừ khi tạo (status = PAID)
+        // - ONLINE Chuyển khoản: Đã trừ khi tạo (status = AUTHORIZED)
+        // - ONLINE COD: Đã trừ khi chuyển PENDING → AUTHORIZED
+        if (newStatus == OrderStatus.CANCELLED && oldStatusEnum != OrderStatus.CANCELLED) {
+            // Restore nếu đã từng trừ stock (PAID, AUTHORIZED, IN_TRANSIT, FAILED)
+            if (oldStatusEnum == OrderStatus.PAID || 
+                oldStatusEnum == OrderStatus.AUTHORIZED || 
+                oldStatusEnum == OrderStatus.IN_TRANSIT ||
+                oldStatusEnum == OrderStatus.FAILED) {
+                for (ReceiptDetail rd : receiptDetails) {
+                    if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                        BookDetail bookDetail = bookDetailRepository
+                                .findById(rd.getBookCopy().getId())
+                                .orElseThrow(() -> new BadRequestException("BookDetail not found: " + rd.getBookCopy().getId()));
+                        Long currentStock = bookDetail.getStock();
+                        bookDetail.setStock(currentStock + rd.getQuantity());
+                        bookDetailRepository.save(bookDetail);
+                        System.out.println("✅ [ReceiptService] Đã restore stock khi hủy đơn: BookDetail " + bookDetail.getId() + 
+                            " - Stock cũ: " + currentStock + ", Số lượng restore: " + rd.getQuantity() + 
+                            ", Stock mới: " + bookDetail.getStock());
+                    }
+                }
+            }
+        }
+        // ✅ Nếu chuyển TỪ CANCELLED sang AUTHORIZED: trừ lại tồn kho
+        else if (oldStatusEnum == OrderStatus.CANCELLED && newStatus == OrderStatus.AUTHORIZED) {
+            // Khôi phục đơn từ CANCELLED → AUTHORIZED: cần trừ stock lại
+            for (ReceiptDetail rd : receiptDetails) {
+                if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                    // Luôn đọc stock mới nhất từ DB
+                    BookDetail freshBookDetail = bookDetailRepository
+                            .findById(rd.getBookCopy().getId())
+                            .orElseThrow(() -> new BadRequestException("BookDetail not found: " + rd.getBookCopy().getId()));
+                    Long currentStock = freshBookDetail.getStock();
+                    if (currentStock == null || currentStock < rd.getQuantity()) {
+                        throw new BadRequestException("Sản phẩm đã hết hàng. Không thể khôi phục đơn hàng.");
+                    }
+                    freshBookDetail.setStock(currentStock - rd.getQuantity());
+                    bookDetailRepository.save(freshBookDetail);
+                    System.out.println("✅ [ReceiptService] Đã trừ lại stock khi khôi phục đơn (CANCELLED → AUTHORIZED): BookDetail " + freshBookDetail.getId() + 
+                        " - Stock cũ: " + currentStock + ", Số lượng trừ: " + rd.getQuantity() + 
+                        ", Stock mới: " + freshBookDetail.getStock());
+                }
+            }
+        }
+        
+        // ✅ Nếu chuyển sang REFUNDED (hoàn tiền): restore tồn kho (hàng đã trả lại)
+        // REFUNDED có thể từ: PAID (trả hàng), FAILED (giao thất bại), CANCELLED (hủy sau khi đã thanh toán)
+        if (newStatus == OrderStatus.REFUNDED && oldStatusEnum != OrderStatus.REFUNDED) {
+            // Restore stock nếu đã từng trừ (PAID, AUTHORIZED, IN_TRANSIT, FAILED)
+            if (oldStatusEnum == OrderStatus.PAID || 
+                oldStatusEnum == OrderStatus.AUTHORIZED || 
+                oldStatusEnum == OrderStatus.IN_TRANSIT ||
+                oldStatusEnum == OrderStatus.FAILED) {
+                for (ReceiptDetail rd : receiptDetails) {
+                    if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                        BookDetail bookDetail = bookDetailRepository
+                                .findById(rd.getBookCopy().getId())
+                                .orElseThrow(() -> new BadRequestException("BookDetail not found: " + rd.getBookCopy().getId()));
+                        Long currentStock = bookDetail.getStock();
+                        bookDetail.setStock(currentStock + rd.getQuantity());
+                        bookDetailRepository.save(bookDetail);
+                        System.out.println("✅ [ReceiptService] Đã restore stock khi hoàn tiền (REFUNDED): BookDetail " + bookDetail.getId() + 
+                            " - Stock cũ: " + currentStock + ", Số lượng restore: " + rd.getQuantity() + 
+                            ", Stock mới: " + bookDetail.getStock());
+                    }
+                }
+            }
+        }
+
         // set trạng thái mới
         receipt.setOrderStatus(newStatus);
         Receipt saved = receiptRepository.save(receipt);
+
+        // ✅ LƯU LỊCH SỬ THAY ĐỔI TRẠNG THÁI VÀO RECEIPT_HISTORY
+        changeStatus(saved, newStatus, oldStatusEnum, "Admin");
 
         // 👉 GỬI MAIL SAU KHI SAVE
         if (saved.getCustomer() != null && saved.getCustomer().getEmail() != null) {
@@ -692,6 +924,43 @@ public class ReceiptService {
         }
 
         return saved;
+    }
+
+    // ✅ HELPER: GHI LỊCH SỬ THAY ĐỔI TRẠNG THÁI
+    private void changeStatus(Receipt receipt, OrderStatus newStatus, OrderStatus oldStatus, String actorName) {
+        try {
+            ReceiptHistory history = ReceiptHistory.builder()
+                    .receipt(receipt)
+                    .actorName(actorName != null ? actorName : "System")
+                    .oldStatus(oldStatus)
+                    .newStatus(newStatus)
+                    .build();
+            receiptHistoryRepository.save(history);
+            System.out.println("✅ [ReceiptService] Đã lưu lịch sử: " + oldStatus + " → " + newStatus);
+        } catch (Exception e) {
+            System.err.println("⚠️ [ReceiptService] Lỗi khi lưu lịch sử: " + e.getMessage());
+        }
+    }
+
+    // ✅ LẤY LỊCH SỬ THAY ĐỔI TRẠNG THÁI CỦA RECEIPT
+    public List<ReceiptHistory> getReceiptHistory(Long receiptId) {
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new RuntimeException("Receipt not found"));
+        return receiptHistoryRepository.findByReceiptOrderByCreatedAtDesc(receipt);
+    }
+
+    public List<sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptHistoryDto> getReceiptHistoryDto(Long receiptId) {
+        List<ReceiptHistory> historyList = getReceiptHistory(receiptId);
+        return historyList.stream().map(h -> {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+            return sd_009.bookstore.dto.jsonApiResource.receipt.ReceiptHistoryDto.builder()
+                    .oldStatus(h.getOldStatus())
+                    .newStatus(h.getNewStatus())
+                    .actorName(h.getActorName())
+                    .createdAt(h.getCreatedAt() != null ? h.getCreatedAt().format(formatter) : null)
+                    .updatedAt(h.getUpdatedAt() != null ? h.getUpdatedAt().format(formatter) : null)
+                    .build();
+        }).toList();
     }
 
     private JsonAdapter<Document<ReceiptDto>> getSingleAdapter() {

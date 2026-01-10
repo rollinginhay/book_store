@@ -38,7 +38,10 @@ public class  CampaignDetailService {
     public String findByCampaignId(Long campaignId) {
         Campaign campaign = campaignRepository.findById(campaignId)
                 .orElseThrow(() -> new BadRequestException("Campaign not found"));
-        List<CampaignDetail> details = campaign.getCampaignDetails();
+        // ✅ CHỈ LẤY campaignDetails với enabled = true
+        List<CampaignDetail> details = campaign.getCampaignDetails().stream()
+                .filter(CampaignDetail::getEnabled)
+                .toList();
 
         Document<List<CampaignDetailDto>> doc = Document.with(
                 details.stream().map(campaignDetailMapper::toDto).toList())
