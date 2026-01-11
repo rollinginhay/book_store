@@ -313,7 +313,7 @@ CREATE TABLE `receipt` (
   `discount` double DEFAULT NULL,
   `grand_total` double DEFAULT NULL,
   `has_shipping` bit(1) DEFAULT NULL,
-  `order_status` enum('AUTHORIZED','CANCELLED','FAILED','IN_TRANSIT','PAID','PENDING','REFUNDED') DEFAULT NULL,
+  `order_status` enum('AUTHORIZED','CANCELLED','FAILED','IN_TRANSIT','PAID','PENDING','REFUNDED','WAITING_REFUND_INFO') DEFAULT NULL,
   `order_type` enum('DIRECT','ONLINE') DEFAULT NULL,
   `payment_date` datetime(6) DEFAULT NULL,
   `service_cost` double DEFAULT NULL,

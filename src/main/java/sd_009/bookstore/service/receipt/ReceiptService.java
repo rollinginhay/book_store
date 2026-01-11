@@ -285,32 +285,11 @@ public class ReceiptService {
             receiptDetailRepository.saveAll(allReceiptDetails);
             
             //------------------------------------------
-            // ✅ TRỪ STOCK NGAY NẾU ĐƠN ONLINE CHUYỂN KHOẢN (AUTHORIZED)
-            // - ONLINE COD (PENDING): KHÔNG trừ stock, chờ xác nhận
-            // - ONLINE Chuyển khoản (AUTHORIZED): TRỪ stock ngay
+            // ✅ KHÔNG TRỪ STOCK KHI TẠO ĐƠN ONLINE (CẢ COD VÀ CHUYỂN KHOẢN)
+            // - ONLINE COD (PENDING): KHÔNG trừ stock, chờ xác nhận → AUTHORIZED → trừ stock
+            // - ONLINE Chuyển khoản (PENDING): KHÔNG trừ stock khi tạo, chờ VNPay callback hoặc admin xác nhận → AUTHORIZED → trừ stock
+            // - Stock sẽ được trừ khi chuyển sang AUTHORIZED (tại updateOrderStatus hoặc VNPay callback)
             //------------------------------------------
-            if (receipt.getOrderStatus() == OrderStatus.AUTHORIZED) {
-                // Đơn chuyển khoản: trừ stock ngay khi tạo
-                for (ReceiptDetail rd : allReceiptDetails) {
-                    if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
-                        // Luôn đọc stock mới nhất từ DB
-                        BookDetail freshBookDetail = bookDetailRepository
-                                .findById(rd.getBookCopy().getId())
-                                .orElseThrow(() -> new BadRequestException("BookDetail not found: " + rd.getBookCopy().getId()));
-                        Long currentStock = freshBookDetail.getStock();
-                        if (currentStock == null || currentStock < rd.getQuantity()) {
-                            throw new BadRequestException("Sản phẩm đã hết hàng do có người khác vừa mua trước bạn.");
-                        }
-                        // Trừ stock
-                        freshBookDetail.setStock(currentStock - rd.getQuantity());
-                        bookDetailRepository.save(freshBookDetail);
-                        System.out.println("✅ [ReceiptService] Đã trừ stock khi tạo đơn chuyển khoản (AUTHORIZED): BookDetail " + freshBookDetail.getId() + 
-                            " - Stock cũ: " + currentStock + ", Số lượng trừ: " + rd.getQuantity() + 
-                            ", Stock mới: " + freshBookDetail.getStock());
-                    }
-                }
-            }
-            // ONLINE COD (PENDING): KHÔNG trừ stock ở đây, sẽ trừ khi chuyển sang AUTHORIZED
         }
 
         //------------------------------------------
@@ -691,26 +670,15 @@ public class ReceiptService {
         // ✅ 7. Set status theo luồng mới:
         // - POS (DIRECT, không ship): PAID luôn (mua xong hoàn thành ngay)
         // - ONLINE COD (CASH): PENDING (chưa trừ số lượng, chờ xác nhận)
-        // - ONLINE Chuyển khoản (TRANSFER): AUTHORIZED (trừ số lượng luôn)
+        // - ONLINE Chuyển khoản (TRANSFER): PENDING (chờ xác nhận) → sau đó admin/VNPay xác nhận → AUTHORIZED
         if (dto.getOrderType() == OrderType.DIRECT && !dto.getHasShipping()) {
             // POS: Hoàn thành luôn
             receipt.setOrderStatus(OrderStatus.PAID);
         } else if (dto.getOrderType() == OrderType.ONLINE) {
-            // ONLINE: Phân biệt COD và Chuyển khoản
-            PaymentType paymentType = dto.getPaymentDetail() != null 
-                ? dto.getPaymentDetail().getPaymentType() 
-                : PaymentType.CASH;
-            
-            if (paymentType == PaymentType.CASH) {
-                // COD: PENDING (chưa trừ số lượng)
-                receipt.setOrderStatus(OrderStatus.PENDING);
-            } else if (paymentType == PaymentType.TRANSFER) {
-                // Chuyển khoản: AUTHORIZED (trừ số lượng luôn)
-                receipt.setOrderStatus(OrderStatus.AUTHORIZED);
-            } else {
-                // Fallback: PENDING
-                receipt.setOrderStatus(OrderStatus.PENDING);
-            }
+            // ONLINE: Cả COD và Chuyển khoản đều bắt đầu từ PENDING (chờ xác nhận)
+            // Chuyển khoản: PENDING → (VNPay callback hoặc admin xác nhận) → AUTHORIZED
+            // COD: PENDING → (admin xác nhận) → AUTHORIZED
+            receipt.setOrderStatus(OrderStatus.PENDING);
         } else {
             // Fallback: PENDING
             receipt.setOrderStatus(OrderStatus.PENDING);
@@ -798,14 +766,24 @@ public class ReceiptService {
             Long receiptId,
             OrderStatus newStatus
     ) {
+        // ✅ Debug: Log receiptId để kiểm tra
+        System.out.println("🔍 [ReceiptService.updateOrderStatus] Đang tìm receipt với ID: " + receiptId);
         Receipt receipt = receiptRepository.findById(receiptId)
-                .orElseThrow(() -> new RuntimeException("Receipt not found"));
+                .orElseThrow(() -> {
+                    System.err.println("❌ [ReceiptService.updateOrderStatus] KHÔNG TÌM THẤY receipt với ID: " + receiptId);
+                    return new BadRequestException("Không tìm thấy đơn hàng với ID: " + receiptId);
+                });
+        System.out.println("✅ [ReceiptService.updateOrderStatus] Đã tìm thấy receipt ID: " + receiptId + ", status hiện tại: " + receipt.getOrderStatus());
 
         // ✅ lấy tên HIỂN THỊ trạng thái cũ
         OrderStatus oldStatusEnum = receipt.getOrderStatus();
         String oldStatus = oldStatusEnum != null
                 ? oldStatusEnum.getDisplayName()
                 : "-";
+
+        // ✅ Flag để đánh dấu đã ghi history CANCELLED/FAILED (cho trường hợp tự động chuyển WAITING_REFUND_INFO)
+        boolean hasIntermediateHistory = false;
+        OrderStatus intermediateStatus = null; // Lưu trạng thái trung gian (CANCELLED hoặc FAILED)
 
         // ✅ CẬP NHẬT TỒN KHO KHI THAY ĐỔI TRẠNG THÁI
         List<ReceiptDetail> receiptDetails = receiptDetailRepository.findByReceipt(receipt);
@@ -835,16 +813,97 @@ public class ReceiptService {
         }
         
         // ✅ Nếu chuyển sang CANCELLED: restore tồn kho (cộng lại số lượng đã trừ)
+        // ✅ NHƯNG: Nếu là đơn TRANSFER (đã thanh toán trước) → TỰ ĐỘNG chuyển WAITING_REFUND_INFO để khách nhập STK
+        // ✅ QUAN TRỌNG: Phải ghi 2 history: AUTHORIZED → CANCELLED → WAITING_REFUND_INFO
         // Restore nếu đã từng trừ stock:
         // - POS: Đã trừ khi tạo (status = PAID)
-        // - ONLINE Chuyển khoản: Đã trừ khi tạo (status = AUTHORIZED)
+        // - ONLINE Chuyển khoản: Đã trừ khi chuyển PENDING → AUTHORIZED
         // - ONLINE COD: Đã trừ khi chuyển PENDING → AUTHORIZED
+        // Lưu ý: KHÔNG restore nếu từ FAILED vì stock đã được restore ở FAILED rồi
         if (newStatus == OrderStatus.CANCELLED && oldStatusEnum != OrderStatus.CANCELLED) {
-            // Restore nếu đã từng trừ stock (PAID, AUTHORIZED, IN_TRANSIT, FAILED)
-            if (oldStatusEnum == OrderStatus.PAID || 
-                oldStatusEnum == OrderStatus.AUTHORIZED || 
-                oldStatusEnum == OrderStatus.IN_TRANSIT ||
-                oldStatusEnum == OrderStatus.FAILED) {
+            // ✅ TỰ ĐỘNG: Nếu là đơn chuyển khoản (TRANSFER) → chuyển WAITING_REFUND_INFO thay vì CANCELLED
+            // NHƯNG: Phải ghi 2 history records: AUTHORIZED → CANCELLED → WAITING_REFUND_INFO
+            if (receipt.getPaymentDetail() != null && receipt.getPaymentDetail().getPaymentType() == PaymentType.TRANSFER) {
+                // ✅ Đánh dấu để ghi 2 history: AUTHORIZED → CANCELLED → WAITING_REFUND_INFO (sẽ ghi sau khi save)
+                hasIntermediateHistory = true;
+                intermediateStatus = OrderStatus.CANCELLED;
+                
+                // Đơn chuyển khoản: chuyển WAITING_REFUND_INFO để khách nhập STK hoàn tiền
+                // Stock sẽ được restore ở logic WAITING_REFUND_INFO (với oldStatusEnum = AUTHORIZED/IN_TRANSIT ban đầu)
+                newStatus = OrderStatus.WAITING_REFUND_INFO;
+                System.out.println("✅ [ReceiptService] Đơn chuyển khoản bị hủy → tự động chuyển WAITING_REFUND_INFO (khách nhập STK)");
+            } else {
+                // Đơn COD: restore stock và giữ CANCELLED
+                // Restore nếu đã từng trừ stock (PAID, AUTHORIZED, IN_TRANSIT)
+                // KHÔNG restore nếu từ FAILED vì đã restore ở FAILED rồi
+                if (oldStatusEnum == OrderStatus.PAID || 
+                    oldStatusEnum == OrderStatus.AUTHORIZED || 
+                    oldStatusEnum == OrderStatus.IN_TRANSIT) {
+                    for (ReceiptDetail rd : receiptDetails) {
+                        if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                            BookDetail bookDetail = bookDetailRepository
+                                    .findById(rd.getBookCopy().getId())
+                                    .orElseThrow(() -> new BadRequestException("BookDetail not found: " + rd.getBookCopy().getId()));
+                            Long currentStock = bookDetail.getStock();
+                            bookDetail.setStock(currentStock + rd.getQuantity());
+                            bookDetailRepository.save(bookDetail);
+                            System.out.println("✅ [ReceiptService] Đã restore stock khi hủy đơn COD (CANCELLED): BookDetail " + bookDetail.getId() + 
+                                " - Stock cũ: " + currentStock + ", Số lượng restore: " + rd.getQuantity() + 
+                                ", Stock mới: " + bookDetail.getStock());
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ✅ Nếu chuyển sang FAILED (giao thất bại) với TRANSFER → TỰ ĐỘNG chuyển WAITING_REFUND_INFO
+        // ✅ QUAN TRỌNG: Phải ghi 2 history: AUTHORIZED/IN_TRANSIT → FAILED → WAITING_REFUND_INFO
+        if (newStatus == OrderStatus.FAILED && oldStatusEnum != OrderStatus.FAILED) {
+            // ✅ TỰ ĐỘNG: Nếu là đơn chuyển khoản (TRANSFER) → chuyển WAITING_REFUND_INFO thay vì FAILED
+            // NHƯNG: Phải ghi 2 history records: AUTHORIZED/IN_TRANSIT → FAILED → WAITING_REFUND_INFO
+            if (receipt.getPaymentDetail() != null && receipt.getPaymentDetail().getPaymentType() == PaymentType.TRANSFER) {
+                // ✅ Đánh dấu để ghi 2 history: AUTHORIZED/IN_TRANSIT → FAILED → WAITING_REFUND_INFO
+                hasIntermediateHistory = true;
+                intermediateStatus = OrderStatus.FAILED;
+                
+                // Đơn chuyển khoản: chuyển WAITING_REFUND_INFO để khách nhập STK hoàn tiền
+                // Stock sẽ được restore ở logic WAITING_REFUND_INFO (với oldStatusEnum = AUTHORIZED/IN_TRANSIT ban đầu)
+                newStatus = OrderStatus.WAITING_REFUND_INFO;
+                System.out.println("✅ [ReceiptService] Đơn chuyển khoản giao thất bại → tự động chuyển WAITING_REFUND_INFO (khách nhập STK)");
+            } else {
+                // Đơn COD: restore stock và giữ FAILED
+                // Restore stock nếu đã từng trừ (AUTHORIZED, IN_TRANSIT) - hàng đã được trừ từ AUTHORIZED
+                if (oldStatusEnum == OrderStatus.AUTHORIZED || 
+                    oldStatusEnum == OrderStatus.IN_TRANSIT) {
+                    for (ReceiptDetail rd : receiptDetails) {
+                        if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
+                            BookDetail bookDetail = bookDetailRepository
+                                    .findById(rd.getBookCopy().getId())
+                                    .orElseThrow(() -> new BadRequestException("BookDetail not found: " + rd.getBookCopy().getId()));
+                            Long currentStock = bookDetail.getStock();
+                            bookDetail.setStock(currentStock + rd.getQuantity());
+                            bookDetailRepository.save(bookDetail);
+                            System.out.println("✅ [ReceiptService] Đã restore stock khi giao thất bại COD (FAILED): BookDetail " + bookDetail.getId() + 
+                                " - Stock cũ: " + currentStock + ", Số lượng restore: " + rd.getQuantity() + 
+                                ", Stock mới: " + bookDetail.getStock());
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ✅ Xử lý restore stock và validation cho WAITING_REFUND_INFO
+        // Restore stock nếu từ AUTHORIZED/IN_TRANSIT (đã trừ stock)
+        // (Có thể từ CANCELLED/FAILED tự động với oldStatusEnum = AUTHORIZED/IN_TRANSIT ban đầu, hoặc set trực tiếp)
+        if (newStatus == OrderStatus.WAITING_REFUND_INFO) {
+            // Kiểm tra payment type: chỉ cho phép với TRANSFER (VNPay, chuyển khoản)
+            if (receipt.getPaymentDetail() == null || receipt.getPaymentDetail().getPaymentType() != PaymentType.TRANSFER) {
+                throw new BadRequestException("Chỉ đơn hàng chuyển khoản (đã thanh toán trước) mới có thể yêu cầu hoàn tiền.");
+            }
+            
+            // Restore stock nếu đã từng trừ (AUTHORIZED, IN_TRANSIT)
+            // oldStatusEnum ở đây là giá trị ban đầu (có thể là AUTHORIZED/IN_TRANSIT nếu từ CANCELLED/FAILED tự động, hoặc set trực tiếp)
+            if (oldStatusEnum == OrderStatus.AUTHORIZED || oldStatusEnum == OrderStatus.IN_TRANSIT) {
                 for (ReceiptDetail rd : receiptDetails) {
                     if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
                         BookDetail bookDetail = bookDetailRepository
@@ -853,12 +912,14 @@ public class ReceiptService {
                         Long currentStock = bookDetail.getStock();
                         bookDetail.setStock(currentStock + rd.getQuantity());
                         bookDetailRepository.save(bookDetail);
-                        System.out.println("✅ [ReceiptService] Đã restore stock khi hủy đơn: BookDetail " + bookDetail.getId() + 
+                        System.out.println("✅ [ReceiptService] Đã restore stock khi chuyển WAITING_REFUND_INFO (từ AUTHORIZED/IN_TRANSIT): BookDetail " + bookDetail.getId() + 
                             " - Stock cũ: " + currentStock + ", Số lượng restore: " + rd.getQuantity() + 
                             ", Stock mới: " + bookDetail.getStock());
                     }
                 }
             }
+            
+            System.out.println("✅ [ReceiptService] Đơn chuyển sang WAITING_REFUND_INFO - Chờ khách nhập thông tin hoàn tiền");
         }
         // ✅ Nếu chuyển TỪ CANCELLED sang AUTHORIZED: trừ lại tồn kho
         else if (oldStatusEnum == OrderStatus.CANCELLED && newStatus == OrderStatus.AUTHORIZED) {
@@ -882,14 +943,26 @@ public class ReceiptService {
             }
         }
         
+        
+        // ✅ Nếu chuyển từ WAITING_REFUND_INFO sang REFUNDED (Admin xác nhận đã hoàn tiền)
+        // Kiểm tra đã có thông tin hoàn tiền chưa (đọc từ note)
+        if (oldStatusEnum == OrderStatus.WAITING_REFUND_INFO && newStatus == OrderStatus.REFUNDED) {
+            String refundInfo = parseRefundInfoFromNote(receipt.getNote());
+            if (refundInfo == null || refundInfo.trim().isEmpty()) {
+                throw new BadRequestException("Chưa có thông tin hoàn tiền. Khách hàng cần nhập STK trước khi xác nhận hoàn tiền.");
+            }
+            System.out.println("✅ [ReceiptService] Admin xác nhận đã hoàn tiền - Chuyển sang REFUNDED");
+        }
+        
         // ✅ Nếu chuyển sang REFUNDED (hoàn tiền): restore tồn kho (hàng đã trả lại)
-        // REFUNDED có thể từ: PAID (trả hàng), FAILED (giao thất bại), CANCELLED (hủy sau khi đã thanh toán)
+        // REFUNDED có thể từ: PAID (trả hàng), WAITING_REFUND_INFO (đã có thông tin hoàn tiền), FAILED (nếu không qua WAITING_REFUND_INFO)
+        // Lưu ý: Nếu từ FAILED → WAITING_REFUND_INFO → REFUNDED, stock đã được restore ở FAILED rồi
         if (newStatus == OrderStatus.REFUNDED && oldStatusEnum != OrderStatus.REFUNDED) {
-            // Restore stock nếu đã từng trừ (PAID, AUTHORIZED, IN_TRANSIT, FAILED)
+            // Restore stock nếu đã từng trừ (PAID, AUTHORIZED, IN_TRANSIT)
+            // KHÔNG restore nếu từ FAILED hoặc WAITING_REFUND_INFO vì đã restore ở FAILED rồi
             if (oldStatusEnum == OrderStatus.PAID || 
                 oldStatusEnum == OrderStatus.AUTHORIZED || 
-                oldStatusEnum == OrderStatus.IN_TRANSIT ||
-                oldStatusEnum == OrderStatus.FAILED) {
+                oldStatusEnum == OrderStatus.IN_TRANSIT) {
                 for (ReceiptDetail rd : receiptDetails) {
                     if (rd.getBookCopy() != null && rd.getQuantity() != null && rd.getQuantity() > 0) {
                         BookDetail bookDetail = bookDetailRepository
@@ -911,7 +984,18 @@ public class ReceiptService {
         Receipt saved = receiptRepository.save(receipt);
 
         // ✅ LƯU LỊCH SỬ THAY ĐỔI TRẠNG THÁI VÀO RECEIPT_HISTORY
-        changeStatus(saved, newStatus, oldStatusEnum, "Admin");
+        // ✅ Nếu có intermediate status (CANCELLED/FAILED) → ghi 2 history: oldStatusEnum → CANCELLED/FAILED → WAITING_REFUND_INFO
+        // ✅ Nếu không có intermediate status → ghi 1 history: oldStatusEnum → newStatus (bình thường)
+        if (hasIntermediateHistory && intermediateStatus != null) {
+            // ✅ GHI HISTORY 1: oldStatusEnum → CANCELLED/FAILED
+            changeStatus(saved, intermediateStatus, oldStatusEnum, "Admin");
+            // ✅ GHI HISTORY 2: CANCELLED/FAILED → WAITING_REFUND_INFO
+            changeStatus(saved, newStatus, intermediateStatus, "Admin");
+            System.out.println("✅ [ReceiptService] Đã ghi 2 lịch sử: " + oldStatusEnum + " → " + intermediateStatus + " → " + newStatus);
+        } else {
+            // Chưa có intermediate status, ghi history bình thường
+            changeStatus(saved, newStatus, oldStatusEnum, "Admin");
+        }
 
         // 👉 GỬI MAIL SAU KHI SAVE
         if (saved.getCustomer() != null && saved.getCustomer().getEmail() != null) {
@@ -927,7 +1011,14 @@ public class ReceiptService {
     }
 
     // ✅ HELPER: GHI LỊCH SỬ THAY ĐỔI TRẠNG THÁI
+    // CHỈ ghi khi có thay đổi trạng thái (oldStatus != newStatus) để tránh duplicate
     private void changeStatus(Receipt receipt, OrderStatus newStatus, OrderStatus oldStatus, String actorName) {
+        // Tránh duplicate: nếu oldStatus == newStatus thì không ghi lịch sử
+        if (oldStatus == newStatus) {
+            System.out.println("✅ [ReceiptService] Không có thay đổi trạng thái (" + oldStatus + " → " + newStatus + "), bỏ qua ghi lịch sử");
+            return;
+        }
+        
         try {
             ReceiptHistory history = ReceiptHistory.builder()
                     .receipt(receipt)
@@ -961,6 +1052,135 @@ public class ReceiptService {
                     .updatedAt(h.getUpdatedAt() != null ? h.getUpdatedAt().format(formatter) : null)
                     .build();
         }).toList();
+    }
+
+    // ✅ CẬP NHẬT THÔNG TIN HOÀN TIỀN (Khách hàng nhập STK)
+    // Lưu thông tin hoàn tiền vào note dạng JSON để admin xem được
+    @Transactional
+    public Receipt updateRefundInfo(Long receiptId, String refundBankAccount, String refundBankName, String refundAccountHolder) {
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy đơn hàng"));
+        
+        // Kiểm tra status phải là WAITING_REFUND_INFO
+        if (receipt.getOrderStatus() != OrderStatus.WAITING_REFUND_INFO) {
+            throw new BadRequestException("Chỉ có thể cập nhật thông tin hoàn tiền khi đơn ở trạng thái 'Chờ thông tin hoàn tiền'.");
+        }
+        
+        // Kiểm tra thông tin bắt buộc
+        if (refundBankAccount == null || refundBankAccount.trim().isEmpty()) {
+            throw new BadRequestException("Số tài khoản hoàn tiền là bắt buộc.");
+        }
+        if (refundBankName == null || refundBankName.trim().isEmpty()) {
+            throw new BadRequestException("Tên ngân hàng là bắt buộc.");
+        }
+        if (refundAccountHolder == null || refundAccountHolder.trim().isEmpty()) {
+            throw new BadRequestException("Tên chủ tài khoản là bắt buộc.");
+        }
+        
+        // ✅ Lưu thông tin hoàn tiền vào note dạng JSON
+        // Format: {"refundBankAccount":"...","refundBankName":"...","refundAccountHolder":"..."}
+        try {
+            String refundInfoJson = String.format(
+                "{\"refundBankAccount\":\"%s\",\"refundBankName\":\"%s\",\"refundAccountHolder\":\"%s\"}",
+                refundBankAccount.trim().replace("\"", "\\\""),
+                refundBankName.trim().replace("\"", "\\\""),
+                refundAccountHolder.trim().replace("\"", "\\\"")
+            );
+            
+            // Lưu vào note (ghi đè hoặc append tùy logic)
+            String existingNote = receipt.getNote();
+            String newNote = existingNote == null || existingNote.trim().isEmpty() 
+                ? refundInfoJson 
+                : existingNote + "\n[THÔNG TIN HOÀN TIỀN]\n" + refundInfoJson;
+            
+            receipt.setNote(newNote);
+        } catch (Exception e) {
+            throw new BadRequestException("Lỗi khi lưu thông tin hoàn tiền: " + e.getMessage());
+        }
+        
+        Receipt saved = receiptRepository.save(receipt);
+        System.out.println("✅ [ReceiptService] Đã cập nhật thông tin hoàn tiền cho đơn " + receiptId + 
+            " - STK: " + refundBankAccount + ", Ngân hàng: " + refundBankName + ", Chủ TK: " + refundAccountHolder);
+        
+        return saved;
+    }
+    
+    // ✅ Helper: Parse thông tin hoàn tiền từ note
+    // Tìm JSON trong note và trả về refundBankAccount hoặc null
+    private String parseRefundInfoFromNote(String note) {
+        if (note == null || note.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // Tìm JSON object trong note
+            int jsonStart = note.indexOf("{\"refundBankAccount\"");
+            if (jsonStart == -1) {
+                return null;
+            }
+            
+            int jsonEnd = note.indexOf("}", jsonStart);
+            if (jsonEnd == -1) {
+                return null;
+            }
+            
+            String jsonStr = note.substring(jsonStart, jsonEnd + 1);
+            JsonNode jsonNode = objectMapper.readTree(jsonStr);
+            
+            String refundBankAccount = jsonNode.get("refundBankAccount") != null 
+                ? jsonNode.get("refundBankAccount").asText() 
+                : null;
+            
+            return refundBankAccount != null && !refundBankAccount.trim().isEmpty() ? refundBankAccount : null;
+        } catch (Exception e) {
+            System.err.println("Lỗi parse refund info từ note: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    // ✅ Helper: Parse toàn bộ thông tin hoàn tiền từ note (trả về Map hoặc object)
+    // Dùng cho admin xem đầy đủ thông tin
+    public RefundInfo parseFullRefundInfoFromNote(String note) {
+        if (note == null || note.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            int jsonStart = note.indexOf("{\"refundBankAccount\"");
+            if (jsonStart == -1) {
+                return null;
+            }
+            
+            int jsonEnd = note.indexOf("}", jsonStart);
+            if (jsonEnd == -1) {
+                return null;
+            }
+            
+            String jsonStr = note.substring(jsonStart, jsonEnd + 1);
+            JsonNode jsonNode = objectMapper.readTree(jsonStr);
+            
+            return new RefundInfo(
+                jsonNode.get("refundBankAccount") != null ? jsonNode.get("refundBankAccount").asText() : null,
+                jsonNode.get("refundBankName") != null ? jsonNode.get("refundBankName").asText() : null,
+                jsonNode.get("refundAccountHolder") != null ? jsonNode.get("refundAccountHolder").asText() : null
+            );
+        } catch (Exception e) {
+            System.err.println("Lỗi parse full refund info từ note: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    // ✅ Inner class để trả về thông tin hoàn tiền
+    public static class RefundInfo {
+        public final String refundBankAccount;
+        public final String refundBankName;
+        public final String refundAccountHolder;
+        
+        public RefundInfo(String refundBankAccount, String refundBankName, String refundAccountHolder) {
+            this.refundBankAccount = refundBankAccount;
+            this.refundBankName = refundBankName;
+            this.refundAccountHolder = refundAccountHolder;
+        }
     }
 
     private JsonAdapter<Document<ReceiptDto>> getSingleAdapter() {

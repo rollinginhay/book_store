@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sd_009.bookstore.config.spec.Routes;
 import sd_009.bookstore.dto.jsonApiResource.receipt.UpdateReceiptStatusRequest;
+import sd_009.bookstore.dto.jsonApiResource.receipt.UpdateRefundInfoRequest;
 import sd_009.bookstore.service.receipt.ReceiptService;
 
 import java.util.List;
@@ -238,6 +239,22 @@ public class ReceiptController {
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(history);
+    }
+
+    @Operation(summary = "Update refund information (Customer)")
+    @PatchMapping("/v1/receipt/{id}/refund-info")
+    public ResponseEntity<Object> updateRefundInfo(
+            @PathVariable Long id,
+            @RequestBody UpdateRefundInfoRequest req
+    ) {
+        receiptService.updateRefundInfo(id, req.refundBankAccount(), req.refundBankName(), req.refundAccountHolder());
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of(
+                        "success", true,
+                        "message", "Cập nhật thông tin hoàn tiền thành công"
+                ));
     }
 
 }

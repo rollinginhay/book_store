@@ -125,14 +125,6 @@ public class BookController {
     }
 
     @Operation(
-            summary = "Get reviews of book",
-            responses = @ApiResponse(responseCode = "200", description = "Success", content = @Content(examples = @ExampleObject(name = "Get reviews of book", externalValue = "/jsonExample/review/get_reviews.json"))))
-    @GetMapping(Routes.MULTI_BOOK_RELATIONSHIP_REVIEW)
-    public ResponseEntity<Object> getReviewsByBook(@PathVariable Long id) {
-        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(bookService.getDependents(id, "review"));
-    }
-
-    @Operation(
             summary = "Attach relationship to book",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
                     @ExampleObject(name = "Attach genre req", externalValue = "/jsonExample/genre/get_genre.json"),
