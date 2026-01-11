@@ -38,8 +38,6 @@ public class BookDto implements Serializable {
     private final List<GenreDto> genres;
     @ToMany(name = "tags")
     private final List<TagDto> tags;
-    @ToMany(name = "reviews")
-    private final List<ReviewDto> reviews;
     @ToOne(name = "publisher")
     private final PublisherDto publisher;
     @ToMany(name = "bookCopies")

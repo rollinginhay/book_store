@@ -10,7 +10,7 @@ import sd_009.bookstore.repository.GenreClosureRepository;
         componentModel = MappingConstants.ComponentModel.SPRING,
         uses = {
                 CreatorMapper.class, GenreMapper.class, TagMapper.class,
-                ReviewMapper.class, PublisherMapper.class,
+                PublisherMapper.class,
                 BookDetailMapper.class, SeriesMapper.class
         }
 )

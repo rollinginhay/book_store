@@ -27,7 +27,6 @@ public class JsonApiMoshiConfig {
                 .addType(CreatorDto.class)
                 .addType(GenreDto.class)
                 .addType(PublisherDto.class)
-                .addType(ReviewDto.class)
                 .addType(SeriesDto.class)
                 .addType(ReceiptDto.class)
                 .addType(ReceiptDetailDto.class)

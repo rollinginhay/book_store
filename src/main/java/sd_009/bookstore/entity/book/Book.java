@@ -40,9 +40,6 @@ public class Book extends AuditableEntity {
     @JoinTable
     private List<Tag> tags;
 
-    @OneToMany(mappedBy = "book", cascade = CascadeType.PERSIST)
-    private List<Review> reviews;
-
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn
     private Publisher publisher;
