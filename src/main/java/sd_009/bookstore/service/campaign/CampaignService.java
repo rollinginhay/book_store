@@ -342,44 +342,76 @@ public class CampaignService {
      */
     private void validateNoOverlappingSaleCampaigns(CampaignDto dto, Long excludeId) {
         // Chỉ validate cho đợt sale có ngày (PERCENTAGE_DISCOUNT, FLAT_DISCOUNT)
-        if (dto.getCampaignType() == null || 
-            dto.getCampaignType().name().equals("PERCENTAGE_PRODUCT") ||
-            dto.getCampaignType().name().equals("PERCENTAGE_RECEIPT")) {
-            return; // Combo và voucher không cần validate
+        if (dto.getMinTotal() != null && dto.getMinTotal() < 0) {
+            throw new BadRequestException("Giá trị đơn hàng tối thiểu không được âm");
         }
 
-        // Phải có ngày bắt đầu và kết thúc
-        if (dto.getStartDate() == null || dto.getEndDate() == null) {
-            return; // Nếu không có ngày thì không validate (có thể là combo)
+        // 2️⃣ Validate percentage
+        if (dto.getPercentage() != null) {
+            if (dto.getPercentage() <= 0 || dto.getPercentage() > 100) {
+                throw new BadRequestException("Phần trăm giảm phải nằm trong khoảng 1–100%");
+            }
+        }
+
+        // 3️⃣ Validate maxDiscount
+        if (dto.getMaxDiscount() != null && dto.getMaxDiscount() < 0) {
+            throw new BadRequestException("Giá trị giảm tối đa không được âm");
         }
 
         // Lấy tất cả các đợt sale đang hoạt động cùng loại
-        List<Campaign> existingCampaigns = campaignRepository.findAllByEnabled(true, Sort.by("updatedAt").descending())
-                .stream()
-                .filter(c -> {
-                    // Chỉ check các đợt sale cùng loại (PERCENTAGE_DISCOUNT hoặc FLAT_DISCOUNT)
-                    String type = c.getCampaignType() != null ? c.getCampaignType().name() : "";
-                    return (type.equals("PERCENTAGE_DISCOUNT") || type.equals("FLAT_DISCOUNT"))
-                            && c.getStartDate() != null && c.getEndDate() != null
-                            && !c.getId().equals(excludeId); // Loại trừ campaign đang update
-                })
-                .toList();
+        List<Campaign> existingCampaigns =
+                campaignRepository.findAllByEnabled(true, Sort.by("updatedAt").descending())
+                        .stream()
+                        .filter(c -> !c.getId().equals(excludeId))
+                        .filter(c -> c.getCampaignType() == dto.getCampaignType())
+                        .filter(c ->
+                                c.getStartDate() != null &&
+                                        c.getEndDate() != null &&
+                                        dto.getStartDate() != null &&
+                                        dto.getEndDate() != null &&
+                                        isDateRangeOverlapping(
+                                                dto.getStartDate(), dto.getEndDate(),
+                                                c.getStartDate(), c.getEndDate()
+                                        )
+                        )
+                        .toList();
 
-        // Kiểm tra overlap với từng campaign
         for (Campaign existing : existingCampaigns) {
-            if (isDateRangeOverlapping(
-                    dto.getStartDate(), dto.getEndDate(),
-                    existing.getStartDate(), existing.getEndDate())) {
+            boolean sameMinTotal =
+                    (existing.getMinTotal() == null && dto.getMinTotal() == null) ||
+                            (existing.getMinTotal() != null && existing.getMinTotal().equals(dto.getMinTotal()));
+
+            boolean samePercentage =
+                    (existing.getPercentage() == null && dto.getPercentage() == null) ||
+                            (existing.getPercentage() != null && existing.getPercentage().equals(dto.getPercentage()));
+
+            boolean sameMaxDiscount =
+                    (existing.getMaxDiscount() == null && dto.getMaxDiscount() == null) ||
+                            (existing.getMaxDiscount() != null && existing.getMaxDiscount().equals(dto.getMaxDiscount()));
+
+            if (sameMinTotal && samePercentage && sameMaxDiscount) {
                 throw new BadRequestException(
-                        String.format("Đợt sale '%s' (từ %s đến %s) đang trùng khoảng thời gian với đợt sale '%s' (từ %s đến %s). Vui lòng chọn khoảng thời gian khác.",
-                                dto.getName(),
-                                dto.getStartDate().toLocalDate(),
-                                dto.getEndDate().toLocalDate(),
-                                existing.getName(),
-                                existing.getStartDate().toLocalDate(),
-                                existing.getEndDate().toLocalDate()));
+                        "Đã tồn tại campaign cùng thời gian và cùng điều kiện giảm giá. " +
+                                "Vui lòng thay đổi minTotal, phần trăm hoặc mức giảm tối đa."
+                );
             }
         }
+
+//         Kiểm tra overlap với từng campaign
+//        for (Campaign existing : existingCampaigns) {
+//            if (isDateRangeOverlapping(
+//                    dto.getStartDate(), dto.getEndDate(),
+//                    existing.getStartDate(), existing.getEndDate())) {
+//                throw new BadRequestException(
+//                        String.format("Đợt sale '%s' (từ %s đến %s) đang trùng khoảng thời gian với đợt sale '%s' (từ %s đến %s). Vui lòng chọn khoảng thời gian khác.",
+//                                dto.getName(),
+//                                dto.getStartDate().toLocalDate(),
+//                                dto.getEndDate().toLocalDate(),
+//                                existing.getName(),
+//                                existing.getStartDate().toLocalDate(),
+//                                existing.getEndDate().toLocalDate()));
+//            }
+//        }
     }
 
     /**
