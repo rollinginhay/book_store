@@ -1,0 +1,21 @@
+{
+  "data": {
+    "type": "user",
+    "id": "1",
+    "attributes": {
+      "email": "example@test.com",
+      "username": "example_user",
+      "personName": "Example User",
+      "phoneNumber": "0987654321",
+      "address": "Example Address",
+      "enabled": true,
+      "createdAt": "2025-01-11T10:00:00Z",
+      "updatedAt": "2025-01-11T10:00:00Z"
+    },
+    "relationships": {
+      "roles": {
+        "data": [{"type": "role", "id": "3"}]
+      }
+    }
+  }
+}
