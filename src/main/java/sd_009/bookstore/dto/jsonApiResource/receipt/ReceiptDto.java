@@ -46,9 +46,9 @@ public class ReceiptDto implements Serializable {
     @ToOne(name = "employee")
     @Nullable
     private final UserDto employee;
-    @Size(min = 2, max = 100, message = "Tên khách hàng phải từ 2 đến 100 ký tự")
+    @Size(max = 100, message = "Tên khách hàng phải từ 2 đến 100 ký tự")
     private final String customerName;
-    @Pattern(regexp = "^[0-9]{10,11}$", message = "Số điện thoại phải có thực")
+    @Pattern(regexp = "^$|^[0-9]{10,11}$", message = "Số điện thoại phải có 10-11 chữ số")
     private final String customerPhone;
     @Size(max = 500, message = "Địa chỉ khách hàng tối đa 500 ký tự")
     private final String customerAddress;
