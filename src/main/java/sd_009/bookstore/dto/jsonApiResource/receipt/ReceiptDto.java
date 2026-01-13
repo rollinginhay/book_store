@@ -52,7 +52,6 @@ public class ReceiptDto implements Serializable {
     private final String customerPhone;
     @Size(max = 500, message = "Địa chỉ khách hàng tối đa 500 ký tự")
     private final String customerAddress;
-    @NotNull
     @PastOrPresent(message = "Ngày thanh toán không hợp lệ")
     private final LocalDateTime paymentDate;
     @ToOne(name = "paymentDetail")
