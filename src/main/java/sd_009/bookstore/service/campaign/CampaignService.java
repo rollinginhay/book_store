@@ -167,7 +167,7 @@ public class CampaignService {
         }
 
         // ✅ Validate: Không cho phép tạo đợt sale trùng khoảng thời gian
-        validateNoOverlappingSaleCampaigns(dto, null);
+        validateNoOverlappingSaleCampaigns(dto, null, campaignDetailsData);
 
         Campaign entity = campaignMapper.toEntity(dto);
         
@@ -247,7 +247,7 @@ public class CampaignService {
                 .orElseThrow(() -> new BadRequestException("Campaign not found"));
 
         // ✅ Validate: Không cho phép cập nhật đợt sale trùng khoảng thời gian
-        validateNoOverlappingSaleCampaigns(dto, Long.valueOf(dto.getId()));
+        validateNoOverlappingSaleCampaigns(dto, Long.valueOf(dto.getId()), campaignDetailsData);
 
         Campaign updated = campaignMapper.partialUpdate(dto, existing);
         
@@ -353,7 +353,7 @@ public class CampaignService {
      * Chỉ validate cho PERCENTAGE_DISCOUNT và FLAT_DISCOUNT (đợt sale có ngày)
      * Combo (PERCENTAGE_PRODUCT) không cần validate vì không có ngày
      */
-    private void validateNoOverlappingSaleCampaigns(CampaignDto dto, Long excludeId) {
+    private void validateNoOverlappingSaleCampaigns(CampaignDto dto, Long excludeId, JsonNode campaignDetailsData) {
         // Chỉ validate cho đợt sale có ngày (PERCENTAGE_DISCOUNT, FLAT_DISCOUNT)
         if (dto.getMinTotal() != null && dto.getMinTotal() < 0) {
             throw new BadRequestException("Giá trị đơn hàng tối thiểu không được âm");
@@ -371,12 +371,80 @@ public class CampaignService {
             throw new BadRequestException("Giá trị giảm tối đa không được âm");
         }
 
+        // ✅ Xử lý riêng cho PERCENTAGE_PRODUCT: validate sản phẩm trùng
+        if (dto.getCampaignType() != null && dto.getCampaignType().name().equals("PERCENTAGE_PRODUCT")) {
+            // Lấy danh sách bookDetailId từ campaignDetailsData
+            List<Long> newBookDetailIds = new ArrayList<>();
+            if (campaignDetailsData != null && campaignDetailsData.isArray()) {
+                for (JsonNode detailNode : campaignDetailsData) {
+                    JsonNode attributes = detailNode.path("attributes");
+                    String bookDetailIdStr = attributes.path("bookDetailId").asText();
+                    if (bookDetailIdStr != null && !bookDetailIdStr.isEmpty() && !bookDetailIdStr.equals("null")) {
+                        try {
+                            newBookDetailIds.add(Long.valueOf(bookDetailIdStr));
+                        } catch (NumberFormatException e) {
+                            // Bỏ qua nếu không parse được
+                        }
+                    }
+                }
+            }
+
+            // Lấy tất cả các campaign PERCENTAGE_PRODUCT đang hoạt động và trùng thời gian
+            List<Campaign> existingCampaigns =
+                    campaignRepository.findAllByEnabled(true, Sort.by("updatedAt").descending())
+                            .stream()
+                            .filter(c -> excludeId == null || !c.getId().equals(excludeId))
+                            .filter(c -> c.getCampaignType() != null && 
+                                    c.getCampaignType().name().equals("PERCENTAGE_PRODUCT"))
+                            .filter(c ->
+                                    c.getStartDate() != null &&
+                                            c.getEndDate() != null &&
+                                            dto.getStartDate() != null &&
+                                            dto.getEndDate() != null &&
+                                            isDateRangeOverlapping(
+                                                    dto.getStartDate(), dto.getEndDate(),
+                                                    c.getStartDate(), c.getEndDate()
+                                            )
+                            )
+                            .toList();
+
+            // Kiểm tra xem có sản phẩm nào trùng không
+            for (Campaign existing : existingCampaigns) {
+                // Lấy danh sách bookDetailId từ campaign hiện có (chỉ lấy enabled = true)
+                List<CampaignDetail> existingDetails = campaignDetailRepository.findAll()
+                        .stream()
+                        .filter(cd -> cd.getCampaign() != null && 
+                                cd.getCampaign().getId() != null &&
+                                cd.getCampaign().getId().equals(existing.getId()) &&
+                                cd.getEnabled() != null && 
+                                cd.getEnabled() &&
+                                cd.getBookDetail() != null)
+                        .toList();
+                
+                List<Long> existingBookDetailIds = existingDetails.stream()
+                        .map(cd -> cd.getBookDetail().getId())
+                        .toList();
+
+                // Kiểm tra xem có sản phẩm nào trùng không
+                for (Long newBookDetailId : newBookDetailIds) {
+                    if (existingBookDetailIds.contains(newBookDetailId)) {
+                        throw new BadRequestException(
+                                "Đã tồn tại campaign '" + existing.getName() + "' cùng thời gian " +
+                                "và có sản phẩm trùng. Vui lòng chọn sản phẩm khác hoặc thay đổi khoảng thời gian."
+                        );
+                    }
+                }
+            }
+            return; // Kết thúc validation cho PERCENTAGE_PRODUCT
+        }
+
+        // ✅ Logic validation cho PERCENTAGE_DISCOUNT và FLAT_DISCOUNT (giữ nguyên)
         // Lấy tất cả các đợt sale đang hoạt động cùng loại
         LocalDateTime now = LocalDateTime.now();
         List<Campaign> existingCampaigns =
                 campaignRepository.findAllByEnabled(true, Sort.by("updatedAt").descending())
                         .stream()
-                        .filter(c -> !c.getId().equals(excludeId))
+                        .filter(c -> excludeId == null || !c.getId().equals(excludeId))
                         .filter(c -> c.getCampaignType() == dto.getCampaignType())
                         // ✅ CHỈ kiểm tra campaigns đang ACTIVE (endDate > now) - không kiểm tra campaigns đã hết hạn
                         .filter(c -> {
