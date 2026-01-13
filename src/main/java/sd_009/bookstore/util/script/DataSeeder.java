@@ -92,16 +92,6 @@ public class DataSeeder {
                 .bookCondition("old")
                 .build();
 
-        Review review1 = Review.builder()
-                .comment("comment")
-                .rating(5)
-                .build();
-
-        Review review2 = Review.builder()
-                .comment("comment")
-                .rating(4)
-                .build();
-
         Book book1 = Book.builder()
                 .title("book 1")
                 .language("English")
@@ -110,15 +100,12 @@ public class DataSeeder {
                 .publisher(publisher1)
                 .creators(List.of(creator1, creator2))
                 .genres(List.of(genre1, genre2))
-                .reviews(List.of(review1, review2))
                 .series(series1)
                 .bookCopies(List.of(bookDetail1, bookDetail2))
                 .build();
 
         bookDetail1.setBook(book1);
         bookDetail2.setBook(book1);
-        review1.setBook(book1);
-        review2.setBook(book1);
 
         genreRepository.save(genre3);
         bookRepository.save(book1);

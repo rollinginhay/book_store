@@ -23,7 +23,6 @@ import sd_009.bookstore.repository.*;
 import sd_009.bookstore.util.mapper.book.BookDetailMapper;
 import sd_009.bookstore.util.mapper.book.BookMapper;
 import sd_009.bookstore.util.mapper.book.GenreMapper;
-import sd_009.bookstore.util.mapper.book.ReviewMapper;
 import sd_009.bookstore.util.mapper.link.LinkMapper;
 import sd_009.bookstore.util.mapper.link.LinkParamMapper;
 import sd_009.bookstore.util.validation.helper.JsonApiValidator;
@@ -39,11 +38,9 @@ public class BookService {
     private final JsonApiValidator validator;
     private final BookMapper bookMapper;
     private final GenreMapper genreMapper;
-    private final ReviewMapper reviewMapper;
     private final BookDetailMapper bookDetailMapper;
     private final BookRepository bookRepository;
     private final BookDetailRepository bookDetailRepository;
-    private final ReviewRepository reviewRepository;
     private final CreatorRepository creatorRepository;
     private final PublisherRepository publisherRepository;
     private final SeriesRepository seriesRepository;
@@ -271,9 +268,6 @@ public class BookService {
             case "bookDetail" -> {
                 dependentType = BookDetailDto.class;
             }
-            case "review" -> {
-                dependentType = ReviewDto.class;
-            }
             case "creator" -> {
                 dependentType = CreatorDto.class;
             }
@@ -297,11 +291,6 @@ public class BookService {
                 BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailDto.getId())).orElseThrow();
                 bookDetail.setBook(book);
                 book.getBookCopies().add(bookDetail);
-            }
-            case ReviewDto reviewDto -> {
-                Review review = reviewRepository.findById(Long.valueOf(reviewDto.getId())).orElseThrow();
-                review.setBook(book);
-                book.getReviews().add(review);
             }
             case CreatorDto creatorDto -> {
                 Creator creator = creatorRepository.findById(Long.valueOf(creatorDto.getId())).orElseThrow();
@@ -339,9 +328,6 @@ public class BookService {
             case "bookDetail" -> {
                 dependentType = BookDetailDto.class;
             }
-            case "review" -> {
-                dependentType = ReviewDto.class;
-            }
             case "creator" -> {
                 dependentType = CreatorDto.class;
             }
@@ -365,11 +351,6 @@ public class BookService {
                 BookDetail bookDetail = bookDetailRepository.findById(Long.valueOf(bookDetailDto.getId())).orElseThrow();
                 bookDetail.setBook(null);
                 book.getBookCopies().remove(bookDetail);
-            }
-            case ReviewDto reviewDto -> {
-                Review review = reviewRepository.findById(Long.valueOf(reviewDto.getId())).orElseThrow();
-                review.setBook(null);
-                book.getReviews().remove(review);
             }
             case CreatorDto creatorDto -> {
                 Creator creator = creatorRepository.findById(Long.valueOf(creatorDto.getId())).orElseThrow();
@@ -411,16 +392,6 @@ public class BookService {
                         .with(dtos)
                         .links(Links.from(JsonApiLinksObject.builder()
                                 .self(LinkMapper.toLink(Routes.MULTI_BOOK_RELATIONSHIP_BOOK_DETAIL, bookId))
-                                .build().toMap()))
-                        .build());
-            }
-            case "review" -> {
-                List<Review> dependents = reviewRepository.findByBook(book);
-                List<ReviewDto> dtos = dependents.stream().map(reviewMapper::toDto).toList();
-                return adapterProvider.listResourceAdapter(ReviewDto.class).toJson(Document
-                        .with(dtos)
-                        .links(Links.from(JsonApiLinksObject.builder()
-                                .self(LinkMapper.toLink(Routes.MULTI_BOOK_RELATIONSHIP_REVIEW, bookId))
                                 .build().toMap()))
                         .build());
             }

@@ -25,11 +25,11 @@ public class ReceiptHistory extends AuditableEntity {
     private String actorName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "old_status")
+    @Column(name = "old_status", columnDefinition = "VARCHAR(255)")
     private OrderStatus oldStatus;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "new_status")
+    @Column(name = "new_status", columnDefinition = "VARCHAR(255)")
     private OrderStatus newStatus;
 }
 

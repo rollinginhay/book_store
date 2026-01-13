@@ -112,6 +112,46 @@ public class UserController {
                 .body(userService.save(json));
     }
 
+    // 🔹 Tạo user mới với role (bypass JsonApiValidator)
+    @Operation(
+            summary = "Create user with role",
+            description = "Tạo user mới và assign role cùng lúc (bypass JsonApiValidator bug).",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(examples = @ExampleObject(
+                            name = "Create user with role req",
+                            value = "{\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"type\": \"user\",\n" +
+                                    "    \"attributes\": {\n" +
+                                    "      \"username\": \"manager_test\",\n" +
+                                    "      \"email\": \"manager@test.com\",\n" +
+                                    "      \"password\": \"12345678\",\n" +
+                                    "      \"personName\": \"Manager Test\",\n" +
+                                    "      \"phoneNumber\": \"0987654321\",\n" +
+                                    "      \"address\": \"Test Address\",\n" +
+                                    "      \"enabled\": true\n" +
+                                    "    },\n" +
+                                    "    \"relationships\": {\n" +
+                                    "      \"roles\": {\n" +
+                                    "        \"data\": [{\"type\": \"role\", \"id\": \"4\"}]\n" +
+                                    "      }\n" +
+                                    "    }\n" +
+                                    "  }\n" +
+                                    "}"
+                    ))
+            ),
+            responses = @ApiResponse(
+                    responseCode = "201",
+                    description = "Created with role"
+            )
+    )
+    @PostMapping("/v1/user/create-with-role")
+    public ResponseEntity<Object> createUserWithRole(@RequestBody String json) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.valueOf(contentType))
+                .body(userService.saveWithRole(json));
+    }
+
     // 🔹 Cập nhật user
     @Operation(
             summary = "Update a user",
@@ -132,6 +172,45 @@ public class UserController {
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf(contentType))
                 .body(userService.update(json, securityUtils));
+    }
+
+    // 🔹 Cập nhật user với role (bypass JsonApiValidator)
+    @Operation(
+            summary = "Update user with role",
+            description = "Cập nhật user và assign role cùng lúc (bypass JsonApiValidator bug).",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(examples = @ExampleObject(
+                            name = "Update user with role req",
+                            value = "{\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"type\": \"user\",\n" +
+                                    "    \"id\": \"1\",\n" +
+                                    "    \"attributes\": {\n" +
+                                    "      \"personName\": \"Manager Updated\",\n" +
+                                    "      \"phoneNumber\": \"0987654321\",\n" +
+                                    "      \"address\": \"Updated Address\",\n" +
+                                    "      \"enabled\": true,\n" +
+                                    "      \"note\": \"Ghi chú cập nhật\"\n" +
+                                    "    },\n" +
+                                    "    \"relationships\": {\n" +
+                                    "      \"roles\": {\n" +
+                                    "        \"data\": [{\"type\": \"role\", \"id\": \"4\"}]\n" +
+                                    "      }\n" +
+                                    "    }\n" +
+                                    "  }\n" +
+                                    "}"
+                    ))
+            ),
+            responses = @ApiResponse(
+                    responseCode = "200",
+                    description = "Updated with role"
+            )
+    )
+    @PutMapping("/v1/user/update-with-role")
+    public ResponseEntity<Object> updateUserWithRole(@RequestBody String json) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(contentType))
+                .body(userService.updateWithRole(json, securityUtils));
     }
 
     // 🔹 Xoá mềm user

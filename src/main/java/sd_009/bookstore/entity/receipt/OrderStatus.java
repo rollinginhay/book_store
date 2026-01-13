@@ -8,7 +8,8 @@ public enum OrderStatus {
     PAID("Đã hoàn thành"),
     FAILED("Giao thất bại"),
     REFUNDED("Đã hoàn tiền"),
-    CANCELLED("Đã hủy");
+    CANCELLED("Đã hủy"),
+    WAITING_REFUND_INFO("Chờ thông tin hoàn tiền");
 
     private final String displayName;
 

@@ -27,7 +27,6 @@ public enum Routes {
     public static final String MULTI_BOOK_RELATIONSHIP_SERIES = "/v1/book/{id}/relationships/series";
     public static final String MULTI_BOOK_RELATIONSHIP_GENRE = "/v1/book/{id}/relationships/genre";
     public static final String MULTI_BOOK_RELATIONSHIP_BOOK_DETAIL = "/v1/book/{id}/relationships/bookDetail";
-    public static final String MULTI_BOOK_RELATIONSHIP_REVIEW = "/v1/book/{id}/relationships/review";
     public static final String MULTI_BOOK_RELATIONSHIP_GENERIC = "/v1/book/{id}/relationships/{dependent}";
 
     public static final String GET_GENRES = "/v1/genres";
@@ -58,11 +57,6 @@ public enum Routes {
     public static final String POST_BOOK_DETAIL_CREATE = "/v1/bookDetail/create";
     public static final String PUT_BOOK_DETAIL_UPDATE = "/v1/bookDetail/update";
     public static final String DELETE_BOOK_DETAIL_DELETE = "/v1/bookDetail/{id}";
-
-    public static final String GET_REVIEW_BY_ID = "/v1/review/{id}";
-    public static final String POST_REVIEW_CREATE = "/v1/review/create";
-    public static final String PUT_REVIEW_UPDATE = "/v1/review/update";
-    public static final String DELETE_REVIEW_DELETE = "/v1/review/{id}";
 
     /*
      * RECEIPT AND DEPENDENTS
@@ -126,7 +120,9 @@ public enum Routes {
     public static final String GET_USER_BY_ID = "/v1/user/{id}";
     public static final String GET_USER_ME = "/v1/users/me";
     public static final String POST_USER_CREATE = "/v1/user/create";
+    public static final String POST_USER_CREATE_WITH_ROLE = "/v1/user/create-with-role";
     public static final String PUT_USER_UPDATE = "/v1/user/update";
+    public static final String PUT_USER_UPDATE_WITH_ROLE = "/v1/user/update-with-role";
     public static final String DELETE_USER_DELETE = "/v1/user/{id}";
     public static final String GET_ROLES = "/v1/roles";
 
