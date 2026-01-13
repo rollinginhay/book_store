@@ -6,6 +6,7 @@ import jsonapi.ToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import sd_009.bookstore.entity.user.User;
+import sd_009.bookstore.util.validation.annotation.ValidUsername;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public class UserDto implements Serializable {
     @Id
     private final String id;
     private final String email;
+    @ValidUsername
     private final String username;
     private final String password;
     private final String personName;

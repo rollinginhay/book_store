@@ -1,6 +1,7 @@
 package sd_009.bookstore.dto.jsonApiResource.book;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import jsonapi.Id;
 import jsonapi.Resource;
 import lombok.AllArgsConstructor;
@@ -22,9 +23,11 @@ public class GenreDto implements Serializable {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final Boolean enabled;
+    @Size(max = 500, message = "Ghi chú không được vượt quá 500 ký tự")
     private final String note;
     @Id
     private final String id;
-    @NotBlank
+    @NotBlank(message = "Tên thể loại là bắt buộc")
+    @Size(min = 2, max = 100, message = "Tên thể loại phải từ 2 đến 100 ký tự")
     private final String name;
 }
