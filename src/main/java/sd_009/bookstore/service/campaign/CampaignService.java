@@ -389,8 +389,8 @@ public class CampaignService {
                 }
             }
 
-            // Lấy tất cả các campaign PERCENTAGE_PRODUCT đang hoạt động và trùng thời gian
-            List<Campaign> existingCampaigns =
+            // ✅ BƯỚC 1: Lấy tất cả các campaign PERCENTAGE_PRODUCT đang hoạt động và trùng thời gian
+            List<Campaign> campaignsWithOverlappingTime =
                     campaignRepository.findAllByEnabled(true, Sort.by("updatedAt").descending())
                             .stream()
                             .filter(c -> excludeId == null || !c.getId().equals(excludeId))
@@ -408,8 +408,9 @@ public class CampaignService {
                             )
                             .toList();
 
-            // Kiểm tra xem có sản phẩm nào trùng không
-            for (Campaign existing : existingCampaigns) {
+            // ✅ BƯỚC 2: Kiểm tra sản phẩm trùng (chỉ trong các campaign trùng thời gian)
+            // Tách thông báo lỗi: lỗi sản phẩm trùng → thông báo về sản phẩm
+            for (Campaign existing : campaignsWithOverlappingTime) {
                 // Lấy danh sách bookDetailId từ campaign hiện có (chỉ lấy enabled = true)
                 List<CampaignDetail> existingDetails = campaignDetailRepository.findAll()
                         .stream()
@@ -425,12 +426,25 @@ public class CampaignService {
                         .map(cd -> cd.getBookDetail().getId())
                         .toList();
 
-                // Kiểm tra xem có sản phẩm nào trùng không
+                // ✅ Kiểm tra xem có sản phẩm nào trùng không
+                // Thông báo lỗi chỉ về sản phẩm trùng (không mention thời gian vì đó chỉ là điều kiện check)
                 for (Long newBookDetailId : newBookDetailIds) {
                     if (existingBookDetailIds.contains(newBookDetailId)) {
+                        // Tìm tên sản phẩm để thông báo rõ ràng hơn
+                        String productName = "sản phẩm này";
+                        try {
+                            BookDetail bookDetail = bookDetailRepository.findById(newBookDetailId).orElse(null);
+                            if (bookDetail != null && bookDetail.getBook() != null) {
+                                productName = bookDetail.getBook().getTitle() + 
+                                        (bookDetail.getBookFormat() != null ? " - " + bookDetail.getBookFormat() : "");
+                            }
+                        } catch (Exception e) {
+                            // Nếu không lấy được tên, dùng mặc định
+                        }
+                        
                         throw new BadRequestException(
-                                "Đã tồn tại campaign '" + existing.getName() + "' cùng thời gian " +
-                                "và có sản phẩm trùng. Vui lòng chọn sản phẩm khác hoặc thay đổi khoảng thời gian."
+                                "Sản phẩm '" + productName + "' đã được áp dụng giảm giá trong campaign '" + 
+                                existing.getName() + "'. Vui lòng chọn sản phẩm khác."
                         );
                     }
                 }
